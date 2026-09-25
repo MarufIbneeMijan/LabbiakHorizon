@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-serif: 'Cinzel', 'Cormorant Garamond', serif;
+    --font-sans: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  body {
+    background-color: #080808;
+    color: #F8FAFC;
+    font-family: var(--font-sans);
+  }
+
+  h1, h2, h3, h4, .font-serif {
+    font-family: var(--font-serif);
+  }
+}
+
+/* Kiswah Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #080808;
+}
+::-webkit-scrollbar-thumb {
+  background: #996515;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #d4af37;
+}
+
+/* Kiswah Gold Metallic & Jet Black Gradients */
+.text-kiswah-gold {
+  background: linear-gradient(135deg, #FFF6D6 0%, #E5C158 35%, #D4AF37 70%, #996515 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bg-kiswah-gold {
+  background: linear-gradient(135deg, #E5C158 0%, #D4AF37 50%, #996515 100%);
+}
+
+.bg-kiswah-gold-hover {
+  background: linear-gradient(135deg, #FFF0B8 0%, #E5BE48 50%, #B8854D 100%);
+}
+
+.bg-kiswah-card {
+  background: rgba(18, 18, 20, 0.85);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(212, 175, 55, 0.22);
+}
+
+.bg-kiswah-card-active {
+  background: rgba(22, 22, 25, 0.95);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(212, 175, 55, 0.65);
+  box-shadow: 0 0 35px -5px rgba(212, 175, 55, 0.3);
+}
+
+.kiswah-gold-glow {
+  box-shadow: 0 0 30px -5px rgba(212, 175, 55, 0.35);
+}
+
+.bg-kiswah-pattern {
+  background-color: #080808;
+  background-image: radial-gradient(#d4af37 0.65px, transparent 0.65px), radial-gradient(#996515 0.65px, #080808 0.65px);
+  background-size: 32px 32px;
+  background-position: 0 0, 16px 16px;
+}
+
+/* Sound Wave Equalizer Bar Animation */
+@keyframes sound-bar {
+  0%, 100% { height: 4px; }
+  50% { height: 16px; }
+}
+
+.animate-equalizer-1 {
+  animation: sound-bar 0.8s ease-in-out infinite;
+}
+.animate-equalizer-2 {
+  animation: sound-bar 1.1s ease-in-out infinite 0.2s;
+}
+.animate-equalizer-3 {
+  animation: sound-bar 0.9s ease-in-out infinite 0.4s;
+}
+
+/* Print Styles for Dossier */
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-card {
+    border: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+}
