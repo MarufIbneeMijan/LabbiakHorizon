@@ -1,9 +1,11 @@
 import React from 'react';
 import { Plane, ShieldCheck, Sparkles, Gem, Crown } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { CONCIERGE_PILLARS } from '../data/mockData';
+import { DICTIONARY, CONCIERGE_PILLARS } from '../data/mockData';
 
-export default function ConciergePillars() {
+export default function ConciergePillars({ locale }) {
+  const dict = DICTIONARY[locale] || DICTIONARY.en;
+
   return (
     <section id="pillars" className="py-20 lg:py-28 bg-[#080808] relative overflow-hidden">
       
@@ -16,13 +18,13 @@ export default function ConciergePillars() {
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.03] border border-[#d4af37]/30 text-[#d4af37] text-xs font-serif font-bold uppercase tracking-widest">
             <Crown className="w-3.5 h-3.5" />
-            <span>Four Pillars of White-Glove Concierge</span>
+            <span>{dict.pillars.badge}</span>
           </div>
           <h2 className="text-3xl sm:text-5xl font-serif font-extrabold text-white leading-tight">
-            The Standards of <span className="text-kiswah-gold">LabbaikHorizon</span>
+            {dict.pillars.titleMain} <span className="text-kiswah-gold">{dict.pillars.titleGold}</span>
           </h2>
           <p className="text-slate-300 text-sm sm:text-base font-light">
-            Every aspect of your pilgrimage is executed with diplomatic precision, complete privacy, and uncompromised spiritual reverence.
+            {dict.pillars.subheading}
           </p>
         </div>
 
@@ -50,16 +52,16 @@ export default function ConciergePillars() {
                     Pillar 0{pillar.id}
                   </span>
                   <h3 className="text-lg font-serif font-bold text-white leading-snug">
-                    {pillar.title}
+                    {locale === 'bn' ? pillar.titleBn : pillar.titleEn}
                   </h3>
                   <p className="text-xs text-slate-300 font-light leading-relaxed">
-                    {pillar.desc}
+                    {locale === 'bn' ? pillar.descBn : pillar.descEn}
                   </p>
                 </div>
               </div>
 
               <div className="pt-6 border-t border-slate-800/80 mt-6 flex items-center gap-1.5 text-[#d4af37] text-xs font-serif font-semibold">
-                <span>Diplomatic Guarantee</span>
+                <span>{locale === 'bn' ? 'ডিপ্লোমেটিক নিশ্চয়তা' : 'Diplomatic Guarantee'}</span>
                 <Crown className="w-3.5 h-3.5" />
               </div>
             </motion.div>

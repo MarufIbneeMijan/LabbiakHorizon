@@ -2,19 +2,94 @@
 
 @layer base {
   :root {
-    --font-serif: 'Cinzel', 'Cormorant Garamond', serif;
-    --font-sans: 'Plus Jakarta Sans', sans-serif;
+    --font-serif: 'Cinzel', 'Noto Serif Bengali', 'Cormorant Garamond', serif;
+    --font-sans: 'Plus Jakarta Sans', 'Hind Siliguri', sans-serif;
   }
 
   body {
-    background-color: #080808;
+    background-color: var(--color-bg-base, #080809);
     color: #F8FAFC;
     font-family: var(--font-sans);
+    transition: background-color 0.4s ease, color 0.4s ease;
   }
 
   h1, h2, h3, h4, .font-serif {
     font-family: var(--font-serif);
   }
+}
+
+/* Multi-Theme Engine */
+:root, [data-theme="kiswah"] {
+  --color-bg-base: #080809;
+  --color-surface: #121215;
+  --color-card-bg: rgba(18, 18, 20, 0.88);
+  --color-primary-gold: #d4af37;
+  --color-primary-light: #f3e5ab;
+  --color-accent: #996515;
+  --color-border: rgba(212, 175, 55, 0.3);
+  --color-border-hover: rgba(212, 175, 55, 0.65);
+}
+
+[data-theme="emerald"] {
+  --color-bg-base: #051610;
+  --color-surface: #0a261c;
+  --color-card-bg: rgba(10, 38, 28, 0.88);
+  --color-primary-gold: #10b981;
+  --color-primary-light: #a7f3d0;
+  --color-accent: #059669;
+  --color-border: rgba(16, 185, 129, 0.35);
+  --color-border-hover: rgba(52, 211, 153, 0.7);
+}
+
+[data-theme="emerald"] body,
+[data-theme="emerald"] .theme-bg-root {
+  background-color: #051610 !important;
+}
+
+[data-theme="emerald"] .text-kiswah-gold {
+  background: linear-gradient(135deg, #ecfdf5 0%, #a7f3d0 30%, #34d399 70%, #059669 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+[data-theme="emerald"] .bg-kiswah-gold {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #047857 100%) !important;
+}
+
+[data-theme="emerald"] .bg-kiswah-card {
+  background: rgba(10, 36, 26, 0.9) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+[data-theme="desert"] {
+  --color-bg-base: #171412;
+  --color-surface: #26211e;
+  --color-card-bg: rgba(38, 33, 30, 0.88);
+  --color-primary-gold: #f59e0b;
+  --color-primary-light: #fef3c7;
+  --color-accent: #d97706;
+  --color-border: rgba(245, 158, 11, 0.35);
+  --color-border-hover: rgba(251, 191, 36, 0.7);
+}
+
+[data-theme="desert"] body,
+[data-theme="desert"] .theme-bg-root {
+  background-color: #171412 !important;
+}
+
+[data-theme="desert"] .text-kiswah-gold {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 30%, #f59e0b 70%, #b45309 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+[data-theme="desert"] .bg-kiswah-gold {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #b45309 100%) !important;
+}
+
+[data-theme="desert"] .bg-kiswah-card {
+  background: rgba(38, 33, 30, 0.9) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
 }
 
 /* Kiswah Custom Scrollbar */
@@ -23,7 +98,7 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #080808;
+  background: #080809;
 }
 ::-webkit-scrollbar-thumb {
   background: #996515;
@@ -35,7 +110,7 @@
 
 /* Kiswah Gold Metallic & Jet Black Gradients */
 .text-kiswah-gold {
-  background: linear-gradient(135deg, #FFF6D6 0%, #E5C158 35%, #D4AF37 70%, #996515 100%);
+  background: linear-gradient(135deg, #FFF6D6 0%, #F3E5AB 30%, #D4AF37 70%, #996515 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -51,7 +126,7 @@
 .bg-kiswah-card {
   background: rgba(18, 18, 20, 0.85);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(212, 175, 55, 0.22);
+  border: 1px solid rgba(212, 175, 55, 0.25);
 }
 
 .bg-kiswah-card-active {
@@ -66,8 +141,8 @@
 }
 
 .bg-kiswah-pattern {
-  background-color: #080808;
-  background-image: radial-gradient(#d4af37 0.65px, transparent 0.65px), radial-gradient(#996515 0.65px, #080808 0.65px);
+  background-color: #080809;
+  background-image: radial-gradient(#d4af37 0.65px, transparent 0.65px), radial-gradient(#996515 0.65px, #080809 0.65px);
   background-size: 32px 32px;
   background-position: 0 0, 16px 16px;
 }

@@ -1,8 +1,11 @@
 import React from 'react';
-import { Crown, ShieldCheck, Sparkles, Gem, ArrowRight, Compass, Building, MapPin } from 'lucide-react';
+import { Crown, ShieldCheck, Sparkles, Gem, ArrowRight, Compass } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { DICTIONARY } from '../data/mockData';
 
-export default function Hero({ onOpenConsultation, onNavigateCurator }) {
+export default function Hero({ locale = 'en', onOpenConsultation = () => {}, onNavigateCurator = () => {}, onOpenWizard = () => {} }) {
+  const dict = DICTIONARY[locale] || DICTIONARY.en;
+
   return (
     <section className="relative min-h-[92vh] flex flex-col justify-between overflow-hidden bg-kiswah-pattern pt-12 pb-20">
       
@@ -23,7 +26,7 @@ export default function Hero({ onOpenConsultation, onNavigateCurator }) {
             className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/[0.03] border border-[#d4af37]/30 text-[#d4af37] text-xs sm:text-sm font-semibold tracking-wide backdrop-blur-md shadow-2xl"
           >
             <Crown className="w-4 h-4 text-[#d4af37]" />
-            <span>Kiswah Inspired Ultra-Luxury Pilgrimage • MoRA License HAAB-1420</span>
+            <span>{dict.hero.badge}</span>
           </motion.div>
 
           {/* Main Headline */}
@@ -33,8 +36,8 @@ export default function Hero({ onOpenConsultation, onNavigateCurator }) {
             transition={{ duration: 0.7, delay: 0.1 }}
             className="text-4xl sm:text-6xl lg:text-7xl font-serif font-extrabold tracking-tight text-white leading-[1.1]"
           >
-            The Sacred Sanctuary, <br />
-            <span className="text-kiswah-gold drop-shadow-lg">Curated with Absolute Exclusivity</span>
+            {dict.hero.headlineMain} <br />
+            <span className="text-kiswah-gold drop-shadow-lg">{dict.hero.headlineGold}</span>
           </motion.h1>
 
           {/* Subheading */}
@@ -44,7 +47,7 @@ export default function Hero({ onOpenConsultation, onNavigateCurator }) {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="text-base sm:text-lg lg:text-xl text-slate-300 font-light max-w-3xl mx-auto leading-relaxed"
           >
-            Serving distinguished pilgrims with presidential suites, private bullet train carriages, and discreet 24/7 scholarly guidance.
+            {dict.hero.subheading}
           </motion.p>
 
           {/* Action CTAs */}
@@ -54,20 +57,22 @@ export default function Hero({ onOpenConsultation, onNavigateCurator }) {
             transition={{ duration: 0.7, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
           >
-            <a
-              href="#curator"
-              onClick={onNavigateCurator}
-              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-kiswah-gold text-[#080808] font-serif font-bold text-sm tracking-wider uppercase shadow-2xl shadow-[#d4af37]/20 hover:opacity-90 transition-transform hover:scale-105 flex items-center justify-center gap-2 cursor-pointer"
+            <button
+              onClick={() => {
+                if (onOpenWizard) onOpenWizard();
+                else if (onNavigateCurator) onNavigateCurator();
+              }}
+              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-kiswah-gold text-[#080809] font-serif font-bold text-sm tracking-wider uppercase shadow-2xl shadow-[#d4af37]/20 hover:opacity-90 transition-transform hover:scale-105 flex items-center justify-center gap-2 cursor-pointer"
             >
-              <Compass className="w-4 h-4 text-[#080808]" />
-              <span>Curate Your Pilgrimage</span>
-            </a>
+              <Compass className="w-4 h-4 text-[#080809]" />
+              <span>{dict.hero.primaryCta}</span>
+            </button>
 
             <a
               href="#suites"
               className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white/[0.04] border border-[#d4af37]/40 text-[#d4af37] font-serif font-semibold text-sm tracking-wider uppercase hover:bg-white/[0.08] transition-colors flex items-center justify-center gap-2 cursor-pointer backdrop-blur-md"
             >
-              <span>Explore Royal Suites</span>
+              <span>{dict.hero.secondaryCta}</span>
               <ArrowRight className="w-4 h-4 text-[#d4af37]" />
             </a>
           </motion.div>
@@ -81,17 +86,17 @@ export default function Hero({ onOpenConsultation, onNavigateCurator }) {
           >
             <span className="flex items-center gap-2">
               <Gem className="w-4 h-4 text-[#d4af37]" />
-              <span>Panoramic Ka'aba View Penthouse</span>
+              <span>{dict.hero.perk1}</span>
             </span>
             <span className="text-[#d4af37]/40">•</span>
             <span className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[#d4af37]" />
-              <span>Haramain Bullet Train VIP Pass</span>
+              <span>{dict.hero.perk2}</span>
             </span>
             <span className="text-[#d4af37]/40">•</span>
             <span className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-[#d4af37]" />
-              <span>Discreet 1-on-1 Scholar Chaperone</span>
+              <span>{dict.hero.perk3}</span>
             </span>
           </motion.div>
 
@@ -104,22 +109,22 @@ export default function Hero({ onOpenConsultation, onNavigateCurator }) {
           
           <div className="bg-white/[0.02] border border-[#d4af37]/15 p-4 rounded-2xl backdrop-blur-md text-center space-y-1">
             <span className="text-[#d4af37] text-xs font-serif font-bold uppercase tracking-widest block">Licensing</span>
-            <p className="text-white text-xs font-semibold">MoRA Certified HAAB-1420</p>
+            <p className="text-white text-xs font-semibold">{dict.hero.trust1}</p>
           </div>
 
           <div className="bg-white/[0.02] border border-[#d4af37]/15 p-4 rounded-2xl backdrop-blur-md text-center space-y-1">
             <span className="text-[#d4af37] text-xs font-serif font-bold uppercase tracking-widest block">CIP Protocol</span>
-            <p className="text-white text-xs font-semibold">Fast-Track DAC & JED Protocol</p>
+            <p className="text-white text-xs font-semibold">{dict.hero.trust2}</p>
           </div>
 
           <div className="bg-white/[0.02] border border-[#d4af37]/15 p-4 rounded-2xl backdrop-blur-md text-center space-y-1">
             <span className="text-[#d4af37] text-xs font-serif font-bold uppercase tracking-widest block">Lounge Presence</span>
-            <p className="text-white text-xs font-semibold">Horizon Tower, Gulshan-2</p>
+            <p className="text-white text-xs font-semibold">{dict.hero.trust3}</p>
           </div>
 
           <div className="bg-white/[0.02] border border-[#d4af37]/15 p-4 rounded-2xl backdrop-blur-md text-center space-y-1">
             <span className="text-[#d4af37] text-xs font-serif font-bold uppercase tracking-widest block">Compliance</span>
-            <p className="text-white text-xs font-semibold">100% Shariah Compliant</p>
+            <p className="text-white text-xs font-semibold">{dict.hero.trust4}</p>
           </div>
 
         </div>

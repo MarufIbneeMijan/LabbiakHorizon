@@ -1,9 +1,11 @@
 import React from 'react';
-import { Building, MapPin, Star, Sparkles, Gem, CheckCircle2, ChevronRight } from 'lucide-react';
+import { MapPin, Star, Gem, CheckCircle2, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { ROYAL_SUITES } from '../data/mockData';
+import { DICTIONARY, ROYAL_SUITES } from '../data/mockData';
 
-export default function SuiteShowcase({ onOpenConsultation }) {
+export default function SuiteShowcase({ locale = 'en', onOpenConsultation = () => {} }) {
+  const dict = DICTIONARY[locale] || DICTIONARY.en;
+
   return (
     <section id="suites" className="py-20 lg:py-28 bg-[#0b0b0d] relative overflow-hidden">
       
@@ -16,13 +18,13 @@ export default function SuiteShowcase({ onOpenConsultation }) {
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.03] border border-[#d4af37]/30 text-[#d4af37] text-xs font-serif font-bold uppercase tracking-widest">
             <Gem className="w-3.5 h-3.5" />
-            <span>The Kiswah Suite Sanctuary</span>
+            <span>{dict.suites.badge}</span>
           </div>
           <h2 className="text-3xl sm:text-5xl font-serif font-extrabold text-white leading-tight">
-            Presidential Suites & <span className="text-kiswah-gold">Haram Sanctums</span>
+            {dict.suites.titleMain} <span className="text-kiswah-gold">{dict.suites.titleGold}</span>
           </h2>
           <p className="text-slate-300 text-sm sm:text-base font-light">
-            Exclusive year-round allotments in Makkah & Madinah's most coveted 5-star penthouse suites with direct courtyard elevators and live Haram audio feeds.
+            {dict.suites.subheading}
           </p>
         </div>
 
@@ -48,7 +50,7 @@ export default function SuiteShowcase({ onOpenConsultation }) {
 
                 <div className="absolute top-4 left-4">
                   <span className="px-3 py-1 rounded-full bg-kiswah-gold text-[#080808] font-serif font-extrabold text-[10px] uppercase tracking-wider shadow-md">
-                    Presidential Suite
+                    {locale === 'bn' ? 'প্রেসিডেন্সিয়াল স্যুইট' : 'Presidential Suite'}
                   </span>
                 </div>
 
@@ -56,7 +58,9 @@ export default function SuiteShowcase({ onOpenConsultation }) {
                   <h3 className="text-xl font-serif font-bold text-white leading-snug">
                     {suite.name}
                   </h3>
-                  <p className="text-xs text-amber-300 font-medium mt-0.5">{suite.subtitle}</p>
+                  <p className="text-xs text-amber-300 font-medium mt-0.5">
+                    {locale === 'bn' ? suite.subtitleBn : suite.subtitleEn}
+                  </p>
                 </div>
               </div>
 
@@ -68,7 +72,7 @@ export default function SuiteShowcase({ onOpenConsultation }) {
                   <div className="flex items-center justify-between text-xs text-slate-300 border-b border-slate-800 pb-3">
                     <span className="flex items-center gap-1.5 text-[#d4af37] font-medium">
                       <MapPin className="w-3.5 h-3.5" />
-                      {suite.location}
+                      {locale === 'bn' ? suite.locationBn : suite.locationEn}
                     </span>
                     <div className="flex items-center gap-0.5 text-[#d4af37]">
                       {[...Array(suite.stars)].map((_, i) => (
@@ -80,10 +84,10 @@ export default function SuiteShowcase({ onOpenConsultation }) {
                   {/* Feature Tags List */}
                   <div className="space-y-2">
                     <span className="text-[11px] font-serif font-bold text-amber-300 uppercase tracking-widest block">
-                      Suite Features & Amenities:
+                      {locale === 'bn' ? 'স্যুইটের সুবিধাসমূহ:' : 'Suite Features & Amenities:'}
                     </span>
                     <div className="space-y-1.5">
-                      {suite.highlights.map((h, i) => (
+                      {(locale === 'bn' ? suite.highlightsBn : suite.highlightsEn).map((h, i) => (
                         <div key={i} className="flex items-center gap-2 text-xs text-slate-300">
                           <CheckCircle2 className="w-3.5 h-3.5 text-[#d4af37] shrink-0" />
                           <span className="font-light">{h}</span>
@@ -96,10 +100,15 @@ export default function SuiteShowcase({ onOpenConsultation }) {
 
                 <div className="pt-4 border-t border-slate-800">
                   <button
-                    onClick={onOpenConsultation}
+                    onClick={() => onOpenConsultation({
+                      tier: suite.name,
+                      packageName: `${suite.name} - ${locale === 'bn' ? suite.subtitleBn : suite.subtitleEn}`,
+                      totalBDT: suite.name.includes('Raffles') ? 145000 : (suite.name.includes('Oberoi') ? 135000 : 95000),
+                      type: 'SUITE RESERVATION'
+                    })}
                     className="w-full py-3 bg-white/[0.04] hover:bg-kiswah-gold text-[#d4af37] hover:text-[#080808] font-serif font-bold rounded-xl text-xs tracking-wider uppercase border border-[#d4af37]/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    <span>Reserve Suite via LabbaikHorizon</span>
+                    <span>{dict.suites.reserveBtn}</span>
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>

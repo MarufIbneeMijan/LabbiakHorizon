@@ -1,399 +1,237 @@
-import React, { useState, useMemo } from 'react';
+import React from 'react';
 import { 
-  Crown, Sparkles, Gem, ShieldCheck, Check, ArrowRight, 
-  MessageSquare, FileText, Calendar, Users, Plane, Star, CheckCircle2 
+  Crown, Sparkles, CheckCircle2, ArrowRight, 
+  Sliders, Building2, Car, Calendar, Users, 
+  ShieldCheck, Star, Award, HeartHandshake, PhoneCall
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  LABBAIK_JOURNEY_TIERS, SEASON_HORIZONS, 
-  PARTY_SIZES, FLIGHT_TIERS 
-} from '../data/mockData';
+import { motion } from 'framer-motion';
 
-export default function ConciergeCurator({ onOpenConsultation, onOpenDossier }) {
-  // Curator State
-  const [selectedTierId, setSelectedTierId] = useState('kiswah_sanctum');
-  const [seasonId, setSeasonId] = useState('ramadan');
-  const [partyId, setPartyId] = useState('couple');
-  const [flightId, setFlightId] = useState('first_suite');
+export default function ConciergeCurator({ 
+  locale = 'en', 
+  onOpenWizard = () => {}, 
+  onOpenConsultation = () => {} 
+}) {
+  const isBn = locale === 'bn';
 
-  // Selected Objects
-  const selectedTier = useMemo(() => {
-    return LABBAIK_JOURNEY_TIERS.find(t => t.id === selectedTierId) || LABBAIK_JOURNEY_TIERS[0];
-  }, [selectedTierId]);
-
-  const selectedParty = useMemo(() => {
-    return PARTY_SIZES.find(p => p.id === partyId) || PARTY_SIZES[0];
-  }, [partyId]);
-
-  const selectedSeason = useMemo(() => {
-    return SEASON_HORIZONS.find(s => s.id === seasonId) || SEASON_HORIZONS[0];
-  }, [seasonId]);
-
-  const selectedFlight = useMemo(() => {
-    return FLIGHT_TIERS.find(f => f.id === flightId) || FLIGHT_TIERS[0];
-  }, [flightId]);
-
-  // Valuation Calculation
-  const valuation = useMemo(() => {
-    if (selectedTier.isCustomPrice) {
-      return {
-        isCustom: true,
-        perPersonBDT: 1250000,
-        totalBDT: 2450000,
-        totalUSD: 20000
-      };
-    }
-
-    const basePerPerson = selectedTier.priceBDT;
-    const flightExtra = selectedFlight.extraBDT;
-    
-    // Season multiplier
-    let seasonMultiplier = 1.0;
-    if (seasonId === 'ramadan') seasonMultiplier = 1.35;
-    if (seasonId === 'hajj') seasonMultiplier = 2.2;
-
-    const perPersonBDT = Math.round((basePerPerson + flightExtra) * seasonMultiplier);
-    const totalBDT = perPersonBDT * selectedParty.multiplier;
-    const totalUSD = Math.round(totalBDT / 122.5);
-    const perPersonUSD = Math.round(perPersonBDT / 122.5);
-
-    return {
-      isCustom: false,
-      perPersonBDT,
-      perPersonUSD,
-      totalBDT,
-      totalUSD
-    };
-  }, [selectedTier, selectedParty, selectedFlight, seasonId]);
-
-  // Handle Direct WhatsApp Director Link
-  const handleWhatsAppConnect = () => {
-    const text = `Assalamu Alaikum. I am interested in inquiring about a VIP Pilgrimage Dossier with LabbaikHorizon:
-    
-🕋 *Journey Tier:* ${selectedTier.title}
-📍 *Season Horizon:* ${selectedSeason.label}
-👥 *Party Size:* ${selectedParty.label}
-✈️ *Flight Tier:* ${selectedFlight.label}
-
-💰 *Est. Valuation:* ${valuation.isCustom ? 'Confidential Custom Charter' : `৳${valuation.totalBDT.toLocaleString('en-IN')} BDT ($${valuation.totalUSD.toLocaleString()} USD)`}
-
-Please connect me with your Private Client Director.`;
-
-    const encodedText = encodeURIComponent(text);
-    window.open(`https://wa.me/8801800522224?text=${encodedText}`, '_blank');
+  const handleCustomReservation = () => {
+    onOpenConsultation({
+      tier: isBn ? 'কাস্টম বেসপোক ওমরাহ ও হজ পরিকল্পনা' : 'Bespoke Custom Pilgrimage Itinerary',
+      packageName: isBn ? 'কাস্টম বেসপোক ওমরাহ ও হজ পরিকল্পনা' : 'Bespoke Custom Pilgrimage Itinerary',
+      totalBDT: 245000,
+      totalUSD: 2040,
+      type: 'CUSTOM BESPOKE',
+      features: [
+        isBn ? 'ব্যক্তিগত ৫-স্টার পেন্টহাউস (০ মিটার কাবা ভিউ)' : 'Private 5-Star Penthouse (0m Kaaba View)',
+        isBn ? 'প্রাইভেট জিএমসি ইউকন / মাইবাখ ট্রান্সফার' : 'Private GMC Yukon / Maybach Transfer',
+        isBn ? '১-অন-১ প্রবীণ আলেম স্কলারের সান্নিধ্য' : '1-on-1 Eminent Senior Scholar Moallim',
+        isBn ? 'সিআইপি ডিপ্লোমেটিক ফাস্ট-ট্র্যাক প্রোটোকল' : 'CIP Diplomatic Fast-Track Airport Protocol'
+      ]
+    });
   };
 
-  const handleRequestDossier = () => {
-    const dossierData = {
-      tier: selectedTier.title,
-      subtitle: selectedTier.subtitle || selectedTier.tagline,
-      season: selectedSeason.label,
-      party: selectedParty.label,
-      flight: selectedFlight.label,
-      perPersonBDT: valuation.perPersonBDT,
-      totalBDT: valuation.totalBDT,
-      totalUSD: valuation.totalUSD,
-      isCustom: valuation.isCustom,
-      features: selectedTier.features,
-      makkahHotel: selectedTier.makkahHotel,
-      madinahHotel: selectedTier.madinahHotel,
-      date: new Date().toLocaleDateString('en-GB')
-    };
-
-    if (onOpenDossier) {
-      onOpenDossier(dossierData);
-    } else {
-      onOpenConsultation(dossierData);
+  const stepsData = [
+    {
+      step: '01',
+      icon: Calendar,
+      titleEn: 'Sacred Dates & Horizon',
+      titleBn: 'পবিত্র সফর ও যাত্রীর সংখ্যা',
+      descEn: 'VIP Umrah or Royal Hajj during Ramadan Last 10 Nights, Winter Sacred Months, or flexible private dates. Configurable for solo, couple, or family delegation.',
+      descBn: 'রমজানের শেষ দশক, শীতকালীন বরকতময় মাস কিংবা আপনার সুবিধাজনক তারিখে সোলো, কাপল বা পরিবার সহ রাজকীয় হজ ও ওমরাহ নির্ধারণ করুন।',
+      tagEn: 'Step 1: Dates & Delegation',
+      tagBn: 'ধাপ ১: সফর ও দল'
+    },
+    {
+      step: '02',
+      icon: Building2,
+      titleEn: 'Sanctuary Suites & Proximity',
+      titleBn: '০ মিটার হারাম চত্বর স্যুইট',
+      descEn: 'Handpick 0m direct courtyard suites at Raffles Makkah Palace, Fairmont Clock Tower, or The Oberoi Madinah with private butler and Kaaba audio feeds.',
+      descBn: 'র‍্যাফেলস মক্কা প্যালেস, ফেয়ারমন্ট ক্লক টাওয়ার ও মদিনার দ্য ওবেরয়ে কাবা শরিফ ও মসজিদে নববীর সরাসরি উঠানমুখী বিলাসবহুল স্যুইট নির্বাচন করুন।',
+      tagEn: 'Step 2: Haramain Hotels',
+      tagBn: 'ধাপ ২: তারকা হোটেল'
+    },
+    {
+      step: '03',
+      icon: Car,
+      titleEn: 'Fleet Logistics & Scholar Care',
+      titleBn: 'প্রাইভেট শফার কার ও মোয়াল্লেম',
+      descEn: 'Select private GMC Yukon XL or Mercedes Maybach ground fleet, Haramain high-speed rail 1st class, and discrete 1-on-1 senior scholar guidance.',
+      descBn: 'জেদ্দা-মক্কা-মদিনা রুটে জিএমসি ইউকন এক্সএল বা মার্সিডিজ-বেঞ্জ বহর, হারামাইন ট্রেনের ফার্স্ট ক্লাস ও অভিজ্ঞ প্রবীণ আলেম স্কলারের সান্নিধ্য যুক্ত করুন।',
+      tagEn: 'Step 3: Chauffeur & Guidance',
+      tagBn: 'ধাপ ৩: প্রাইভেট বহর'
     }
-  };
+  ];
 
   return (
-    <section id="curator" className="py-20 lg:py-28 bg-[#080808] relative overflow-hidden">
+    <section id="custom-package" className="py-20 lg:py-28 bg-[#080809] relative overflow-hidden">
       
-      {/* Glow Orbs */}
-      <div className="absolute top-1/3 left-0 w-[500px] h-[500px] bg-[#d4af37]/10 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-10 right-0 w-[500px] h-[500px] bg-[#996515]/10 rounded-full blur-[140px] pointer-events-none" />
+      {/* Anchor for legacy curator link */}
+      <div id="curator" className="relative -top-24" />
+
+      {/* Kiswah Ambient Glow Spotlight */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[550px] bg-[#d4af37]/10 rounded-full blur-[170px] pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-[#996515]/10 rounded-full blur-[150px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
-        {/* Section Title Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.03] border border-[#d4af37]/30 text-[#d4af37] text-xs font-serif font-bold uppercase tracking-widest">
-            <Crown className="w-3.5 h-3.5" />
-            <span>Frictionless Concierge Curator</span>
-          </div>
-          <h2 className="text-3xl sm:text-5xl font-serif font-extrabold text-white leading-tight">
-            Curate Your Sacred <span className="text-kiswah-gold">Pilgrimage Sanctum</span>
-          </h2>
-          <p className="text-slate-300 text-sm sm:text-base font-light">
-            Designed for distinguished pilgrims. Select your journey tier, season horizon, and party parameters in three effortless steps.
-          </p>
-        </div>
-
-        {/* STEP 1: SELECT YOUR JOURNEY TIER */}
-        <div className="space-y-6 mb-12">
-          <div className="flex items-center gap-3 border-b border-[#d4af37]/20 pb-4">
-            <div className="w-8 h-8 rounded-full bg-kiswah-gold text-[#080808] font-bold text-sm flex items-center justify-center font-serif">
-              1
-            </div>
-            <div>
-              <h3 className="text-lg font-serif font-bold text-white">Step 1: Select Your Journey Tier</h3>
-              <p className="text-xs text-slate-400">Choose your presidential penthouse tier and luxury benchmark</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {LABBAIK_JOURNEY_TIERS.map((tier) => {
-              const isSelected = selectedTierId === tier.id;
-              return (
-                <motion.div
-                  key={tier.id}
-                  onClick={() => setSelectedTierId(tier.id)}
-                  whileHover={{ y: -4 }}
-                  className={`rounded-3xl overflow-hidden cursor-pointer transition-all duration-300 flex flex-col justify-between ${
-                    isSelected ? 'bg-kiswah-card-active' : 'bg-kiswah-card hover:border-[#d4af37]/50'
-                  }`}
-                >
-                  {/* Card Image Banner */}
-                  <div className="relative h-56 overflow-hidden">
-                    <img
-                      src={tier.image}
-                      alt={tier.title}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#121214] via-[#121214]/50 to-transparent" />
-
-                    <div className="absolute top-4 left-4">
-                      <span className="px-3 py-1 rounded-full bg-kiswah-gold text-[#080808] font-serif font-extrabold text-[10px] uppercase tracking-wider shadow-md">
-                        {tier.badge}
-                      </span>
-                    </div>
-
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <h4 className="text-xl font-serif font-bold text-white leading-snug">
-                        {tier.title}
-                      </h4>
-                      <p className="text-xs text-amber-300 font-medium mt-0.5">{tier.subtitle || tier.tagline}</p>
-                    </div>
-                  </div>
-
-                  {/* Card Content Body */}
-                  <div className="p-6 space-y-5 flex-1 flex flex-col justify-between">
-                    <div className="space-y-3">
-                      <div className="bg-white/[0.03] p-3 rounded-xl border border-[#d4af37]/15 space-y-1.5 text-xs">
-                        <div className="flex justify-between items-center text-slate-200 font-semibold">
-                          <span>Makkah:</span>
-                          <span className="text-[#d4af37] font-bold">{tier.makkahHotel}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-slate-200 font-semibold">
-                          <span>Madinah:</span>
-                          <span className="text-[#d4af37] font-bold">{tier.madinahHotel}</span>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1.5 pt-1">
-                        {tier.features.slice(0, 4).map((f, idx) => (
-                          <div key={idx} className="flex items-start gap-2 text-xs text-slate-300">
-                            <Check className="w-3.5 h-3.5 text-[#d4af37] shrink-0 mt-0.5" />
-                            <span className="font-light">{f}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
-                      <div>
-                        <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono block">Indicative Investment</span>
-                        {tier.isCustomPrice ? (
-                          <span className="text-lg font-serif font-bold text-[#d4af37]">Confidential Dossier</span>
-                        ) : (
-                          <span className="text-xl font-serif font-extrabold text-kiswah-gold">
-                            ~ ৳{tier.priceBDT.toLocaleString('en-IN')} <span className="text-xs text-slate-400 font-normal">/ guest</span>
-                          </span>
-                        )}
-                      </div>
-
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center border transition-all ${
-                        isSelected ? 'bg-kiswah-gold text-[#080808] border-[#d4af37]' : 'border-slate-700 text-slate-500'
-                      }`}>
-                        <Check className="w-4 h-4" />
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* STEP 2: IMMEDIATE PARAMETERS */}
-        <div className="space-y-6 mb-12">
-          <div className="flex items-center gap-3 border-b border-[#d4af37]/20 pb-4">
-            <div className="w-8 h-8 rounded-full bg-kiswah-gold text-[#080808] font-bold text-sm flex items-center justify-center font-serif">
-              2
-            </div>
-            <div>
-              <h3 className="text-lg font-serif font-bold text-white">Step 2: Immediate Parameters</h3>
-              <p className="text-xs text-slate-400">Select season horizon, party size, and flight tier</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            {/* Season Horizon */}
-            <div className="bg-kiswah-card p-5 rounded-2xl border border-[#d4af37]/20 space-y-3">
-              <label className="text-xs font-serif font-bold text-amber-300 uppercase tracking-wider block flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-[#d4af37]" />
-                <span>1. Season Horizon</span>
-              </label>
-              <div className="space-y-2">
-                {SEASON_HORIZONS.map((season) => (
-                  <button
-                    key={season.id}
-                    type="button"
-                    onClick={() => setSeasonId(season.id)}
-                    className={`w-full p-3 rounded-xl text-xs font-semibold border transition-all text-left flex items-center justify-between cursor-pointer ${
-                      seasonId === season.id
-                        ? 'bg-[#d4af37]/20 border-[#d4af37] text-amber-300'
-                        : 'bg-white/[0.02] border-slate-800 text-slate-300 hover:border-slate-700'
-                    }`}
-                  >
-                    <span>{season.label}</span>
-                    {seasonId === season.id && <Check className="w-4 h-4 text-[#d4af37]" />}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Party Size */}
-            <div className="bg-kiswah-card p-5 rounded-2xl border border-[#d4af37]/20 space-y-3">
-              <label className="text-xs font-serif font-bold text-amber-300 uppercase tracking-wider block flex items-center gap-2">
-                <Users className="w-4 h-4 text-[#d4af37]" />
-                <span>2. Traveling Party Size</span>
-              </label>
-              <div className="space-y-2">
-                {PARTY_SIZES.map((party) => (
-                  <button
-                    key={party.id}
-                    type="button"
-                    onClick={() => setPartyId(party.id)}
-                    className={`w-full p-3 rounded-xl text-xs font-semibold border transition-all text-left flex items-center justify-between cursor-pointer ${
-                      partyId === party.id
-                        ? 'bg-[#d4af37]/20 border-[#d4af37] text-amber-300'
-                        : 'bg-white/[0.02] border-slate-800 text-slate-300 hover:border-slate-700'
-                    }`}
-                  >
-                    <span>{party.label}</span>
-                    {partyId === party.id && <Check className="w-4 h-4 text-[#d4af37]" />}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Flight Tier */}
-            <div className="bg-kiswah-card p-5 rounded-2xl border border-[#d4af37]/20 space-y-3">
-              <label className="text-xs font-serif font-bold text-amber-300 uppercase tracking-wider block flex items-center gap-2">
-                <Plane className="w-4 h-4 text-[#d4af37]" />
-                <span>3. Flight Cabin Tier</span>
-              </label>
-              <div className="space-y-2">
-                {FLIGHT_TIERS.map((flight) => (
-                  <button
-                    key={flight.id}
-                    type="button"
-                    onClick={() => setFlightId(flight.id)}
-                    className={`w-full p-3 rounded-xl text-xs font-semibold border transition-all text-left flex items-center justify-between cursor-pointer ${
-                      flightId === flight.id
-                        ? 'bg-[#d4af37]/20 border-[#d4af37] text-amber-300'
-                        : 'bg-white/[0.02] border-slate-800 text-slate-300 hover:border-slate-700'
-                    }`}
-                  >
-                    <span>{flight.label}</span>
-                    {flightId === flight.id && <Check className="w-4 h-4 text-[#d4af37]" />}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* STEP 3: INSTANT VALUATION & DIRECT WHITE-GLOVE CTA */}
-        <div className="bg-gradient-to-b from-[#121214] to-[#080808] p-8 sm:p-10 rounded-3xl border-2 border-[#d4af37]/40 shadow-2xl kiswah-gold-glow grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        {/* ATTENTION-GRABBING CUSTOM TOUR BUILDER HERO BANNER */}
+        <div className="relative rounded-3xl p-1 bg-gradient-to-r from-[#996515] via-[#d4af37] via-[#ffd700] to-[#996515] shadow-[0_0_50px_rgba(212,175,55,0.18)] mb-14 group">
           
-          {/* Left Column: Live Valuation */}
-          <div className="lg:col-span-6 space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#d4af37]/10 border border-[#d4af37]/30 text-amber-300 text-xs font-bold uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Step 3: Instant Valuation Summary</span>
+          <div className="bg-[#0e0e11]/98 backdrop-blur-2xl rounded-[23px] p-6 sm:p-10 lg:p-12 relative overflow-hidden border border-[#d4af37]/40">
+            
+            {/* Ambient Background Decorative Grid */}
+            <div className="absolute top-0 right-0 w-[450px] h-[450px] bg-gradient-to-bl from-[#d4af37]/15 to-transparent rounded-full blur-3xl pointer-events-none" />
+
+            <div className="max-w-4xl mx-auto text-center space-y-6">
+              
+              {/* Prestigious Gold Badge */}
+              <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#d4af37]/15 border border-[#d4af37]/50 text-[#d4af37] text-xs font-serif font-extrabold uppercase tracking-widest shadow-lg">
+                <Crown className="w-4 h-4 text-[#d4af37]" />
+                <span>{isBn ? 'ভিআইপি বেসপোক সার্ভিস' : 'VIP BESPOKE SERVICE'}</span>
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              </div>
+
+              {/* Bold Call-out Headline */}
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-extrabold text-white leading-tight">
+                {isBn 
+                  ? 'আপনার পছন্দসই পবিত্র সফর সাজান — ' 
+                  : 'Design Your Own Sacred Journey — '
+                }
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#e5c158] via-[#d4af37] to-[#ffd700]">
+                  {isBn ? 'মাত্র ৩ ধাপে রাজকীয় অভিজ্ঞতা' : 'Tailored Luxury in 3 Steps'}
+                </span>
+              </h2>
+
+              {/* Subheading */}
+              <p className="text-slate-300 text-sm sm:text-base lg:text-lg font-light leading-relaxed max-w-2xl mx-auto">
+                {isBn 
+                  ? 'মক্কা ও মদিনায় ০ মিটার পেন্টহাউস, বিলাসবহুল জিএমসি চফার বহর, হারামাইন বুলেট ট্রেন ফার্স্ট ক্লাস ও প্রবীণ মোয়াল্লেম গাইডসহ আপনার বাজেট ও পছন্দ অনুযায়ী তাৎক্ষণিক হিসেব করুন।'
+                  : 'Experience absolute freedom. Select your royal courtyard penthouses, Maybach ground logistics, and dedicated scholar accompaniment with automated real-time valuation.'
+                }
+              </p>
+
+              {/* Action Buttons Group */}
+              <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+                
+                {/* Primary CTA: Launch Guided Wizard */}
+                <button
+                  type="button"
+                  onClick={onOpenWizard}
+                  className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-[#996515] via-[#d4af37] to-[#e5c158] hover:brightness-110 text-[#080809] font-serif font-extrabold text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2.5 shadow-2xl hover:scale-[1.02] cursor-pointer"
+                >
+                  <Sliders className="w-4 h-4 text-[#080809]" />
+                  <span>{isBn ? 'কাস্টম কনসিয়ার্জ উইজার্ড চালু করুন' : 'Launch Bespoke Concierge Wizard'}</span>
+                  <ArrowRight className="w-4 h-4 text-[#080809]" />
+                </button>
+
+                {/* Secondary CTA: Quick Lead Reservation */}
+                <button
+                  type="button"
+                  onClick={handleCustomReservation}
+                  className="w-full sm:w-auto px-7 py-4 rounded-xl bg-white/[0.04] hover:bg-white/[0.09] text-amber-300 hover:text-white border border-[#d4af37]/40 font-serif font-bold text-xs sm:text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <PhoneCall className="w-4 h-4 text-[#d4af37]" />
+                  <span>{isBn ? 'সরাসরি ডিরেক্টর পরামর্শ চান' : 'Consult Private Director'}</span>
+                </button>
+
+              </div>
+
             </div>
 
+          </div>
+
+        </div>
+
+        {/* 3-STEP VISUAL ROADMAP CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-12">
+          {stepsData.map((item, idx) => {
+            const Icon = item.icon;
+            return (
+              <motion.div
+                key={item.step}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: idx * 0.1 }}
+                whileHover={{ y: -6 }}
+                className="bg-[#121215] rounded-3xl border border-[#d4af37]/30 hover:border-[#d4af37]/70 p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 shadow-2xl relative overflow-hidden group hover:shadow-[0_10px_30px_rgba(212,175,55,0.1)]"
+              >
+                {/* Step Watermark */}
+                <div className="absolute top-3 right-4 text-4xl font-mono font-extrabold text-white/[0.04] group-hover:text-[#d4af37]/10 transition-colors pointer-events-none select-none">
+                  {item.step}
+                </div>
+
+                <div className="space-y-4">
+                  {/* Step Tag & Icon */}
+                  <div className="flex items-center justify-between">
+                    <div className="w-12 h-12 rounded-2xl bg-[#d4af37]/10 border border-[#d4af37]/35 text-[#d4af37] flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                      <Icon className="w-6 h-6 text-[#d4af37]" />
+                    </div>
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-amber-300 bg-white/[0.03] px-2.5 py-1 rounded-full border border-slate-800">
+                      {isBn ? item.tagBn : item.tagEn}
+                    </span>
+                  </div>
+
+                  {/* Title & Desc */}
+                  <div className="space-y-2 pt-1">
+                    <h3 className="text-xl font-serif font-bold text-white group-hover:text-[#d4af37] transition-colors">
+                      {isBn ? item.titleBn : item.titleEn}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-300 font-light leading-relaxed">
+                      {isBn ? item.descBn : item.descEn}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Card Footer Feature Indicator */}
+                <div className="pt-5 mt-5 border-t border-slate-800 flex items-center justify-between text-xs text-[#d4af37]">
+                  <span className="font-serif font-semibold">
+                    {isBn ? 'সম্পূর্ণ স্বয়ংক্রিয় ও লাইভ' : '100% Customizable'}
+                  </span>
+                  <CheckCircle2 className="w-4 h-4 text-[#d4af37]" />
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* REAL-TIME VALUATION PREVIEW BANNER */}
+        <div className="bg-[#121215]/80 rounded-2xl border border-slate-800 p-5 sm:p-6 backdrop-blur-xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-400 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-6 h-6" />
+            </div>
             <div>
-              <span className="text-xs text-slate-400 font-serif uppercase tracking-widest block">Estimated Total Investment ({selectedParty.label})</span>
-              {valuation.isCustom ? (
-                <div className="mt-1">
-                  <span className="text-3xl sm:text-4xl font-serif font-extrabold text-kiswah-gold">
-                    Confidential Custom Quotation
-                  </span>
-                  <p className="text-xs text-slate-400 mt-1">Tailored charter pricing upon briefing</p>
-                </div>
-              ) : (
-                <div className="flex items-baseline gap-3 mt-1">
-                  <span className="text-3xl sm:text-5xl font-serif font-extrabold text-kiswah-gold drop-shadow-md">
-                    ৳{valuation.totalBDT.toLocaleString('en-IN')}
-                  </span>
-                  <span className="text-sm font-semibold text-slate-400">BDT</span>
-                  <span className="text-xs sm:text-sm text-amber-300 font-serif">
-                    (~ ${valuation.totalUSD.toLocaleString()} USD)
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Inclusions summary bullets */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-300 pt-2 border-t border-slate-800">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[#d4af37] shrink-0" />
-                <span>Diplomatic CIP Fast-Track at DAC & JED</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[#d4af37] shrink-0" />
-                <span>24/7 Personal Concierge & Butler</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[#d4af37] shrink-0" />
-                <span>Haramain Bullet Train VIP First Class</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[#d4af37] shrink-0" />
-                <span>Private GMC Yukon / Maybach Chauffeur</span>
-              </div>
+              <h4 className="font-serif font-bold text-base text-white">
+                {isBn ? 'স্বচ্ছ বাজেট ও সরাসরি সৌদি রিয়েল-টাইম হিসাব' : 'Instant Real-Time Pricing Engine'}
+              </h4>
+              <p className="text-xs text-slate-400 font-light mt-0.5">
+                {isBn 
+                  ? 'কোনো গোপন চার্জ নেই • আল আহসানিয়া ট্রান্সপোর্ট গ্রিড ও ৫-স্টার হোটেলের সরাসরি চুক্তি অনুযায়ী মূল্য নির্ধারিত।' 
+                  : 'Zero hidden fees. Rates reflect direct Al Ahsaniya fleet infrastructure & MoRA verified hotel contracts.'}
+              </p>
             </div>
           </div>
 
-          {/* Right Column: White-Glove Action CTAs */}
-          <div className="lg:col-span-6 space-y-3">
-            <button
-              onClick={handleRequestDossier}
-              className="w-full py-4 px-6 bg-kiswah-gold hover:bg-kiswah-gold-hover text-[#080808] font-serif font-bold rounded-2xl text-sm sm:text-base tracking-wider uppercase shadow-2xl flex items-center justify-center gap-2.5 cursor-pointer transition-transform hover:scale-[1.02]"
-            >
-              <FileText className="w-5 h-5 text-[#080808]" />
-              <span>Request Confidential VIP Dossier</span>
-            </button>
+          <div className="flex items-center gap-4 shrink-0 w-full md:w-auto justify-end">
+            <div className="text-right">
+              <span className="text-[10px] text-slate-400 font-mono uppercase block">
+                {isBn ? 'নমুনা হিসেব শুরু' : 'Sample Curations From'}
+              </span>
+              <div className="text-lg font-serif font-extrabold text-kiswah-gold">
+                ৳185,000 <span className="text-xs text-slate-400 font-normal">/ person</span>
+              </div>
+            </div>
 
             <button
-              onClick={handleWhatsAppConnect}
-              className="w-full py-3.5 px-6 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-white font-serif font-semibold rounded-2xl text-xs sm:text-sm tracking-wider uppercase flex items-center justify-center gap-2 cursor-pointer transition-colors"
+              type="button"
+              onClick={onOpenWizard}
+              className="px-5 py-2.5 rounded-xl bg-kiswah-gold text-[#080809] font-serif font-bold text-xs uppercase tracking-wider hover:bg-amber-300 transition-colors cursor-pointer shadow-md flex items-center gap-1.5"
             >
-              <MessageSquare className="w-4 h-4 text-emerald-400" />
-              <span>Connect with Private Client Director</span>
+              <span>{isBn ? 'শুরু করুন' : 'Curate Now'}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
-
-            <p className="text-[11px] text-center text-slate-400 font-light pt-1">
-              Confidentiality Guaranteed • Private Briefing Meeting at Gulshan-2, Dhaka
-            </p>
           </div>
-
         </div>
 
       </div>
