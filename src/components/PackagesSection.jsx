@@ -11,7 +11,7 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
-import { packagesAPI } from '../services/api';
+import { packagesAPI, hotelsAPI } from '../services/api';
 import { DICTIONARY } from '../data/mockData';
 
 export default function PackagesSection({ locale = 'en', onSelectPackage = () => {}, onOpenWizard = () => {} }) {
@@ -20,6 +20,7 @@ export default function PackagesSection({ locale = 'en', onSelectPackage = () =>
 
   const [activeTab, setActiveTab] = useState('umrah'); // 'umrah' | 'hajj'
   const [packages, setPackages] = useState([]);
+  const [hotelsList, setHotelsList] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Swiper instance ref
@@ -34,17 +35,33 @@ export default function PackagesSection({ locale = 'en', onSelectPackage = () =>
 
   useEffect(() => {
     fetchPackages(activeTab);
+    fetchHotels();
 
-    // Live CMS Binding: React immediately when admin adds/edits/deletes packages in Admin Dashboard
+    // Live CMS Binding: React immediately when admin adds/edits/deletes packages or hotels
     const handlePackagesUpdated = () => {
       fetchPackages(activeTab);
     };
 
+    const handleHotelsUpdated = () => {
+      fetchHotels();
+    };
+
     window.addEventListener('horizon:packages-updated', handlePackagesUpdated);
+    window.addEventListener('horizon:hotels-updated', handleHotelsUpdated);
     return () => {
       window.removeEventListener('horizon:packages-updated', handlePackagesUpdated);
+      window.removeEventListener('horizon:hotels-updated', handleHotelsUpdated);
     };
   }, [activeTab]);
+
+  const fetchHotels = async () => {
+    try {
+      const data = await hotelsAPI.getAll('all');
+      setHotelsList(data || []);
+    } catch (err) {
+      console.warn('Failed to load hotels catalog:', err);
+    }
+  };
 
   // Lock body scroll when detail modal is open
   useEffect(() => {
@@ -74,8 +91,15 @@ export default function PackagesSection({ locale = 'en', onSelectPackage = () =>
     const isClocktower = pkg.id?.includes('clocktower') || pkg.title_en?.includes('Clock Tower');
     const isHajj = pkg.type === 'hajj';
 
-    return {
-      amenities: [
+    // 1. Amenities / Inclusions
+    let amenities = [];
+    if (Array.isArray(pkg.inclusions) && pkg.inclusions.length > 0) {
+      amenities = pkg.inclusions.map((inc) => ({
+        title: isBn ? (inc.title_bn || inc.title) : (inc.title || inc.title_bn),
+        desc: isBn ? (inc.desc_bn || inc.desc) : (inc.desc || inc.desc_bn)
+      }));
+    } else {
+      amenities = [
         {
           title: isBn ? 'ভিআইপি ওমরাহ/হজ ভিসা ও নুসুক পারমিট' : 'VIP Visa & Nusuk Priority Rawdah Permit',
           desc: isBn ? 'সৌদি সরকারের সরাসরি অনুমোদিত প্রোটোকল ও দ্রুত রওজা পারমিট সহায়তা।' : 'Government-verified visa processing with priority Nusuk Rawdah reservation.'
@@ -96,8 +120,32 @@ export default function PackagesSection({ locale = 'en', onSelectPackage = () =>
           title: isBn ? 'সিআইপি ফাস্ট-ট্র্যাক এয়ারপোর্ট প্রোটোকল' : 'CIP Fast-Track Airport Protocol',
           desc: isBn ? 'ঢাকা ও জেদ্দা উভয় বিমানবন্দরে কূটনৈতিক লাইনে দ্রুত ইমিগ্রেশন ও লাউঞ্জ সুবিধা।' : 'Expedited customs, diplomatic immigration clearance, and lounge access at DAC & JED.'
         }
-      ],
-      hotels: [
+      ];
+    }
+
+    // 2. Hotels (Dynamic Directory Binding)
+    let hotels = [];
+    if (Array.isArray(pkg.selectedHotelIds) && pkg.selectedHotelIds.length > 0) {
+      const resolved = pkg.selectedHotelIds.map((id) => {
+        return (hotelsList || []).find((h) => h.id === id);
+      }).filter(Boolean);
+
+      if (resolved.length > 0) {
+        hotels = resolved.map((h) => {
+          const isMadinah = (h.city || '').toLowerCase().includes('madinah');
+          return {
+            city: isBn ? (isMadinah ? 'মদিনা মুনাওয়ারা' : 'মক্কা মুকাররমা') : (isMadinah ? 'Madinah Al-Munawwarah' : 'Makkah Al-Mukarramah'),
+            hotel: isBn ? (h.nameBn || h.name) : (h.name || h.nameBn),
+            dist: isBn ? (h.distBn || h.dist) : (h.dist || h.distBn),
+            rating: h.starRating || `${h.stars || 5}-Star VIP`,
+            features: Array.isArray(h.features) ? h.features.join(' • ') : (h.features || '')
+          };
+        });
+      }
+    }
+
+    if (hotels.length === 0) {
+      hotels = [
         {
           city: isBn ? 'মক্কা মুকাররমা' : 'Makkah Al-Mukarramah',
           hotel: isClocktower ? 'Raffles Makkah Palace / Fairmont Clock Tower' : 'Swissôtel Makkah / Pullman Zamzam',
@@ -112,19 +160,32 @@ export default function PackagesSection({ locale = 'en', onSelectPackage = () =>
           rating: '5-Star Ultra Luxury',
           features: isBn ? 'মসজিদে নববী সংলগ্ন মনোরম ভিউ ও নিরিবিলি আধুনিক স্যুইট' : "Direct pedestrian access to the Prophet's Mosque courtyard and luxury amenities."
         }
-      ],
-      flights: {
-        carrier: isBn ? 'সাউদিয়া এয়ারলাইন্স অথবা বিমান বাংলাদেশ ভিআইপি' : 'Saudia Airlines or Biman Bangladesh VIP',
-        aircraft: 'Boeing 787-9 Dreamliner / Boeing 777-300ER',
-        route: isHajj 
-          ? (isBn ? 'ঢাকা ➔ মদিনা ➔ মক্কা ➔ জেদ্দা ➔ ঢাকা (ডিরেক্ট)' : 'Dhaka ➔ Madinah ➔ Makkah ➔ Jeddah ➔ Dhaka (Direct)')
-          : (isBn ? 'ঢাকা ➔ জেদ্দা ➔ মদিনা ➔ ঢাকা (ডিরেক্ট নন-স্টপ)' : 'Dhaka ➔ Jeddah ➔ Madinah ➔ Dhaka (Direct Non-Stop)'),
-        luggage: isBn 
-          ? '২ টি লাগেজ (২৩ কেজি করে = ৪৬ কেজি) + ৭ কেজি হ্যান্ডব্যাগ + ৫ লিটার জমজম বক্স' 
-          : '2 pieces check-in (23kg each = 46kg) + 7kg cabin baggage + 5L sealed Zamzam box',
-        vipAccess: isBn ? 'হযরত শাহজালাল ভিআইপি সিআইপি লাউঞ্জ এক্সেস ও ফাস্ট-ট্র্যাক বোর্ডিং' : 'CIP Fast-Track Lounge Access at DAC & Royal Terminal Protocol at JED'
-      },
-      itinerary: [
+      ];
+    }
+
+    // 3. Flights
+    const flights = {
+      carrier: pkg.flightTier || (isBn ? 'সাউদিয়া এয়ারলাইন্স অথবা বিমান বাংলাদেশ ভিআইপি' : 'Saudia Airlines or Biman Bangladesh VIP'),
+      aircraft: pkg.flightAircraft || 'Boeing 787-9 Dreamliner / Boeing 777-300ER',
+      route: pkg.flightRoute || (isHajj 
+        ? (isBn ? 'ঢাকা ➔ মদিনা ➔ মক্কা ➔ জেদ্দা ➔ ঢাকা (ডিরেক্ট)' : 'Dhaka ➔ Madinah ➔ Makkah ➔ Jeddah ➔ Dhaka (Direct)')
+        : (isBn ? 'ঢাকা ➔ জেদ্দা ➔ মদিনা ➔ ঢাকা (ডিরেক্ট নন-স্টপ)' : 'Dhaka ➔ Jeddah ➔ Madinah ➔ Dhaka (Direct Non-Stop)')),
+      luggage: pkg.flightLuggage || (isBn 
+        ? '২ টি লাগেজ (২৩ কেজি করে = ৪৬ কেজি) + ৭ কেজি হ্যান্ডব্যাগ + ৫ লিটার জমজম বক্স' 
+        : '2 pieces check-in (23kg each = 46kg) + 7kg cabin baggage + 5L sealed Zamzam box'),
+      vipAccess: isBn ? 'হযরত শাহজালাল ভিআইপি সিআইপি লাউঞ্জ এক্সেস ও ফাস্ট-ট্র্যাক বোর্ডিং' : 'CIP Fast-Track Lounge Access at DAC & Royal Terminal Protocol at JED'
+    };
+
+    // 4. Itinerary
+    let itinerary = [];
+    if (Array.isArray(pkg.itinerary) && pkg.itinerary.length > 0) {
+      itinerary = pkg.itinerary.map((step, idx) => ({
+        day: isBn ? (step.day_bn || step.day || `দিন ${idx + 1}`) : (step.day || step.day_bn || `Day ${idx + 1}`),
+        title: isBn ? (step.title_bn || step.title) : (step.title || step.title_bn),
+        desc: isBn ? (step.desc_bn || step.desc) : (step.desc || step.desc_bn)
+      }));
+    } else {
+      itinerary = [
         {
           day: isBn ? 'দিন ১' : 'Day 1',
           title: isBn ? 'ঢাকা ত্যাগ ও জেদ্দা রাজকীয় আগমন' : 'Dhaka Departure & Royal Jeddah Arrival',
@@ -155,8 +216,10 @@ export default function PackagesSection({ locale = 'en', onSelectPackage = () =>
           title: isBn ? 'মদিনা জিয়ারত ও ঢাকায় সম্মানজনক প্রত্যাবর্তন' : 'Madinah Ziyarah & Homeward Return',
           desc: isBn ? 'মসজিদে কুবা, উহুদ প্রান্তর পরিদর্শন শেষে মদিনা বিমানবন্দর থেকে সরাসরি ঢাকায় প্রত্যাবর্তন।' : 'Visiting Quba Mosque and Mount Uhud before direct VIP flight return to Dhaka.'
         }
-      ]
-    };
+      ];
+    }
+
+    return { amenities, hotels, flights, itinerary };
   };
 
   return (
@@ -434,7 +497,7 @@ export default function PackagesSection({ locale = 'en', onSelectPackage = () =>
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.94, y: 15 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 280 }}
-                className="relative bg-[#101013] border border-[#d4af37]/40 rounded-3xl max-w-3xl w-full shadow-2xl overflow-hidden z-10 my-auto flex flex-col max-h-[90vh]"
+                className="relative bg-[#101013] border border-[#d4af37]/40 rounded-3xl max-w-3xl w-full shadow-2xl overflow-hidden z-10 my-auto flex flex-col max-h-[85vh]"
               >
                 {/* Header Visual with Gradient Overlay */}
                 <div className="relative h-48 sm:h-56 shrink-0 overflow-hidden">
@@ -519,8 +582,8 @@ export default function PackagesSection({ locale = 'en', onSelectPackage = () =>
                   </button>
                 </div>
 
-                {/* Tab Content Body (Scrollable) */}
-                <div className="p-5 sm:p-7 overflow-y-auto space-y-4 flex-1">
+                {/* Tab Content Body (Scrollable with explicit flex constraint) */}
+                <div className="p-5 sm:p-7 overflow-y-auto space-y-4 flex-1 min-h-0 pr-2 sm:pr-4">
                   
                   {/* TAB 1: Included Amenities */}
                   {detailTab === 'amenities' && (
@@ -656,22 +719,27 @@ export default function PackagesSection({ locale = 'en', onSelectPackage = () =>
                     <motion.div
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="space-y-4"
+                      className="space-y-4 pb-6"
                     >
-                      <h4 className="text-xs uppercase font-mono tracking-widest text-[#d4af37]">
-                        {isBn ? '১০ দিনের সাজানো পবিত্র সফরসূচি' : 'Day-by-Day Journey Itinerary'}
-                      </h4>
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs uppercase font-mono tracking-widest text-[#d4af37]">
+                          {isBn ? `${tabsData.itinerary.length} দিনের সাজানো পবিত্র সফরসূচি` : `${tabsData.itinerary.length}-Day Detailed Itinerary`}
+                        </h4>
+                        <span className="text-[11px] font-mono text-slate-400">
+                          {isBn ? 'প্রতিদিনের পূর্ণাঙ্গ বিবরণ' : 'Daily Plan'}
+                        </span>
+                      </div>
                       <div className="space-y-3">
                         {tabsData.itinerary.map((step, i) => (
-                          <div key={i} className="flex gap-4 p-3.5 rounded-2xl bg-white/[0.02] border border-slate-800">
-                            <span className="w-16 shrink-0 text-xs font-mono font-bold text-[#d4af37] pt-0.5">
+                          <div key={i} className="flex gap-4 p-4 rounded-2xl bg-white/[0.02] border border-slate-800 hover:border-[#d4af37]/40 transition-colors">
+                            <span className="w-20 shrink-0 text-xs font-mono font-bold text-[#d4af37] pt-0.5">
                               {step.day}
                             </span>
-                            <div className="space-y-1">
+                            <div className="space-y-1 flex-1">
                               <h5 className="text-sm font-serif font-bold text-white">
                                 {step.title}
                               </h5>
-                              <p className="text-xs text-slate-400 font-light leading-relaxed">
+                              <p className="text-xs text-slate-300 font-light leading-relaxed">
                                 {step.desc}
                               </p>
                             </div>

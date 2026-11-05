@@ -3,10 +3,28 @@ import {
   ShieldCheck, Lock, LogOut, Package, ShoppingBag, Car, 
   ClipboardList, Plus, Trash2, Edit3, Save, X, Check, 
   MessageSquare, ExternalLink, RefreshCw, AlertCircle, 
-  Sparkles, Crown, DollarSign, Calendar, Eye, Phone, MapPin, Tag, CheckCircle2, Building2
+  Sparkles, Crown, DollarSign, Calendar, Eye, Phone, MapPin, Tag, CheckCircle2, Building2,
+  Plane, Luggage, RotateCcw, ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { authAPI, packagesAPI, productsAPI, transportAPI, ordersAPI, hotelsAPI } from '../services/api';
+
+const DEFAULT_ITINERARY_TEMPLATE = [
+  { day: 'Day 1', day_bn: 'দিন ১', title: 'Dhaka Departure & Royal Jeddah Arrival', title_bn: 'ঢাকা ত্যাগ ও জেদ্দা রাজকীয় আগমন', desc: 'VIP flight from DAC to JED, private chauffeur transfer to Makkah 5-star hotel.', desc_bn: 'ঢাকা থেকে বিমানে জেদ্দা পৌঁছানো এবং প্রাইভেট চফারে মক্কা ৫-স্টার হোটেলে স্থানান্তর।' },
+  { day: 'Day 2', day_bn: 'দিন ২', title: 'Guided Umrah under Senior Scholar Direction', title_bn: 'মোয়াল্লিমের নেতৃত্বে পবিত্র উমরাহ পালন', desc: 'Performing peaceful Umrah rites with dedicated scholar guidance.', desc_bn: 'অভিজ্ঞ আলেমের নির্দেশনায় তাওয়াফ, সাঈ ও হালাল সঠিকভাবে সুন্নাহ মোতাবেক সম্পন্ন করা।' },
+  { day: 'Day 3–5', day_bn: 'দিন ৩–৫', title: 'Makkah Sacred Ziyarah & Prayers', title_bn: 'মক্কার ঐতিহাসিক জিয়ারত ও ইবাদত', desc: 'Excursion to Cave Hira, Thawr, Mina, and unhurried courtyard prayers.', desc_bn: 'জাবালে নূর, জাবালে সওর ও আরাফাত পরিদর্শন। হারামে নফল ইবাদতের পর্যাপ্ত সময়।' },
+  { day: 'Day 6', day_bn: 'দিন ৬', title: 'Haramain High-Speed Train to Madinah', title_bn: 'হারামাইন বুলেট ট্রেনে মদিনা যাত্রা', desc: 'First-Class high-speed bullet train transfer to Madinah Al-Munawwarah.', desc_bn: 'বুলেট ট্রেনের ফার্স্ট ক্লাস কেবিনে আরামদায়কভাবে মদিনায় গমন।' },
+  { day: 'Day 7–8', day_bn: 'দিন ৭–৮', title: "Rawdah Sharif Ziyarah & Prophet's Mosque", title_bn: 'রওজা শরিফ জিয়ারত ও মসজিদে নববী', desc: "Priority entry to Rawdah Sharif and spiritual solace in the Prophet's Mosque.", desc_bn: 'নুসুক অ্যাপ পারমিটে রিয়াদুল জান্নাতে সালাত ও রাসুলুল্লাহ (সাঃ)-এর রওজায় সালাম পেশ।' },
+  { day: 'Day 9–10', day_bn: 'দিন ৯–১০', title: 'Madinah Ziyarah & Homeward Return', title_bn: 'মদিনা জিয়ারত ও ঢাকায় প্রত্যাবর্তন', desc: 'Visiting Quba Mosque and Mount Uhud before direct flight return to Dhaka.', desc_bn: 'মসজিদে কুবা ও উহুদ প্রান্তর পরিদর্শন শেষে ঢাকায় সম্মানজনক প্রত্যাবর্তন।' }
+];
+
+const DEFAULT_INCLUSIONS_TEMPLATE = [
+  { title: 'VIP Visa & Priority Rawdah Permit', title_bn: 'ভিআইপি ভিসা ও নুসুক অগ্রাধিকার রওজা পারমিট', desc: 'Ministry-verified visa with fast-track Nusuk Rawdah reservation.' },
+  { title: '1-on-1 Senior Scholar Moallim', title_bn: 'ব্যক্তিগত অভিজ্ঞ আলেম মোয়াল্লিম গাইড', desc: 'Experienced Bengali scholar escorting every ritual and tawaf.' },
+  { title: 'Private AC Fleet & Bullet Train 1st Class', title_bn: 'প্রাইভেট এসি পরিবহন ও বুলেট ট্রেন ফার্স্ট ক্লাস', desc: 'Airport transfers and intercity travel in luxury vehicles.' },
+  { title: '5L Zamzam & Dates to Dhaka Home', title_bn: 'ঢাকায় বাসায় ৫ লিটার জমজম ও খেজুর ডেলিভারি', desc: 'Sealed official Zamzam delivered to your doorstep in Dhaka.' },
+  { title: 'CIP Airport Fast-Track Protocol', title_bn: 'সিআইপি ফাস্ট-ট্র্যাক এয়ারপোর্ট প্রোটোকল', desc: 'Expedited customs and lounge access at Dhaka & Jeddah airports.' }
+];
 
 export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
   if (!isOpen) return null;
@@ -81,7 +99,14 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
     isPopular: false,
     image: 'https://images.unsplash.com/photo-1591604466107-ec97de577aff?auto=format&fit=crop&q=80&w=800',
     features_en: 'VIP Visa Processing\nDirect Flight Ticket\n5-Star Courtyard Hotel\nAC Transport Service',
-    features_bn: 'ভিআইপি ভিসা প্রসেসিং\nডিরেক্ট ফ্লাইট টিকিট\n৫-স্টার উঠানমুখী হোটেল\nএসি পরিবহন সুবিধা'
+    features_bn: 'ভিআইপি ভিসা প্রসেসিং\nডিরেক্ট ফ্লাইট টিকিট\n৫-স্টার উঠানমুখী হোটেল\nএসি পরিবহন সুবিধা',
+    selectedHotelIds: [],
+    flightTier: 'Direct Flight - Saudia / Biman VIP',
+    flightLuggage: '2x 23kg Check-in (46kg) + 7kg Cabin Baggage + 5L Zamzam',
+    flightRoute: 'Dhaka ➔ Jeddah ➔ Madinah ➔ Dhaka (Direct)',
+    flightAircraft: 'Boeing 787-9 Dreamliner / Boeing 777-300ER',
+    itinerary: DEFAULT_ITINERARY_TEMPLATE,
+    inclusions: DEFAULT_INCLUSIONS_TEMPLATE
   });
 
   // Product Form State
@@ -170,27 +195,62 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
   };
 
   // --- PACKAGE ACTIONS ---
+  const resetPackageForm = () => {
+    setPackageForm({
+      type: 'umrah',
+      title_en: '',
+      title_bn: '',
+      badge_en: 'VIP Sanctum',
+      badge_bn: 'ভিআইপি স্যাঙ্কটাম',
+      priceBDT: 185000,
+      priceUSD: 1540,
+      isPopular: false,
+      image: 'https://images.unsplash.com/photo-1591604466107-ec97de577aff?auto=format&fit=crop&q=80&w=800',
+      features_en: 'VIP Visa Processing\nDirect Flight Ticket\n5-Star Courtyard Hotel\nAC Transport Service',
+      features_bn: 'ভিআইপি ভিসা প্রসেসিং\nডিরেক্ট ফ্লাইট টিকিট\n৫-স্টার উঠানমুখী হোটেল\nএসি পরিবহন সুবিধা',
+      selectedHotelIds: [],
+      flightTier: 'Direct Flight - Saudia / Biman VIP',
+      flightLuggage: '2x 23kg Check-in (46kg) + 7kg Cabin Baggage + 5L Zamzam',
+      flightRoute: 'Dhaka ➔ Jeddah ➔ Madinah ➔ Dhaka (Direct)',
+      flightAircraft: 'Boeing 787-9 Dreamliner / Boeing 777-300ER',
+      itinerary: DEFAULT_ITINERARY_TEMPLATE,
+      inclusions: DEFAULT_INCLUSIONS_TEMPLATE
+    });
+  };
+
   const handleSavePackage = async (e) => {
     e.preventDefault();
     const payload = {
       ...packageForm,
-      features_en: packageForm.features_en.split('\n').filter(Boolean),
-      features_bn: packageForm.features_bn.split('\n').filter(Boolean),
+      features_en: typeof packageForm.features_en === 'string' 
+        ? packageForm.features_en.split('\n').filter(Boolean) 
+        : packageForm.features_en,
+      features_bn: typeof packageForm.features_bn === 'string' 
+        ? packageForm.features_bn.split('\n').filter(Boolean) 
+        : packageForm.features_bn,
       priceBDT: Number(packageForm.priceBDT),
       priceUSD: Number(packageForm.priceUSD) || Math.round(Number(packageForm.priceBDT) / 120),
       price_en: `৳ ${Number(packageForm.priceBDT).toLocaleString()} / $${Number(packageForm.priceUSD || Math.round(packageForm.priceBDT / 120))}`,
-      price_bn: `৳ ${Number(packageForm.priceBDT).toLocaleString()}/-`
+      price_bn: `৳ ${Number(packageForm.priceBDT).toLocaleString()}/-`,
+      selectedHotelIds: packageForm.selectedHotelIds || [],
+      flightTier: packageForm.flightTier,
+      flightLuggage: packageForm.flightLuggage,
+      flightRoute: packageForm.flightRoute,
+      flightAircraft: packageForm.flightAircraft,
+      itinerary: packageForm.itinerary || [],
+      inclusions: packageForm.inclusions || []
     };
 
     if (editingPackage) {
       await packagesAPI.update(editingPackage.id, payload);
-      showNotification('Package updated successfully!');
+      showNotification('Package updated successfully with full details & hotel directory binding!');
     } else {
       await packagesAPI.create(payload);
-      showNotification('New package created successfully!');
+      showNotification('New package created successfully with full custom details!');
     }
 
     setEditingPackage(null);
+    resetPackageForm();
     const updated = await packagesAPI.getAll('all');
     setPackages(updated);
   };
@@ -214,13 +274,104 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
       priceBDT: pkg.priceBDT || 185000,
       priceUSD: pkg.priceUSD || 1540,
       isPopular: Boolean(pkg.isPopular),
-      image: pkg.image || '',
+      image: pkg.image || 'https://images.unsplash.com/photo-1591604466107-ec97de577aff?auto=format&fit=crop&q=80&w=800',
       features_en: Array.isArray(pkg.features_en) ? pkg.features_en.join('\n') : (pkg.features_en || ''),
-      features_bn: Array.isArray(pkg.features_bn) ? pkg.features_bn.join('\n') : (pkg.features_bn || '')
+      features_bn: Array.isArray(pkg.features_bn) ? pkg.features_bn.join('\n') : (pkg.features_bn || ''),
+      selectedHotelIds: Array.isArray(pkg.selectedHotelIds) ? pkg.selectedHotelIds : [],
+      flightTier: pkg.flightTier || 'Direct Flight - Saudia / Biman VIP',
+      flightLuggage: pkg.flightLuggage || '2x 23kg Check-in (46kg) + 7kg Cabin Baggage + 5L Zamzam',
+      flightRoute: pkg.flightRoute || 'Dhaka ➔ Jeddah ➔ Madinah ➔ Dhaka (Direct)',
+      flightAircraft: pkg.flightAircraft || 'Boeing 787-9 Dreamliner / Boeing 777-300ER',
+      itinerary: Array.isArray(pkg.itinerary) && pkg.itinerary.length > 0 ? pkg.itinerary : DEFAULT_ITINERARY_TEMPLATE,
+      inclusions: Array.isArray(pkg.inclusions) && pkg.inclusions.length > 0 ? pkg.inclusions : DEFAULT_INCLUSIONS_TEMPLATE
     });
     setTimeout(() => {
       packageFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 50);
+  };
+
+  // Toggle hotel selection in package
+  const toggleHotelSelection = (hotelId) => {
+    setPackageForm((prev) => {
+      const currentList = prev.selectedHotelIds || [];
+      const exists = currentList.includes(hotelId);
+      return {
+        ...prev,
+        selectedHotelIds: exists
+          ? currentList.filter((id) => id !== hotelId)
+          : [...currentList, hotelId]
+      };
+    });
+  };
+
+  // Add Itinerary Day
+  const handleAddItineraryDay = () => {
+    setPackageForm((prev) => {
+      const currentList = prev.itinerary || [];
+      const nextDayNum = currentList.length + 1;
+      const newDay = {
+        day: `Day ${nextDayNum}`,
+        day_bn: `দিন ${nextDayNum}`,
+        title: '',
+        title_bn: '',
+        desc: '',
+        desc_bn: ''
+      };
+      return {
+        ...prev,
+        itinerary: [...currentList, newDay]
+      };
+    });
+  };
+
+  // Update Itinerary Day
+  const handleUpdateItineraryDay = (index, field, value) => {
+    setPackageForm((prev) => {
+      const updated = [...(prev.itinerary || [])];
+      updated[index] = { ...updated[index], [field]: value };
+      return { ...prev, itinerary: updated };
+    });
+  };
+
+  // Delete Itinerary Day
+  const handleDeleteItineraryDay = (index) => {
+    setPackageForm((prev) => ({
+      ...prev,
+      itinerary: (prev.itinerary || []).filter((_, i) => i !== index)
+    }));
+  };
+
+  // Add Custom Inclusion
+  const handleAddInclusion = (title = '', title_bn = '', desc = '', desc_bn = '') => {
+    setPackageForm((prev) => ({
+      ...prev,
+      inclusions: [
+        ...(prev.inclusions || []),
+        {
+          title: title || 'New White-Glove Privilege',
+          title_bn: title_bn || 'নতুন ভিআইপি সুবিধা',
+          desc: desc || 'Dedicated privilege ensuring spiritual comfort and peace of mind.',
+          desc_bn: desc_bn || 'আপনার পবিত্র সফরে পরম প্রশান্তি ও স্বাচ্ছন্দ্য নিশ্চিতকরণ সুবিধা।'
+        }
+      ]
+    }));
+  };
+
+  // Update Inclusion
+  const handleUpdateInclusion = (index, field, value) => {
+    setPackageForm((prev) => {
+      const updated = [...(prev.inclusions || [])];
+      updated[index] = { ...updated[index], [field]: value };
+      return { ...prev, inclusions: updated };
+    });
+  };
+
+  // Delete Inclusion
+  const handleDeleteInclusion = (index) => {
+    setPackageForm((prev) => ({
+      ...prev,
+      inclusions: (prev.inclusions || []).filter((_, i) => i !== index)
+    }));
   };
 
   // --- PRODUCT ACTIONS ---
@@ -699,127 +850,581 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
                           )}
                         </div>
 
-                        <form onSubmit={handleSavePackage} className="space-y-4 text-xs">
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div>
-                              <label className="text-slate-300 font-semibold block mb-1">Package Type</label>
-                              <select
-                                value={packageForm.type}
-                                onChange={(e) => setPackageForm({ ...packageForm, type: e.target.value })}
-                                className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
+                        <form onSubmit={handleSavePackage} className="space-y-6 text-xs">
+                          
+                          {/* PANEL 1: CORE PACKAGE ATTRIBUTES */}
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+                              <Package className="w-4 h-4 text-[#d4af37]" />
+                              <h4 className="text-sm font-serif font-bold text-white">1. Core Package Details & Pricing</h4>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                              <div>
+                                <label className="text-slate-300 font-semibold block mb-1">Package Type *</label>
+                                <select
+                                  value={packageForm.type}
+                                  onChange={(e) => setPackageForm({ ...packageForm, type: e.target.value })}
+                                  className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
+                                >
+                                  <option value="umrah">VIP Umrah Package</option>
+                                  <option value="hajj">Royal Hajj Package</option>
+                                </select>
+                              </div>
+
+                              <div>
+                                <label className="text-slate-300 font-semibold block mb-1">Title (English) *</label>
+                                <input
+                                  type="text"
+                                  required
+                                  value={packageForm.title_en}
+                                  onChange={(e) => setPackageForm({ ...packageForm, title_en: e.target.value })}
+                                  placeholder="e.g. VIP Clock Tower Royal Suite"
+                                  className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="text-slate-300 font-semibold block mb-1">Title (বাংলা) *</label>
+                                <input
+                                  type="text"
+                                  required
+                                  value={packageForm.title_bn}
+                                  onChange={(e) => setPackageForm({ ...packageForm, title_bn: e.target.value })}
+                                  placeholder="যেমনঃ ভিআইপি ক্লক টাওয়ার স্যুইট"
+                                  className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                              <div>
+                                <label className="text-slate-300 font-semibold block mb-1">Price (BDT ৳) *</label>
+                                <input
+                                  type="number"
+                                  required
+                                  value={packageForm.priceBDT}
+                                  onChange={(e) => setPackageForm({ 
+                                    ...packageForm, 
+                                    priceBDT: Number(e.target.value),
+                                    priceUSD: Math.round(Number(e.target.value) / 120)
+                                  })}
+                                  className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:border-[#d4af37] focus:outline-none"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="text-slate-300 font-semibold block mb-1">Price (USD $)</label>
+                                <input
+                                  type="number"
+                                  value={packageForm.priceUSD}
+                                  onChange={(e) => setPackageForm({ ...packageForm, priceUSD: Number(e.target.value) })}
+                                  className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:border-[#d4af37] focus:outline-none"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="text-slate-300 font-semibold block mb-1">Badge (EN)</label>
+                                <input
+                                  type="text"
+                                  value={packageForm.badge_en}
+                                  onChange={(e) => setPackageForm({ ...packageForm, badge_en: e.target.value })}
+                                  className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="text-slate-300 font-semibold block mb-1">Badge (বাংলা)</label>
+                                <input
+                                  type="text"
+                                  value={packageForm.badge_bn}
+                                  onChange={(e) => setPackageForm({ ...packageForm, badge_bn: e.target.value })}
+                                  className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                              <div>
+                                <label className="text-slate-300 font-semibold block mb-1">Package Banner Image URL</label>
+                                <input
+                                  type="url"
+                                  value={packageForm.image}
+                                  onChange={(e) => setPackageForm({ ...packageForm, image: e.target.value })}
+                                  placeholder="https://images.unsplash.com/photo-..."
+                                  className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
+                                />
+                              </div>
+
+                              <div className="flex items-center gap-3 pt-4 sm:pt-6">
+                                <input
+                                  type="checkbox"
+                                  id="isPopular"
+                                  checked={packageForm.isPopular}
+                                  onChange={(e) => setPackageForm({ ...packageForm, isPopular: e.target.checked })}
+                                  className="w-4 h-4 accent-[#d4af37] cursor-pointer"
+                                />
+                                <label htmlFor="isPopular" className="text-amber-300 font-semibold cursor-pointer">
+                                  Mark as 'Popular Choice'
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* PANEL 2: HOTEL DIRECTORY MULTI-SELECT SELECTION */}
+                          <div className="p-4 sm:p-5 rounded-2xl bg-[#121214] border border-slate-800 space-y-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                              <div>
+                                <h4 className="text-sm font-serif font-bold text-white flex items-center gap-2">
+                                  <Building2 className="w-4 h-4 text-[#d4af37]" />
+                                  <span>2. Hotel Directory Binding (Makkah & Madinah)</span>
+                                </h4>
+                                <p className="text-[11px] text-slate-400">
+                                  Select hotels directly from your Hotel Management directory for the package "Hotel Proximity & Stars" tab.
+                                </p>
+                              </div>
+                              <span className="text-xs font-mono font-bold text-amber-300 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 shrink-0">
+                                {packageForm.selectedHotelIds?.length || 0} Hotels Linked
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* Makkah Hotels Group */}
+                              <div className="space-y-2.5">
+                                <span className="text-xs font-serif font-bold text-[#d4af37] flex items-center gap-1.5">
+                                  <span>🕋</span>
+                                  <span>Makkah Al-Mukarramah Directory</span>
+                                </span>
+                                {hotels.filter((h) => (h.city || '').toLowerCase() === 'makkah').length === 0 ? (
+                                  <div className="p-3 rounded-xl bg-white/[0.01] border border-slate-800 text-[11px] text-slate-500 italic">
+                                    No Makkah hotels in directory. Register properties in the "Luxury Hotels" tab.
+                                  </div>
+                                ) : (
+                                  <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                                    {hotels
+                                      .filter((h) => (h.city || '').toLowerCase() === 'makkah')
+                                      .map((h) => {
+                                        const isSelected = (packageForm.selectedHotelIds || []).includes(h.id);
+                                        return (
+                                          <div
+                                            key={h.id}
+                                            onClick={() => toggleHotelSelection(h.id)}
+                                            className={`p-3 rounded-xl border text-xs cursor-pointer transition-all flex items-start gap-3 ${
+                                              isSelected
+                                                ? 'bg-[#d4af37]/15 border-[#d4af37] text-white shadow-md'
+                                                : 'bg-white/[0.02] border-slate-800 text-slate-300 hover:border-slate-700'
+                                            }`}
+                                          >
+                                            <input
+                                              type="checkbox"
+                                              checked={isSelected}
+                                              onChange={() => {}}
+                                              className="mt-0.5 accent-[#d4af37] pointer-events-none"
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                              <div className="flex items-center justify-between">
+                                                <span className="font-serif font-bold text-white truncate">{h.name}</span>
+                                                <span className="text-[10px] text-amber-400 font-mono font-bold shrink-0 ml-1">
+                                                  {h.stars || 5}★
+                                                </span>
+                                              </div>
+                                              <div className="text-[11px] text-emerald-400 truncate mt-0.5">
+                                                {h.dist || '0m Direct Courtyard'}
+                                              </div>
+                                              <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                                                ৳{h.nightlyBdt?.toLocaleString()} / night
+                                              </div>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Madinah Hotels Group */}
+                              <div className="space-y-2.5">
+                                <span className="text-xs font-serif font-bold text-emerald-400 flex items-center gap-1.5">
+                                  <span>🕌</span>
+                                  <span>Madinah Al-Munawwarah Directory</span>
+                                </span>
+                                {hotels.filter((h) => (h.city || '').toLowerCase() === 'madinah').length === 0 ? (
+                                  <div className="p-3 rounded-xl bg-white/[0.01] border border-slate-800 text-[11px] text-slate-500 italic">
+                                    No Madinah hotels in directory. Register properties in the "Luxury Hotels" tab.
+                                  </div>
+                                ) : (
+                                  <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                                    {hotels
+                                      .filter((h) => (h.city || '').toLowerCase() === 'madinah')
+                                      .map((h) => {
+                                        const isSelected = (packageForm.selectedHotelIds || []).includes(h.id);
+                                        return (
+                                          <div
+                                            key={h.id}
+                                            onClick={() => toggleHotelSelection(h.id)}
+                                            className={`p-3 rounded-xl border text-xs cursor-pointer transition-all flex items-start gap-3 ${
+                                              isSelected
+                                                ? 'bg-[#d4af37]/15 border-[#d4af37] text-white shadow-md'
+                                                : 'bg-white/[0.02] border-slate-800 text-slate-300 hover:border-slate-700'
+                                            }`}
+                                          >
+                                            <input
+                                              type="checkbox"
+                                              checked={isSelected}
+                                              onChange={() => {}}
+                                              className="mt-0.5 accent-[#d4af37] pointer-events-none"
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                              <div className="flex items-center justify-between">
+                                                <span className="font-serif font-bold text-white truncate">{h.name}</span>
+                                                <span className="text-[10px] text-amber-400 font-mono font-bold shrink-0 ml-1">
+                                                  {h.stars || 5}★
+                                                </span>
+                                              </div>
+                                              <div className="text-[11px] text-emerald-400 truncate mt-0.5">
+                                                {h.dist || '0m Courtyard'}
+                                              </div>
+                                              <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                                                ৳{h.nightlyBdt?.toLocaleString()} / night
+                                              </div>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* PANEL 3: FLIGHT DETAILS & LUGGAGE ALLOWANCE */}
+                          <div className="p-4 sm:p-5 rounded-2xl bg-[#121214] border border-slate-800 space-y-4">
+                            <div className="border-b border-slate-800 pb-2">
+                              <h4 className="text-sm font-serif font-bold text-white flex items-center gap-2">
+                                <Plane className="w-4 h-4 text-[#d4af37]" />
+                                <span>3. Flight Details & Baggage Allowances</span>
+                              </h4>
+                              <p className="text-[11px] text-slate-400">
+                                Configure flight carrier tier, route, aircraft model, and luggage specifications shown in package details.
+                              </p>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div>
+                                <label className="text-slate-300 font-semibold block mb-1">Flight Tier / Carrier *</label>
+                                <input
+                                  type="text"
+                                  value={packageForm.flightTier}
+                                  onChange={(e) => setPackageForm({ ...packageForm, flightTier: e.target.value })}
+                                  placeholder="e.g. Direct Flight - Saudia / Biman VIP"
+                                  className="w-full bg-[#18181c] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="text-slate-300 font-semibold block mb-1">Baggage / Luggage Allowance *</label>
+                                <input
+                                  type="text"
+                                  value={packageForm.flightLuggage}
+                                  onChange={(e) => setPackageForm({ ...packageForm, flightLuggage: e.target.value })}
+                                  placeholder="e.g. 2x 23kg Check-in (46kg) + 7kg Cabin + 5L Zamzam"
+                                  className="w-full bg-[#18181c] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="text-slate-300 font-semibold block mb-1">Flight Route</label>
+                                <input
+                                  type="text"
+                                  value={packageForm.flightRoute}
+                                  onChange={(e) => setPackageForm({ ...packageForm, flightRoute: e.target.value })}
+                                  placeholder="e.g. Dhaka ➔ Jeddah ➔ Madinah ➔ Dhaka (Direct)"
+                                  className="w-full bg-[#18181c] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="text-slate-300 font-semibold block mb-1">Aircraft Model</label>
+                                <input
+                                  type="text"
+                                  value={packageForm.flightAircraft}
+                                  onChange={(e) => setPackageForm({ ...packageForm, flightAircraft: e.target.value })}
+                                  placeholder="e.g. Boeing 787-9 Dreamliner / Boeing 777-300ER"
+                                  className="w-full bg-[#18181c] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* PANEL 4: DYNAMIC DAY-BY-DAY JOURNEY ITINERARY BUILDER */}
+                          <div className="p-4 sm:p-5 rounded-2xl bg-[#121214] border border-slate-800 space-y-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                              <div>
+                                <h4 className="text-sm font-serif font-bold text-white flex items-center gap-2">
+                                  <Calendar className="w-4 h-4 text-[#d4af37]" />
+                                  <span>4. Dynamic Day-by-Day Journey Itinerary Builder ({packageForm.itinerary?.length || 0} Days)</span>
+                                </h4>
+                                <p className="text-[11px] text-slate-400">
+                                  Add, modify, or remove days for the journey itinerary tab. Supports full English and Bengali titles and descriptions.
+                                </p>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setPackageForm((prev) => ({ ...prev, itinerary: DEFAULT_ITINERARY_TEMPLATE }))}
+                                  className="px-2.5 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white border border-slate-800 text-xs font-serif font-medium flex items-center gap-1.5 cursor-pointer transition-colors"
+                                  title="Reset to 10-day template"
+                                >
+                                  <RotateCcw className="w-3.5 h-3.5 text-[#d4af37]" />
+                                  <span>Load Template</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={handleAddItineraryDay}
+                                  className="px-3.5 py-1.5 bg-[#d4af37]/20 hover:bg-[#d4af37] text-[#d4af37] hover:text-[#080809] border border-[#d4af37]/40 rounded-xl font-bold text-xs cursor-pointer transition-colors flex items-center gap-1.5"
+                                >
+                                  <Plus className="w-3.5 h-3.5" />
+                                  <span>Add Day</span>
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+                              {(packageForm.itinerary || []).map((step, idx) => (
+                                <div key={idx} className="p-3.5 rounded-2xl bg-[#18181c] border border-slate-800 space-y-3">
+                                  <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] uppercase font-mono font-bold text-slate-400">Day Tag:</span>
+                                      <input
+                                        type="text"
+                                        value={step.day}
+                                        onChange={(e) => handleUpdateItineraryDay(idx, 'day', e.target.value)}
+                                        placeholder="Day 1"
+                                        className="w-24 bg-[#121214] border border-slate-800 rounded-lg px-2 py-1 text-white font-mono font-bold text-xs focus:border-[#d4af37]"
+                                      />
+                                      <input
+                                        type="text"
+                                        value={step.day_bn || ''}
+                                        onChange={(e) => handleUpdateItineraryDay(idx, 'day_bn', e.target.value)}
+                                        placeholder="দিন ১"
+                                        className="w-24 bg-[#121214] border border-slate-800 rounded-lg px-2 py-1 text-amber-300 font-mono font-bold text-xs focus:border-[#d4af37]"
+                                      />
+                                    </div>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteItineraryDay(idx)}
+                                      className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-950/40 transition-colors cursor-pointer"
+                                      title="Remove this day"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                      <label className="text-[11px] text-slate-400 block mb-1">Day Title (English)</label>
+                                      <input
+                                        type="text"
+                                        value={step.title}
+                                        onChange={(e) => handleUpdateItineraryDay(idx, 'title', e.target.value)}
+                                        placeholder="e.g. Dhaka Departure & Royal Jeddah Arrival"
+                                        className="w-full bg-[#121214] border border-slate-800 rounded-xl px-2.5 py-1.5 text-white font-medium text-xs focus:border-[#d4af37]"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="text-[11px] text-slate-400 block mb-1">Day Title (বাংলা)</label>
+                                      <input
+                                        type="text"
+                                        value={step.title_bn || ''}
+                                        onChange={(e) => handleUpdateItineraryDay(idx, 'title_bn', e.target.value)}
+                                        placeholder="যেমনঃ ঢাকা ত্যাগ ও জেদ্দা রাজকীয় আগমন"
+                                        className="w-full bg-[#121214] border border-slate-800 rounded-xl px-2.5 py-1.5 text-white font-medium text-xs focus:border-[#d4af37]"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                      <label className="text-[11px] text-slate-400 block mb-1">Description (English)</label>
+                                      <textarea
+                                        rows={2}
+                                        value={step.desc}
+                                        onChange={(e) => handleUpdateItineraryDay(idx, 'desc', e.target.value)}
+                                        placeholder="Detailed description of itinerary activities, prayers, and transfers..."
+                                        className="w-full bg-[#121214] border border-slate-800 rounded-xl p-2.5 text-slate-300 text-xs focus:border-[#d4af37]"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="text-[11px] text-slate-400 block mb-1">Description (বাংলা)</label>
+                                      <textarea
+                                        rows={2}
+                                        value={step.desc_bn || ''}
+                                        onChange={(e) => handleUpdateItineraryDay(idx, 'desc_bn', e.target.value)}
+                                        placeholder="দিনটির কার্যক্রম, ইবাদত ও সফর বিবরণ..."
+                                        className="w-full bg-[#121214] border border-slate-800 rounded-xl p-2.5 text-slate-300 text-xs focus:border-[#d4af37]"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* PANEL 5: WHITE-GLOVE INCLUSIONS & AMENITIES CHECKLIST */}
+                          <div className="p-4 sm:p-5 rounded-2xl bg-[#121214] border border-slate-800 space-y-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                              <div>
+                                <h4 className="text-sm font-serif font-bold text-white flex items-center gap-2">
+                                  <Sparkles className="w-4 h-4 text-[#d4af37]" />
+                                  <span>5. White-Glove Inclusions & Privileges ({packageForm.inclusions?.length || 0})</span>
+                                </h4>
+                                <p className="text-[11px] text-slate-400">
+                                  Custom inclusions shown in the "Included Amenities" breakdown modal.
+                                </p>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => handleAddInclusion()}
+                                className="px-3.5 py-1.5 bg-[#d4af37]/20 hover:bg-[#d4af37] text-[#d4af37] hover:text-[#080809] border border-[#d4af37]/40 rounded-xl font-bold text-xs cursor-pointer transition-colors flex items-center gap-1.5"
                               >
-                                <option value="umrah">VIP Umrah Package</option>
-                                <option value="hajj">Royal Hajj Package</option>
-                              </select>
+                                <Plus className="w-3.5 h-3.5" />
+                                <span>Add Inclusion</span>
+                              </button>
                             </div>
 
-                            <div>
-                              <label className="text-slate-300 font-semibold block mb-1">Title (English) *</label>
-                              <input
-                                type="text"
-                                required
-                                value={packageForm.title_en}
-                                onChange={(e) => setPackageForm({ ...packageForm, title_en: e.target.value })}
-                                placeholder="e.g. VIP Clock Tower Royal Suite"
-                                className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
-                              />
+                            {/* Quick Add Suggestions Chips */}
+                            <div className="flex flex-wrap items-center gap-2 pt-1">
+                              <span className="text-[10px] uppercase font-mono text-slate-400 font-bold">Quick Suggestions:</span>
+                              {[
+                                { title: 'VIP Rawdah Priority Permit', title_bn: 'নুসুক ভিআইপি রওজা পারমিট', desc: 'Guaranteed fast-track Rawdah Sharif reservation.' },
+                                { title: '1-on-1 Senior Scholar Moallim', title_bn: '১-অন-১ অভিজ্ঞ আলেম মোয়াল্লিম গাইড', desc: 'Dedicated Bengali scholar guide throughout rituals.' },
+                                { title: '5L Zamzam Home Delivery in Dhaka', title_bn: 'ঢাকায় বাসায় ৫ লিটার জমজম ডেলিভারি', desc: 'Official sealed Zamzam delivered to your residence.' },
+                                { title: 'CIP Airport Fast-Track Immigration', title_bn: 'সিআইপি বিমানবন্দর ফাস্ট-ট্র্যাক ইমিগ্রেশন', desc: 'Diplomatic line clearance and CIP lounge access.' },
+                                { title: 'Private GMC Yukon Chauffeur', title_bn: 'প্রাইভেট জিএমসি ইউকন শফার কার', desc: 'Luxury private SUV for airport and intercity transfers.' },
+                                { title: '24/7 Dedicated Butler Service', title_bn: '২৪/৭ ডেডিকেটেড বাটলার ও রুম সার্ভিস', desc: 'Round-the-clock room dining and private hospitality.' }
+                              ].map((chip, idx) => (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  onClick={() => handleAddInclusion(chip.title, chip.title_bn, chip.desc)}
+                                  className="px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-[#d4af37]/20 text-slate-300 hover:text-[#d4af37] border border-slate-800 text-[10px] font-medium transition-colors cursor-pointer"
+                                >
+                                  + {chip.title}
+                                </button>
+                              ))}
                             </div>
 
-                            <div>
-                              <label className="text-slate-300 font-semibold block mb-1">Title (বাংলা) *</label>
-                              <input
-                                type="text"
-                                required
-                                value={packageForm.title_bn}
-                                onChange={(e) => setPackageForm({ ...packageForm, title_bn: e.target.value })}
-                                placeholder="যেমনঃ ভিআইপি ক্লক টাওয়ার স্যুইট"
-                                className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
-                              />
+                            <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+                              {(packageForm.inclusions || []).map((inc, idx) => (
+                                <div key={idx} className="p-3 rounded-xl bg-[#18181c] border border-slate-800 space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-mono font-bold text-[#d4af37]">Privilege #{idx + 1}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteInclusion(idx)}
+                                      className="p-1 rounded text-slate-500 hover:text-red-400 transition-colors cursor-pointer"
+                                      title="Remove inclusion"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <input
+                                      type="text"
+                                      value={inc.title}
+                                      onChange={(e) => handleUpdateInclusion(idx, 'title', e.target.value)}
+                                      placeholder="Privilege Title (English)"
+                                      className="w-full bg-[#121214] border border-slate-800 rounded-lg px-2.5 py-1.5 text-white font-medium text-xs focus:border-[#d4af37]"
+                                    />
+                                    <input
+                                      type="text"
+                                      value={inc.title_bn || ''}
+                                      onChange={(e) => handleUpdateInclusion(idx, 'title_bn', e.target.value)}
+                                      placeholder="সুবিধার শিরোনাম (বাংলা)"
+                                      className="w-full bg-[#121214] border border-slate-800 rounded-lg px-2.5 py-1.5 text-white font-medium text-xs focus:border-[#d4af37]"
+                                    />
+                                  </div>
+
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <input
+                                      type="text"
+                                      value={inc.desc}
+                                      onChange={(e) => handleUpdateInclusion(idx, 'desc', e.target.value)}
+                                      placeholder="Description (English)"
+                                      className="w-full bg-[#121214] border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-300 text-xs focus:border-[#d4af37]"
+                                    />
+                                    <input
+                                      type="text"
+                                      value={inc.desc_bn || ''}
+                                      onChange={(e) => handleUpdateInclusion(idx, 'desc_bn', e.target.value)}
+                                      placeholder="বিবরণ (বাংলা)"
+                                      className="w-full bg-[#121214] border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-300 text-xs focus:border-[#d4af37]"
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Front Card Highlights (Checklist) */}
+                            <div className="pt-3 border-t border-slate-800/80 space-y-2">
+                              <span className="text-[11px] font-mono font-bold text-slate-400 block uppercase">
+                                Front Card Checklist Highlights (Shown on Homepage Card)
+                              </span>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="text-slate-400 block mb-1">Checklist EN (1 bullet per line)</label>
+                                  <textarea
+                                    rows={3}
+                                    value={packageForm.features_en}
+                                    onChange={(e) => setPackageForm({ ...packageForm, features_en: e.target.value })}
+                                    className="w-full bg-[#18181c] border border-slate-800 rounded-xl p-3 text-white focus:border-[#d4af37] focus:outline-none font-sans"
+                                    placeholder="VIP Visa&#10;Direct Flight&#10;5-Star Hotel"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="text-slate-400 block mb-1">Checklist BN (1 bullet per line)</label>
+                                  <textarea
+                                    rows={3}
+                                    value={packageForm.features_bn}
+                                    onChange={(e) => setPackageForm({ ...packageForm, features_bn: e.target.value })}
+                                    className="w-full bg-[#18181c] border border-slate-800 rounded-xl p-3 text-white focus:border-[#d4af37] focus:outline-none font-sans"
+                                    placeholder="ভিআইপি ভিসা&#10;সরাসরি ফ্লাইট&#10;৫ তারকা হোটেল"
+                                  />
+                                </div>
+                              </div>
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                            <div>
-                              <label className="text-slate-300 font-semibold block mb-1">Price (BDT ৳) *</label>
-                              <input
-                                type="number"
-                                required
-                                value={packageForm.priceBDT}
-                                onChange={(e) => setPackageForm({ 
-                                  ...packageForm, 
-                                  priceBDT: Number(e.target.value),
-                                  priceUSD: Math.round(Number(e.target.value) / 120)
-                                })}
-                                className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:border-[#d4af37] focus:outline-none"
-                              />
-                            </div>
+                          {/* ACTION BUTTONS */}
+                          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-800">
+                            {editingPackage && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingPackage(null);
+                                  resetPackageForm();
+                                }}
+                                className="w-full sm:w-auto px-5 py-2.5 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 font-serif font-bold text-xs uppercase tracking-wider rounded-xl border border-slate-800 transition-colors cursor-pointer"
+                              >
+                                Cancel Editing
+                              </button>
+                            )}
 
-                            <div>
-                              <label className="text-slate-300 font-semibold block mb-1">Price (USD $)</label>
-                              <input
-                                type="number"
-                                value={packageForm.priceUSD}
-                                onChange={(e) => setPackageForm({ ...packageForm, priceUSD: Number(e.target.value) })}
-                                className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:border-[#d4af37] focus:outline-none"
-                              />
+                            <div className="flex items-center gap-3 w-full sm:w-auto ml-auto">
+                              <button
+                                type="submit"
+                                className="w-full sm:w-auto px-8 py-3 bg-kiswah-gold text-[#080809] font-serif font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-lg flex items-center justify-center gap-2 cursor-pointer hover:bg-kiswah-gold-hover hover:scale-[1.01] transition-all"
+                              >
+                                <Save className="w-4 h-4" />
+                                <span>{editingPackage ? 'Save Package Changes' : 'Publish New Package'}</span>
+                              </button>
                             </div>
-
-                            <div>
-                              <label className="text-slate-300 font-semibold block mb-1">Badge (EN)</label>
-                              <input
-                                type="text"
-                                value={packageForm.badge_en}
-                                onChange={(e) => setPackageForm({ ...packageForm, badge_en: e.target.value })}
-                                className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
-                              />
-                            </div>
-
-                            <div className="flex items-center gap-2 pt-6">
-                              <input
-                                type="checkbox"
-                                id="isPopular"
-                                checked={packageForm.isPopular}
-                                onChange={(e) => setPackageForm({ ...packageForm, isPopular: e.target.checked })}
-                                className="w-4 h-4 accent-[#d4af37]"
-                              />
-                              <label htmlFor="isPopular" className="text-amber-300 font-semibold cursor-pointer">
-                                Mark as 'Popular Choice'
-                              </label>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                              <label className="text-slate-300 font-semibold block mb-1">Features Checklist EN (1 per line)</label>
-                              <textarea
-                                rows={3}
-                                value={packageForm.features_en}
-                                onChange={(e) => setPackageForm({ ...packageForm, features_en: e.target.value })}
-                                className="w-full bg-[#121214] border border-slate-800 rounded-xl p-3 text-white focus:border-[#d4af37] focus:outline-none font-sans"
-                                placeholder="VIP Visa&#10;Direct Flight&#10;5-Star Hotel"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="text-slate-300 font-semibold block mb-1">Features Checklist BN (1 per line)</label>
-                              <textarea
-                                rows={3}
-                                value={packageForm.features_bn}
-                                onChange={(e) => setPackageForm({ ...packageForm, features_bn: e.target.value })}
-                                className="w-full bg-[#121214] border border-slate-800 rounded-xl p-3 text-white focus:border-[#d4af37] focus:outline-none font-sans"
-                                placeholder="ভিআইপি ভিসা&#10;সরাসরি ফ্লাইট&#10;৫ তারকা হোটেল"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="flex justify-end gap-3 pt-2">
-                            <button
-                              type="submit"
-                              className="px-6 py-2.5 bg-kiswah-gold text-[#080809] font-serif font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg flex items-center gap-2 cursor-pointer hover:bg-kiswah-gold-hover"
-                            >
-                              <Save className="w-4 h-4" />
-                              <span>{editingPackage ? 'Save Package Changes' : 'Publish New Package'}</span>
-                            </button>
                           </div>
                         </form>
                       </div>

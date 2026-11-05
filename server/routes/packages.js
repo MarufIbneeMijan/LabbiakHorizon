@@ -37,10 +37,14 @@ router.post('/', requireAdmin, (req, res) => {
     const { 
       type, title_en, title_bn, badge_en, badge_bn, 
       priceBDT, priceUSD, features_en, features_bn, 
-      image, accentColor, borderColor, tagColor, isPopular 
+      image, accentColor, borderColor, tagColor, isPopular,
+      selectedHotelIds, flightTier, flightLuggage, flightRoute, flightAircraft,
+      itinerary, inclusions
     } = req.body;
 
-    if (!title_en || !priceBDT) {
+    const bdtAmount = priceBDT || req.body.price;
+
+    if (!title_en || !bdtAmount) {
       return res.status(400).json({ 
         success: false, 
         message: 'Validation error: title_en and priceBDT are required.' 
@@ -53,15 +57,22 @@ router.post('/', requireAdmin, (req, res) => {
       title_bn: title_bn || title_en,
       badge_en: badge_en || 'VIP Sanctum',
       badge_bn: badge_bn || 'ভিআইপি স্যাঙ্কটাম',
-      priceBDT: Number(priceBDT),
-      priceUSD: Number(priceUSD) || Math.round(Number(priceBDT) / 120),
+      priceBDT: Number(bdtAmount),
+      priceUSD: Number(priceUSD) || Math.round(Number(bdtAmount) / 120),
       features_en: Array.isArray(features_en) ? features_en : [features_en].filter(Boolean),
       features_bn: Array.isArray(features_bn) ? features_bn : [features_bn].filter(Boolean),
       image,
       accentColor,
       borderColor,
       tagColor,
-      isPopular
+      isPopular,
+      selectedHotelIds: Array.isArray(selectedHotelIds) ? selectedHotelIds : [],
+      flightTier: flightTier || 'Direct Flight - Saudia / Biman VIP',
+      flightLuggage: flightLuggage || '2x 23kg Check-in (46kg) + 7kg Cabin Baggage + 5L Zamzam',
+      flightRoute: flightRoute || 'Dhaka ➔ Jeddah ➔ Madinah ➔ Dhaka (Direct)',
+      flightAircraft: flightAircraft || 'Boeing 787-9 Dreamliner / Boeing 777-300ER',
+      itinerary: Array.isArray(itinerary) ? itinerary : [],
+      inclusions: Array.isArray(inclusions) ? inclusions : []
     });
 
     res.status(201).json({

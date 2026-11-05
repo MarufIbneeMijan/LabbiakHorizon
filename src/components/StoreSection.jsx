@@ -390,12 +390,12 @@ export default function StoreSection({ locale = 'en', onAddToCart = null }) {
                   initial={{ opacity: 0, scale: 0.95, y: 15 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 15 }}
-                  className="bg-[#121215] border border-[#d4af37]/40 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative overflow-y-auto max-h-[90vh] z-10 kiswah-gold-glow selection:bg-[#d4af37] selection:text-[#080809]"
+                  className="bg-[#121215] border border-[#d4af37]/40 rounded-3xl max-w-2xl w-full p-6 sm:p-8 pt-12 sm:pt-14 shadow-2xl relative overflow-y-auto max-h-[90vh] z-10 kiswah-gold-glow selection:bg-[#d4af37] selection:text-[#080809]"
                 >
-                  {/* Close Button */}
+                  {/* Close Button: Absolute top-right with high contrast and proper clearance */}
                   <button
                     onClick={() => setSelectedDetailProduct(null)}
-                    className="absolute top-4 right-4 p-2 rounded-full bg-white/[0.04] hover:bg-white/[0.1] text-slate-400 hover:text-white transition-colors cursor-pointer border border-slate-800 z-20"
+                    className="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/40 hover:bg-black/60 text-white border border-[#d4af37]/30 transition-all cursor-pointer shadow-lg"
                     aria-label="Close product details"
                   >
                     <X className="w-5 h-5" />

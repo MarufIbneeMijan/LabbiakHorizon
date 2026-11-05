@@ -207,6 +207,13 @@ export const db = {
       borderColor: pkgData.borderColor || 'border-[#d4af37]',
       tagColor: pkgData.tagColor || 'text-[#d4af37]',
       isPopular: Boolean(pkgData.isPopular),
+      selectedHotelIds: Array.isArray(pkgData.selectedHotelIds) ? pkgData.selectedHotelIds : [],
+      flightTier: pkgData.flightTier || 'Direct Flight - Saudia / Biman VIP',
+      flightLuggage: pkgData.flightLuggage || '2x 23kg Check-in (46kg) + 7kg Cabin Baggage + 5L Zamzam',
+      flightRoute: pkgData.flightRoute || 'Dhaka ➔ Jeddah ➔ Madinah ➔ Dhaka (Direct)',
+      flightAircraft: pkgData.flightAircraft || 'Boeing 787-9 Dreamliner / Boeing 777-300ER',
+      itinerary: Array.isArray(pkgData.itinerary) ? pkgData.itinerary : [],
+      inclusions: Array.isArray(pkgData.inclusions) ? pkgData.inclusions : [],
       createdAt: new Date().toISOString()
     };
 
