@@ -20,12 +20,15 @@ router.get('/', (req, res) => {
   }
 });
 
-// PUT /api/transport/routes/:id - Update route base prices (automatically re-applying the tiered markup formula: +150 SAR if >1500, +100 SAR if 900–1500, +50 SAR if <900)
+// PUT /api/transport/routes/:id - Update route
 router.put('/routes/:id', requireAdmin, (req, res) => {
   try {
-    const { basePriceSAR, nameEn, nameBn, descEn, descBn, distanceEn, distanceBn, typeEn, typeBn } = req.body;
+    const { 
+      basePriceSAR, priceBDT, vehicleType, vehicleTypeEn, vehicleTypeBn,
+      nameEn, nameBn, descEn, descBn, distanceEn, distanceBn, typeEn, typeBn 
+    } = req.body;
 
-    if (basePriceSAR === undefined && !nameEn) {
+    if (basePriceSAR === undefined && priceBDT === undefined && !nameEn) {
       return res.status(400).json({ 
         success: false, 
         message: 'No update data provided.' 
@@ -33,6 +36,9 @@ router.put('/routes/:id', requireAdmin, (req, res) => {
     }
 
     const updated = db.updateRoute(req.params.id, {
+      ...(priceBDT !== undefined && { priceBDT: Number(priceBDT) }),
+      ...(vehicleType && { vehicleType }),
+      ...(vehicleTypeEn && { vehicleType: vehicleTypeEn }),
       ...(basePriceSAR !== undefined && { basePriceSAR: Number(basePriceSAR) }),
       ...(nameEn && { nameEn }),
       ...(nameBn && { nameBn }),
@@ -50,7 +56,7 @@ router.put('/routes/:id', requireAdmin, (req, res) => {
 
     res.json({
       success: true,
-      message: 'Transport route updated with automatic tiered markup applied.',
+      message: 'Transport route updated successfully.',
       data: updated
     });
   } catch (err) {
@@ -58,11 +64,13 @@ router.put('/routes/:id', requireAdmin, (req, res) => {
   }
 });
 
-// POST /api/transport/routes - Add a new custom transport route or ziyarah excursion
+// POST /api/transport/routes - Add a new custom transport route
 router.post('/routes', requireAdmin, (req, res) => {
   try {
     const { 
       nameEn, nameBn, name_en, name_bn,
+      vehicleType, vehicleTypeEn, vehicleTypeBn,
+      priceBDT, price,
       descEn, descBn, desc_en, desc_bn,
       typeEn, typeBn, type_en, type_bn,
       distanceEn, distanceBn,
@@ -77,22 +85,42 @@ router.post('/routes', requireAdmin, (req, res) => {
       });
     }
 
+    const finalBDT = Number(priceBDT || price) || Math.round((Number(basePriceSAR) || 600) * 33);
+
     const newRoute = db.addRoute({
       nameEn: enName,
       nameBn: nameBn || name_bn || enName,
+      vehicleType: vehicleType || vehicleTypeEn || typeEn || 'VIP GMC Yukon',
+      priceBDT: finalBDT,
       descEn: descEn || desc_en,
       descBn: descBn || desc_bn,
-      typeEn: typeEn || type_en || 'Private Chauffeur',
-      typeBn: typeBn || type_bn || 'প্রাইভেট সফর',
-      distanceEn: distanceEn || 'Variable distance',
-      distanceBn: distanceBn || 'দূরত্ব ভিত্তিক',
-      basePriceSAR: Number(basePriceSAR) || 600
+      typeEn: typeEn || type_en || vehicleType || 'Private Chauffeur',
+      typeBn: typeBn || type_bn || vehicleTypeBn || 'প্রাইভেট সফর',
+      distanceEn: distanceEn || 'Express Route',
+      distanceBn: distanceBn || 'এক্সপ্রেস রুট',
+      basePriceSAR: Number(basePriceSAR) || Math.round(finalBDT / 33) || 600
     });
 
     res.status(201).json({
       success: true,
-      message: 'Custom transport route created with tiered markup.',
+      message: 'Custom transport route created successfully.',
       data: newRoute
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// DELETE /api/transport/routes/:id - Remove a transport route
+router.delete('/routes/:id', requireAdmin, (req, res) => {
+  try {
+    const deleted = db.deleteRoute(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: 'Transport route not found.' });
+    }
+    res.json({
+      success: true,
+      message: 'Transport route deleted successfully.'
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

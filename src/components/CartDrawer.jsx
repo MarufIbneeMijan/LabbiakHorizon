@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function CartDrawer({
   isOpen,
   onClose,
-  locale = 'en',
+  locale = 'bn',
   cartItems = [],
   onUpdateQuantity = () => {},
   onRemoveItem = () => {},
@@ -198,10 +198,7 @@ export default function CartDrawer({
                     </span>
                     <div className="text-right">
                       <div className="font-serif font-extrabold text-lg text-kiswah-gold">
-                        ৳{totalBDT.toLocaleString('en-IN')}
-                      </div>
-                      <div className="text-[10px] text-slate-500 font-mono">
-                        ≈ ${totalUSD} USD
+                        ৳{totalBDT.toLocaleString('en-IN')}/-
                       </div>
                     </div>
                   </div>

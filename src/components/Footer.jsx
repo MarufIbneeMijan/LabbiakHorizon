@@ -2,7 +2,7 @@ import React from 'react';
 import { Crown, ShieldCheck, MapPin, Phone, Mail, Clock, MessageSquare, Lock } from 'lucide-react';
 import { DICTIONARY, AGENCY_CREDENTIALS } from '../data/mockData';
 
-export default function Footer({ locale, onOpenConsultation, onOpenAdmin = () => {} }) {
+export default function Footer({ locale, onOpenConsultation }) {
   const dict = DICTIONARY[locale] || DICTIONARY.en;
   const whatsappUrl = "https://wa.me/8801800522224?text=Assalamu%20Alaikum.%20I%20would%20like%20to%20request%20a%20confidential%20VIP%20dossier%20from%20LabbaikHorizon.";
 
@@ -138,14 +138,6 @@ export default function Footer({ locale, onOpenConsultation, onOpenAdmin = () =>
             <span>MoRA Certified HAAB-1420</span>
             <span>•</span>
             <span>100% Shariah Compliant</span>
-            <span>•</span>
-            <button
-              onClick={onOpenAdmin}
-              className="inline-flex items-center gap-1.5 text-slate-400 hover:text-[#d4af37] transition-colors cursor-pointer"
-            >
-              <Lock className="w-3 h-3 text-[#d4af37]" />
-              <span>{locale === 'bn' ? 'অ্যাডমিন পোর্টাল' : 'Admin Control Center'}</span>
-            </button>
           </div>
         </div>
 

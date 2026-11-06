@@ -156,13 +156,8 @@ export default function PdfQuotationModal({ data, onClose }) {
               <tbody className="divide-y divide-slate-800 text-slate-200">
                 <tr>
                   <td className="p-3 font-medium">Bespoke Sacred Pilgrimage Package Total</td>
-                  <td className="p-3 text-right font-bold text-kiswah-gold">৳{data.perPersonBDT.toLocaleString('en-IN')}</td>
-                  <td className="p-3 text-right font-bold text-kiswah-gold">৳{data.totalGroupBDT.toLocaleString('en-IN')}</td>
-                </tr>
-                <tr className="bg-white/[0.02] font-semibold text-amber-300">
-                  <td className="p-3 text-slate-400 font-normal">Equivalent Currency Rates</td>
-                  <td className="p-3 text-right">${data.perPersonUSD} USD</td>
-                  <td className="p-3 text-right">${data.totalGroupUSD.toLocaleString()} USD ({data.totalGroupSAR ? data.totalGroupSAR.toLocaleString() : Math.round(data.totalGroupBDT / 32.5).toLocaleString()} SAR)</td>
+                  <td className="p-3 text-right font-bold text-kiswah-gold">৳{data.perPersonBDT.toLocaleString('en-IN')}/-</td>
+                  <td className="p-3 text-right font-bold text-kiswah-gold">৳{data.totalGroupBDT.toLocaleString('en-IN')}/-</td>
                 </tr>
               </tbody>
             </table>

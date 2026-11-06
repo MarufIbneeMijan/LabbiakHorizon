@@ -9,7 +9,12 @@ import confetti from 'canvas-confetti';
 import { productsAPI, ordersAPI } from '../services/api';
 import { DICTIONARY } from '../data/mockData';
 
-export default function StoreSection({ locale = 'en', onAddToCart = null }) {
+export default function StoreSection({ 
+  locale = 'bn', 
+  onAddToCart = null,
+  onBuyNow = null,
+  onNavigateShop = null
+}) {
   const isBn = locale === 'bn';
 
   const [activeCategory, setActiveCategory] = useState('all');
@@ -293,8 +298,7 @@ export default function StoreSection({ locale = 'en', onAddToCart = null }) {
                               {isBn ? 'মূল্য' : 'Investment'}
                             </span>
                             <div className="text-xl font-serif font-extrabold text-kiswah-gold">
-                              ৳{prod.priceBDT?.toLocaleString('en-IN')}{' '}
-                              <span className="text-xs text-slate-400 font-normal">(${prod.priceUSD} USD)</span>
+                              ৳{prod.priceBDT?.toLocaleString('en-IN')}{isBn ? '/-' : ''}
                             </div>
                           </div>
                         </div>
@@ -346,24 +350,28 @@ export default function StoreSection({ locale = 'en', onAddToCart = null }) {
               })}
             </div>
 
-            {/* Expandable Grid Toggle: "Show More Products" / "Show Less" */}
-            {products.length > 6 && (
-              <div className="mt-12 text-center">
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => setShowAllProducts((prev) => !prev)}
-                  className="px-8 py-3.5 rounded-2xl bg-white/[0.04] hover:bg-[#d4af37]/10 border border-[#d4af37]/40 hover:border-[#d4af37] text-[#d4af37] font-serif font-bold text-xs uppercase tracking-wider transition-all duration-300 inline-flex items-center gap-2.5 cursor-pointer shadow-lg hover:shadow-[0_0_25px_rgba(212,175,55,0.25)]"
-                >
-                  <Sparkles className="w-4 h-4 text-[#d4af37]" />
-                  <span>
-                    {showAllProducts
-                      ? (isBn ? 'কম দেখুন' : 'Show Less Products')
-                      : (isBn ? `আরও প্রোডাক্ট দেখুন (${products.length - 6}টি বাকি)` : `Show More Products (${products.length - 6} more)`)}
-                  </span>
-                </motion.button>
-              </div>
-            )}
+            {/* Prominent CTA to visit Dedicated Shop Route (/shop) for Social Media Ads & Full Catalog */}
+            <div className="mt-14 text-center space-y-3">
+              <a
+                href="/shop"
+                onClick={(e) => {
+                  if (onNavigateShop) {
+                    e.preventDefault();
+                    onNavigateShop();
+                  }
+                }}
+                className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-kiswah-gold hover:bg-kiswah-gold-hover text-[#080809] font-serif font-extrabold text-xs uppercase tracking-wider transition-all duration-300 shadow-xl shadow-[#d4af37]/20 hover:scale-[1.02] cursor-pointer group"
+              >
+                <ShoppingBag className="w-4 h-4 text-[#080809]" />
+                <span>{isBn ? 'সম্পূর্ণ অনলাইন শপ ভিজিট করুন (সব প্রোডাক্ট দেখুন)' : 'Visit Full Pilgrim Essentials Store (/shop)'}</span>
+                <ArrowRight className="w-4 h-4 text-[#080809] group-hover:translate-x-1 transition-transform" />
+              </a>
+              <p className="text-[11px] text-slate-400 font-mono">
+                {isBn 
+                  ? 'মক্কার সিলগালা জমজম, আজওয়া খেজুর ও প্রিমিয়াম ইহরাম কালেকশন সরাসরি অর্ডার করুন' 
+                  : 'Explore 20+ Shariah-compliant relics, instant checkout, and nationwide Bangladesh delivery'}
+              </p>
+            </div>
           </div>
         )}
 
@@ -426,11 +434,7 @@ export default function StoreSection({ locale = 'en', onAddToCart = null }) {
                         </span>
                       </div>
 
-                      <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-[11px] text-slate-300 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-800">
-                        <span className="flex items-center gap-1 text-[#d4af37]">
-                          <ShieldCheck className="w-3.5 h-3.5" />
-                          <span>{specs.origin}</span>
-                        </span>
+                      <div className="absolute bottom-3 right-3 text-[11px] text-slate-300 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-800">
                         <span className="text-slate-400 text-[10px] font-mono">
                           {isZoomed ? (isBn ? 'স্বাভাবিক দেখতে ক্লিক করুন' : 'Click to unzoom') : (isBn ? 'বড় করে দেখতে ক্লিক করুন' : 'Click to zoom')}
                         </span>
@@ -454,10 +458,7 @@ export default function StoreSection({ locale = 'en', onAddToCart = null }) {
 
                       <div className="flex items-baseline gap-2">
                         <span className="text-2xl font-serif font-extrabold text-kiswah-gold">
-                          ৳{prod.priceBDT?.toLocaleString('en-IN')}
-                        </span>
-                        <span className="text-xs text-slate-400 font-mono">
-                          (${prod.priceUSD} USD / unit)
+                          ৳{prod.priceBDT?.toLocaleString('en-IN')}{isBn ? '/-' : ''}
                         </span>
                       </div>
 
@@ -474,7 +475,7 @@ export default function StoreSection({ locale = 'en', onAddToCart = null }) {
                         {isBn ? 'পণ্যটির বিশদ বিবরণ ও বৈশিষ্ট্য' : 'Key Specifications & Inclusions'}
                       </span>
                       <ul className="space-y-2 text-xs text-slate-300">
-                        {specs.specs.map((item, idx) => (
+                        {((Array.isArray(prod.specifications) && prod.specifications.length > 0) ? prod.specifications : specs.specs).map((item, idx) => (
                           <li key={idx} className="flex items-start gap-2">
                             <CheckCircle2 className="w-3.5 h-3.5 text-[#d4af37] shrink-0 mt-0.5" />
                             <span>{item}</span>
@@ -545,7 +546,9 @@ export default function StoreSection({ locale = 'en', onAddToCart = null }) {
                             const p = selectedDetailProduct;
                             const qty = detailQuantity;
                             setSelectedDetailProduct(null);
-                            if (onAddToCart) {
+                            if (onBuyNow) {
+                              onBuyNow(p, qty);
+                            } else if (onAddToCart) {
                               onAddToCart(p, qty);
                             } else {
                               openOrderModal(p, qty);
@@ -628,7 +631,7 @@ export default function StoreSection({ locale = 'en', onAddToCart = null }) {
                           {isBn ? (orderingProduct.name_bn || orderingProduct.name_en) : orderingProduct.name_en}
                         </h3>
                         <p className="text-xs text-amber-300 font-mono">
-                          ৳{orderingProduct.priceBDT?.toLocaleString('en-IN')} BDT (${orderingProduct.priceUSD} USD) / unit
+                          ৳{orderingProduct.priceBDT?.toLocaleString('en-IN')}{isBn ? '/-' : ''} / unit
                         </p>
                       </div>
                     </div>

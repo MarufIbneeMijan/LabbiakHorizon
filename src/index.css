@@ -22,74 +22,295 @@
 :root, [data-theme="kiswah"] {
   --color-bg-base: #080809;
   --color-surface: #121215;
+  --color-surface-elevated: #161619;
   --color-card-bg: rgba(18, 18, 20, 0.88);
   --color-primary-gold: #d4af37;
+  --color-primary-rgb: 212, 175, 55;
   --color-primary-light: #f3e5ab;
   --color-accent: #996515;
+  --color-accent-rgb: 153, 101, 21;
   --color-border: rgba(212, 175, 55, 0.3);
   --color-border-hover: rgba(212, 175, 55, 0.65);
+  --color-glow: rgba(212, 175, 55, 0.35);
 }
 
 [data-theme="emerald"] {
   --color-bg-base: #051610;
   --color-surface: #0a261c;
+  --color-surface-elevated: #0d3224;
   --color-card-bg: rgba(10, 38, 28, 0.88);
   --color-primary-gold: #10b981;
+  --color-primary-rgb: 16, 185, 129;
   --color-primary-light: #a7f3d0;
   --color-accent: #059669;
+  --color-accent-rgb: 5, 150, 105;
   --color-border: rgba(16, 185, 129, 0.35);
   --color-border-hover: rgba(52, 211, 153, 0.7);
+  --color-glow: rgba(16, 185, 129, 0.35);
 }
 
+[data-theme="desert"] {
+  --color-bg-base: #1c1917;
+  --color-surface: #26211e;
+  --color-surface-elevated: #322a26;
+  --color-card-bg: rgba(38, 33, 30, 0.88);
+  --color-primary-gold: #d97706;
+  --color-primary-rgb: 217, 119, 6;
+  --color-primary-light: #fef3c7;
+  --color-accent: #b45309;
+  --color-accent-rgb: 180, 83, 9;
+  --color-border: rgba(217, 119, 6, 0.35);
+  --color-border-hover: rgba(251, 191, 36, 0.7);
+  --color-glow: rgba(217, 119, 6, 0.35);
+}
+
+/* ==========================================================
+   DYNAMIC THEME MAPPINGS: ZERO COLOR LEAKAGE
+   ========================================================== */
+
+/* Universal selection styling */
+[data-theme="emerald"] ::selection {
+  background-color: #10b981 !important;
+  color: #051610 !important;
+}
+
+[data-theme="desert"] ::selection {
+  background-color: #d97706 !important;
+  color: #1c1917 !important;
+}
+
+/* Base backgrounds & surfaces for Emerald */
 [data-theme="emerald"] body,
-[data-theme="emerald"] .theme-bg-root {
+[data-theme="emerald"] .theme-bg-root,
+[data-theme="emerald"] .bg-\[\#080809\] {
   background-color: #051610 !important;
 }
 
+[data-theme="emerald"] .bg-\[\#121215\],
+[data-theme="emerald"] .bg-\[\#0e0e11\],
+[data-theme="emerald"] .bg-\[\#161619\],
+[data-theme="emerald"] .bg-\[\#121214\] {
+  background-color: #0a261c !important;
+}
+
+[data-theme="emerald"] .bg-kiswah-card {
+  background: rgba(10, 38, 28, 0.9) !important;
+  border-color: rgba(16, 185, 129, 0.32) !important;
+}
+
+[data-theme="emerald"] .bg-kiswah-card-active {
+  background: rgba(13, 50, 36, 0.95) !important;
+  border-color: rgba(52, 211, 153, 0.65) !important;
+  box-shadow: 0 0 35px -5px rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Emerald Text Highlights */
 [data-theme="emerald"] .text-kiswah-gold {
   background: linear-gradient(135deg, #ecfdf5 0%, #a7f3d0 30%, #34d399 70%, #059669 100%) !important;
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
 }
 
+[data-theme="emerald"] .text-\[\#d4af37\],
+[data-theme="emerald"] .text-amber-300,
+[data-theme="emerald"] .text-yellow-400 {
+  color: #10b981 !important;
+}
+
+[data-theme="emerald"] .hover\:text-\[\#d4af37\]:hover {
+  color: #34d399 !important;
+}
+
+/* Emerald Borders */
+[data-theme="emerald"] .border-\[\#d4af37\],
+[data-theme="emerald"] .border-\[\#d4af37\]\/80 {
+  border-color: rgba(16, 185, 129, 0.8) !important;
+}
+
+[data-theme="emerald"] .border-\[\#d4af37\]\/70,
+[data-theme="emerald"] .border-\[\#d4af37\]\/65,
+[data-theme="emerald"] .border-\[\#d4af37\]\/60 {
+  border-color: rgba(16, 185, 129, 0.65) !important;
+}
+
+[data-theme="emerald"] .border-\[\#d4af37\]\/50,
+[data-theme="emerald"] .border-\[\#d4af37\]\/40,
+[data-theme="emerald"] .border-\[\#d4af37\]\/35,
+[data-theme="emerald"] .border-\[\#d4af37\]\/30 {
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+[data-theme="emerald"] .border-\[\#d4af37\]\/25,
+[data-theme="emerald"] .border-\[\#d4af37\]\/20,
+[data-theme="emerald"] .border-\[\#d4af37\]\/15,
+[data-theme="emerald"] .border-\[\#d4af37\]\/10 {
+  border-color: rgba(16, 185, 129, 0.2) !important;
+}
+
+[data-theme="emerald"] .hover\:border-\[\#d4af37\]\/60:hover,
+[data-theme="emerald"] .hover\:border-\[\#d4af37\]\/65:hover,
+[data-theme="emerald"] .hover\:border-\[\#d4af37\]:hover {
+  border-color: rgba(52, 211, 153, 0.75) !important;
+}
+
+/* Emerald Backgrounds & Badges */
 [data-theme="emerald"] .bg-kiswah-gold {
   background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #047857 100%) !important;
+  color: #ffffff !important;
 }
 
-[data-theme="emerald"] .bg-kiswah-card {
-  background: rgba(10, 36, 26, 0.9) !important;
-  border-color: rgba(16, 185, 129, 0.3) !important;
+[data-theme="emerald"] .bg-kiswah-gold-hover:hover {
+  background: linear-gradient(135deg, #6ee7b7 0%, #34d399 50%, #059669 100%) !important;
 }
 
-[data-theme="desert"] {
-  --color-bg-base: #171412;
-  --color-surface: #26211e;
-  --color-card-bg: rgba(38, 33, 30, 0.88);
-  --color-primary-gold: #f59e0b;
-  --color-primary-light: #fef3c7;
-  --color-accent: #d97706;
-  --color-border: rgba(245, 158, 11, 0.35);
-  --color-border-hover: rgba(251, 191, 36, 0.7);
+[data-theme="emerald"] .bg-\[\#d4af37\] {
+  background-color: #10b981 !important;
+  color: #ffffff !important;
 }
 
+[data-theme="emerald"] .bg-\[\#d4af37\]\/5 {
+  background-color: rgba(16, 185, 129, 0.05) !important;
+}
+[data-theme="emerald"] .bg-\[\#d4af37\]\/8 {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+}
+[data-theme="emerald"] .bg-\[\#d4af37\]\/10 {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+}
+[data-theme="emerald"] .bg-\[\#d4af37\]\/15 {
+  background-color: rgba(16, 185, 129, 0.18) !important;
+}
+[data-theme="emerald"] .bg-\[\#d4af37\]\/20 {
+  background-color: rgba(16, 185, 129, 0.24) !important;
+}
+[data-theme="emerald"] .bg-\[\#d4af37\]\/30 {
+  background-color: rgba(16, 185, 129, 0.32) !important;
+}
+[data-theme="emerald"] .bg-\[\#996515\]\/8 {
+  background-color: rgba(5, 150, 105, 0.08) !important;
+}
+
+[data-theme="emerald"] .kiswah-gold-glow {
+  box-shadow: 0 0 30px -5px rgba(16, 185, 129, 0.35) !important;
+}
+
+/* ==========================================================
+   DESERT SAND THEME OVERRIDES
+   ========================================================== */
+
+/* Base backgrounds & surfaces for Desert Sand */
 [data-theme="desert"] body,
-[data-theme="desert"] .theme-bg-root {
-  background-color: #171412 !important;
+[data-theme="desert"] .theme-bg-root,
+[data-theme="desert"] .bg-\[\#080809\] {
+  background-color: #1c1917 !important;
 }
 
+[data-theme="desert"] .bg-\[\#121215\],
+[data-theme="desert"] .bg-\[\#0e0e11\],
+[data-theme="desert"] .bg-\[\#161619\],
+[data-theme="desert"] .bg-\[\#121214\] {
+  background-color: #26211e !important;
+}
+
+[data-theme="desert"] .bg-kiswah-card {
+  background: rgba(38, 33, 30, 0.9) !important;
+  border-color: rgba(217, 119, 6, 0.35) !important;
+}
+
+[data-theme="desert"] .bg-kiswah-card-active {
+  background: rgba(50, 42, 38, 0.95) !important;
+  border-color: rgba(251, 191, 36, 0.65) !important;
+  box-shadow: 0 0 35px -5px rgba(217, 119, 6, 0.3) !important;
+}
+
+/* Desert Text Highlights */
 [data-theme="desert"] .text-kiswah-gold {
   background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 30%, #f59e0b 70%, #b45309 100%) !important;
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
 }
 
-[data-theme="desert"] .bg-kiswah-gold {
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #b45309 100%) !important;
+[data-theme="desert"] .text-\[\#d4af37\],
+[data-theme="desert"] .text-amber-300,
+[data-theme="desert"] .text-yellow-400 {
+  color: #d97706 !important;
 }
 
-[data-theme="desert"] .bg-kiswah-card {
-  background: rgba(38, 33, 30, 0.9) !important;
-  border-color: rgba(245, 158, 11, 0.3) !important;
+[data-theme="desert"] .hover\:text-\[\#d4af37\]:hover {
+  color: #f59e0b !important;
+}
+
+/* Desert Borders */
+[data-theme="desert"] .border-\[\#d4af37\],
+[data-theme="desert"] .border-\[\#d4af37\]\/80 {
+  border-color: rgba(217, 119, 6, 0.8) !important;
+}
+
+[data-theme="desert"] .border-\[\#d4af37\]\/70,
+[data-theme="desert"] .border-\[\#d4af37\]\/65,
+[data-theme="desert"] .border-\[\#d4af37\]\/60 {
+  border-color: rgba(217, 119, 6, 0.65) !important;
+}
+
+[data-theme="desert"] .border-\[\#d4af37\]\/50,
+[data-theme="desert"] .border-\[\#d4af37\]\/40,
+[data-theme="desert"] .border-\[\#d4af37\]\/35,
+[data-theme="desert"] .border-\[\#d4af37\]\/30 {
+  border-color: rgba(217, 119, 6, 0.35) !important;
+}
+
+[data-theme="desert"] .border-\[\#d4af37\]\/25,
+[data-theme="desert"] .border-\[\#d4af37\]\/20,
+[data-theme="desert"] .border-\[\#d4af37\]\/15,
+[data-theme="desert"] .border-\[\#d4af37\]\/10 {
+  border-color: rgba(217, 119, 6, 0.2) !important;
+}
+
+[data-theme="desert"] .hover\:border-\[\#d4af37\]\/60:hover,
+[data-theme="desert"] .hover\:border-\[\#d4af37\]\/65:hover,
+[data-theme="desert"] .hover\:border-\[\#d4af37\]:hover {
+  border-color: rgba(251, 191, 36, 0.75) !important;
+}
+
+/* Desert Backgrounds & Badges */
+[data-theme="desert"] .bg-kiswah-gold {
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 50%, #92400e 100%) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="desert"] .bg-kiswah-gold-hover:hover {
+  background: linear-gradient(135deg, #fde68a 0%, #f59e0b 50%, #b45309 100%) !important;
+}
+
+[data-theme="desert"] .bg-\[\#d4af37\] {
+  background-color: #d97706 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="desert"] .bg-\[\#d4af37\]\/5 {
+  background-color: rgba(217, 119, 6, 0.05) !important;
+}
+[data-theme="desert"] .bg-\[\#d4af37\]\/8 {
+  background-color: rgba(217, 119, 6, 0.08) !important;
+}
+[data-theme="desert"] .bg-\[\#d4af37\]\/10 {
+  background-color: rgba(217, 119, 6, 0.12) !important;
+}
+[data-theme="desert"] .bg-\[\#d4af37\]\/15 {
+  background-color: rgba(217, 119, 6, 0.18) !important;
+}
+[data-theme="desert"] .bg-\[\#d4af37\]\/20 {
+  background-color: rgba(217, 119, 6, 0.24) !important;
+}
+[data-theme="desert"] .bg-\[\#d4af37\]\/30 {
+  background-color: rgba(217, 119, 6, 0.32) !important;
+}
+[data-theme="desert"] .bg-\[\#996515\]\/8 {
+  background-color: rgba(180, 83, 9, 0.08) !important;
+}
+
+[data-theme="desert"] .kiswah-gold-glow {
+  box-shadow: 0 0 30px -5px rgba(217, 119, 6, 0.35) !important;
 }
 
 /* Kiswah Custom Scrollbar */
@@ -106,6 +327,26 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #d4af37;
+}
+
+[data-theme="emerald"] ::-webkit-scrollbar-track {
+  background: #051610 !important;
+}
+[data-theme="emerald"] ::-webkit-scrollbar-thumb {
+  background: #059669 !important;
+}
+[data-theme="emerald"] ::-webkit-scrollbar-thumb:hover {
+  background: #10b981 !important;
+}
+
+[data-theme="desert"] ::-webkit-scrollbar-track {
+  background: #1c1917 !important;
+}
+[data-theme="desert"] ::-webkit-scrollbar-thumb {
+  background: #b45309 !important;
+}
+[data-theme="desert"] ::-webkit-scrollbar-thumb:hover {
+  background: #d97706 !important;
 }
 
 /* Kiswah Gold Metallic & Jet Black Gradients */

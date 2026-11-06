@@ -28,7 +28,8 @@ router.post('/', (req, res) => {
       type, customerName, customerPhone, customerEmail,
       name, phone, email,
       items, totalBDT, totalUSD, deliveryAddress, address, notes,
-      tier, rawdahWindow, makkahHotel, madinahHotel
+      tier, rawdahWindow, makkahHotel, madinahHotel,
+      division, shippingFee, paymentMethod
     } = req.body;
 
     const resolvedName = customerName || name;
@@ -62,6 +63,9 @@ router.post('/', (req, res) => {
       totalBDT: Number(totalBDT) || 0,
       totalUSD: Number(totalUSD) || Math.round((Number(totalBDT) || 0) / 120),
       deliveryAddress: deliveryAddress || address || 'Horizon VIP Client Desk, Gulshan-2, Dhaka',
+      division: division || '',
+      shippingFee: Number(shippingFee) || 0,
+      paymentMethod: paymentMethod || 'Cash on Delivery',
       notes: notes || ''
     });
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import PackagesSection from './components/PackagesSection';
@@ -12,14 +13,126 @@ import FaqSection from './components/FaqSection';
 import Testimonials from './components/Testimonials';
 import Footer from './components/Footer';
 import ContactModal from './components/ContactModal';
+import CheckoutModal from './components/CheckoutModal';
 import PrivateDossierModal from './components/PrivateDossierModal';
 import PdfQuotationModal from './components/PdfQuotationModal';
 import AdminDashboard from './components/AdminDashboard';
+import AdminAuthGuard from './components/AdminAuthGuard';
 import CartDrawer from './components/CartDrawer';
+import ShopPage from './components/ShopPage';
+
+// Homepage Component holding the primary sanctuary pilgrimage sections
+function HomePage({
+  locale,
+  toggleLocale,
+  theme,
+  setTheme,
+  cartCount,
+  onOpenCart,
+  onOpenConsultationWithPreset,
+  scrollToCurator,
+  onOpenWizard,
+  handleAddToCart,
+  handleBuyNow,
+  navigate
+}) {
+  return (
+    <div className="min-h-screen theme-bg-root bg-[#080809] text-slate-100 flex flex-col font-sans selection:bg-[#d4af37] selection:text-[#080809]">
+      
+      {/* Luxury Navigation Header */}
+      <Navbar
+        locale={locale}
+        onToggleLocale={toggleLocale}
+        theme={theme}
+        onSelectTheme={setTheme}
+        onOpenConsultation={() => onOpenConsultationWithPreset()}
+        onNavigateCurator={scrollToCurator}
+        onOpenWizard={onOpenWizard}
+        cartCount={cartCount}
+        onOpenCart={onOpenCart}
+      />
+
+      {/* Main Luxury Sections */}
+      <main className="flex-1">
+        <Hero
+          locale={locale}
+          onOpenConsultation={() => onOpenConsultationWithPreset()}
+          onNavigateCurator={scrollToCurator}
+          onOpenWizard={onOpenWizard}
+        />
+
+        {/* 1. CURATED HAJJ & UMRAH VERIFIED PACKAGES (WITH HIGH-RESOLUTION ISLAMIC IMAGERY) */}
+        <PackagesSection
+          locale={locale}
+          onSelectPackage={onOpenConsultationWithPreset}
+          onOpenWizard={onOpenWizard}
+        />
+        
+        {/* 2. ATTENTION-GRABBING CUSTOM TOUR BUILDER */}
+        <ConciergeCurator
+          locale={locale}
+          onOpenWizard={onOpenWizard}
+          onOpenConsultation={onOpenConsultationWithPreset}
+        />
+
+        {/* 3. BESPOKE PRIVATE ROYAL FLEET & CHAUFFEUR SERVICES SECTION */}
+        <FleetSection
+          locale={locale}
+          onConfirmFleet={onOpenConsultationWithPreset}
+        />
+
+        {/* 4. SANCTUARY SUITES SHOWCASE */}
+        <SuiteShowcase
+          locale={locale}
+          onOpenConsultation={onOpenConsultationWithPreset}
+        />
+
+        {/* 5. PILGRIM ESSENTIALS PREVIEW GRID (WITH "VISIT FULL STORE" CTA) */}
+        <StoreSection
+          locale={locale}
+          onAddToCart={handleAddToCart}
+          onBuyNow={handleBuyNow}
+          onNavigateShop={() => navigate('/shop')}
+        />
+        
+        {/* 6. CONCIERGE PILLARS */}
+        <ConciergePillars
+          locale={locale}
+        />
+        
+        {/* 7. COMPREHENSIVE LUXURY FAQ ACCORDION */}
+        <FaqSection
+          locale={locale}
+        />
+
+        {/* 8. TESTIMONIALS */}
+        <Testimonials
+          locale={locale}
+        />
+      </main>
+
+      {/* Global Footer */}
+      <Footer
+        locale={locale}
+        onOpenConsultation={() => onOpenConsultationWithPreset()}
+      />
+
+    </div>
+  );
+}
 
 export default function App() {
-  // Locale State: 'en' | 'bn'
-  const [locale, setLocale] = useState('en');
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Locale State: 'bn' (default) | 'en'
+  const [locale, setLocale] = useState(() => {
+    return localStorage.getItem('horizon_locale') || 'bn';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('horizon_locale', locale);
+  }, [locale]);
 
   // Theme State: 'kiswah' (default) | 'emerald' | 'desert'
   const [theme, setTheme] = useState(() => {
@@ -31,30 +144,56 @@ export default function App() {
     localStorage.setItem('horizon_theme', theme);
   }, [theme]);
 
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   // Modals & Drawers States
   const [wizardOpen, setWizardOpen] = useState(false);
   const [contactModalOpen, setContactModalOpen] = useState(false);
-  const [adminDashboardOpen, setAdminDashboardOpen] = useState(false);
+  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
+
   const [dossierData, setDossierData] = useState(null);
   const [presetDataForModal, setPresetDataForModal] = useState(null);
   const [pdfModalData, setPdfModalData] = useState(null);
 
-  // E-Commerce Cart State
-  const [cartItems, setCartItems] = useState([]);
+  // E-Commerce Cart & Checkout State
+  const [cartItems, setCartItems] = useState(() => {
+    try {
+      const saved = localStorage.getItem('horizon_cart');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [checkoutItems, setCheckoutItems] = useState([]);
+
+  // Save cart to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('horizon_cart', JSON.stringify(cartItems));
+    } catch {}
+  }, [cartItems]);
 
   const toggleLocale = () => {
     setLocale((prev) => (prev === 'en' ? 'bn' : 'en'));
   };
 
   const scrollToCurator = () => {
+    if (location.pathname !== '/') {
+      navigate('/#curator');
+      return;
+    }
     const curatorElem = document.getElementById('custom-package') || document.getElementById('curator');
     if (curatorElem) {
       curatorElem.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
-  // Safe reservation modal trigger - removes broken triggers causing blank-screens
+  // Tour reservation modal trigger (for Hajj/Umrah Packages, Custom Tours & Vehicles)
   const handleOpenConsultationWithPreset = (data = null) => {
     if (data) {
       setPresetDataForModal(data);
@@ -100,98 +239,114 @@ export default function App() {
     setCartItems((prev) => prev.filter((item) => item.id !== id));
   };
 
-  const handleProceedToCheckout = (items, totalBDT) => {
-    const summaryItems = items.map((i) => `${i.name_en || i.name} (x${i.quantity || 1})`).join(', ');
-    handleOpenConsultationWithPreset({
-      tier: locale === 'bn' ? 'অনলাইন শপ অর্ডার চেকআউট' : 'Store Purchase Checkout',
-      packageName: `Cart Items: ${summaryItems}`,
-      totalBDT: totalBDT,
-      type: 'STORE PURCHASE'
-    });
+  // Proceed to Checkout for entire Cart Drawer
+  const handleProceedToCheckout = (items) => {
+    const targetItems = items && items.length > 0 ? items : cartItems;
+    if (targetItems.length === 0) return;
+    setCheckoutItems(targetItems);
+    setCartDrawerOpen(false);
+    setCheckoutModalOpen(true);
+  };
+
+  // Direct "Buy Now" handler for a single product from Store / ShopPage
+  const handleBuyNow = (product, quantity = 1) => {
+    setCheckoutItems([
+      {
+        id: product.id,
+        name: product.name_en,
+        name_en: product.name_en,
+        name_bn: product.name_bn,
+        priceBDT: product.priceBDT,
+        priceUSD: product.priceUSD,
+        image: product.image,
+        quantity: quantity
+      }
+    ]);
+    setCheckoutModalOpen(true);
+  };
+
+  // On successful order in CheckoutModal
+  const handleOrderSuccess = () => {
+    // If the completed checkout items were from the cart, clear the cart
+    setCartItems([]);
   };
 
   const cartCount = cartItems.reduce((acc, it) => acc + (it.quantity || 1), 0);
 
   return (
-    <div className="min-h-screen theme-bg-root bg-[#080809] text-slate-100 flex flex-col font-sans selection:bg-[#d4af37] selection:text-[#080809]">
-      
-      {/* Kiswah Luxury Navigation Header with Language & Theme Switcher */}
-      <Navbar
-        locale={locale}
-        onToggleLocale={toggleLocale}
-        theme={theme}
-        onSelectTheme={setTheme}
-        onOpenConsultation={() => handleOpenConsultationWithPreset()}
-        onNavigateCurator={scrollToCurator}
-        onOpenWizard={() => setWizardOpen(true)}
-        onOpenAdmin={() => setAdminDashboardOpen(true)}
-        cartCount={cartCount}
-        onOpenCart={() => setCartDrawerOpen(true)}
-      />
-
-      {/* Main Luxury Content Sections */}
-      <main className="flex-1">
-        <Hero
-          locale={locale}
-          onOpenConsultation={() => handleOpenConsultationWithPreset()}
-          onNavigateCurator={scrollToCurator}
-          onOpenWizard={() => setWizardOpen(true)}
+    <>
+      <Routes>
+        {/* HOMEPAGE ROUTE */}
+        <Route
+          path="/"
+          element={
+            <HomePage
+              locale={locale}
+              toggleLocale={toggleLocale}
+              theme={theme}
+              setTheme={setTheme}
+              cartCount={cartCount}
+              onOpenCart={() => setCartDrawerOpen(true)}
+              onOpenConsultationWithPreset={handleOpenConsultationWithPreset}
+              scrollToCurator={scrollToCurator}
+              onOpenWizard={() => setWizardOpen(true)}
+              handleAddToCart={handleAddToCart}
+              handleBuyNow={handleBuyNow}
+              navigate={navigate}
+            />
+          }
         />
 
-        {/* 1. CURATED HAJJ & UMRAH VERIFIED PACKAGES (CMS HYDRATED - ONLY ONE UNIFIED SECTION) */}
-        <PackagesSection
-          locale={locale}
-          onSelectPackage={handleOpenConsultationWithPreset}
-          onOpenWizard={() => setWizardOpen(true)}
-        />
-        
-        {/* 2. ATTENTION-GRABBING CUSTOM TOUR BUILDER (NO DUPLICATE PACKAGES) */}
-        <ConciergeCurator
-          locale={locale}
-          onOpenWizard={() => setWizardOpen(true)}
-          onOpenConsultation={handleOpenConsultationWithPreset}
-        />
-
-        {/* 3. BESPOKE PRIVATE ROYAL FLEET & CHAUFFEUR SERVICES SECTION */}
-        <FleetSection
-          locale={locale}
-          onConfirmFleet={handleOpenConsultationWithPreset}
-        />
-
-        {/* 4. SANCTUARY SUITES SHOWCASE */}
-        <SuiteShowcase
-          locale={locale}
-          onOpenConsultation={handleOpenConsultationWithPreset}
+        {/* DEDICATED STANDALONE E-COMMERCE SHOP ROUTE (/shop) FOR SOCIAL MEDIA ADS */}
+        <Route
+          path="/shop"
+          element={
+            <ShopPage
+              locale={locale}
+              onToggleLocale={toggleLocale}
+              theme={theme}
+              onSelectTheme={setTheme}
+              cartItems={cartItems}
+              cartCount={cartCount}
+              onOpenCart={() => setCartDrawerOpen(true)}
+              onAddToCart={handleAddToCart}
+              onBuyNow={handleBuyNow}
+              onOpenConsultation={() => handleOpenConsultationWithPreset()}
+            />
+          }
         />
 
-        {/* 5. PILGRIM ESSENTIALS & LUXURY RELICS STORE (E-COMMERCE BACKEND) */}
-        <StoreSection
-          locale={locale}
-          onAddToCart={handleAddToCart}
-        />
-        
-        {/* 6. CONCIERGE PILLARS */}
-        <ConciergePillars
-          locale={locale}
-        />
-        
-        {/* 7. COMPREHENSIVE LUXURY FAQ ACCORDION */}
-        <FaqSection
-          locale={locale}
+        {/* DEDICATED PRIVATE ADMIN CMS & ORDERS ROUTE (/admin) */}
+        <Route
+          path="/admin"
+          element={
+            <AdminAuthGuard>
+              <AdminDashboard locale={locale} />
+            </AdminAuthGuard>
+          }
         />
 
-        {/* 8. TESTIMONIALS */}
-        <Testimonials
-          locale={locale}
+        {/* CATCH-ALL REDIRECT TO HOME */}
+        <Route
+          path="*"
+          element={
+            <HomePage
+              locale={locale}
+              toggleLocale={toggleLocale}
+              theme={theme}
+              setTheme={setTheme}
+              cartCount={cartCount}
+              onOpenCart={() => setCartDrawerOpen(true)}
+              onOpenConsultationWithPreset={handleOpenConsultationWithPreset}
+              scrollToCurator={scrollToCurator}
+              onOpenWizard={() => setWizardOpen(true)}
+              handleAddToCart={handleAddToCart}
+              handleBuyNow={handleBuyNow}
+              navigate={navigate}
+            />
+          }
         />
-      </main>
-
-      {/* Global Footer */}
-      <Footer
-        locale={locale}
-        onOpenConsultation={() => handleOpenConsultationWithPreset()}
-        onOpenAdmin={() => setAdminDashboardOpen(true)}
-      />
+      </Routes>
 
       {/* FULL-SCREEN INTERACTIVE MULTI-STEP GUIDED CONCIERGE WIZARD */}
       <ConciergeWizardModal
@@ -201,7 +356,7 @@ export default function App() {
         onOpenPdfModal={(data) => setPdfModalData(data)}
       />
 
-      {/* VIP CREDENTIALS RESERVATION MODAL (GLASSMORPHISM, CONFETTI & WHATSAPP LINK) */}
+      {/* VIP CREDENTIALS RESERVATION MODAL (FOR TOURS, PACKAGES & FLEET RESERVATIONS) */}
       {contactModalOpen && (
         <ContactModal
           locale={locale}
@@ -213,6 +368,15 @@ export default function App() {
         />
       )}
 
+      {/* DEDICATED E-COMMERCE CHECKOUT MODAL (WITH COD, ADDRESS, BANGLADESH DIVISIONS & SHIPPING FEES) */}
+      <CheckoutModal
+        isOpen={checkoutModalOpen}
+        onClose={() => setCheckoutModalOpen(false)}
+        locale={locale}
+        items={checkoutItems}
+        onOrderSuccess={handleOrderSuccess}
+      />
+
       {/* SLIDE-IN PILGRIM ESSENTIALS CART DRAWER */}
       <CartDrawer
         isOpen={cartDrawerOpen}
@@ -223,8 +387,8 @@ export default function App() {
         onRemoveItem={handleRemoveFromCart}
         onProceedToCheckout={handleProceedToCheckout}
         onExploreStore={() => {
-          const el = document.getElementById('store');
-          if (el) el.scrollIntoView({ behavior: 'smooth' });
+          setCartDrawerOpen(false);
+          navigate('/shop');
         }}
       />
 
@@ -244,14 +408,6 @@ export default function App() {
           onClose={() => setPdfModalData(null)}
         />
       )}
-
-      {/* Dynamic Content Management System (CMS) & Orders Admin Dashboard */}
-      <AdminDashboard
-        isOpen={adminDashboardOpen}
-        onClose={() => setAdminDashboardOpen(false)}
-        locale={locale}
-      />
-
-    </div>
+    </>
   );
 }

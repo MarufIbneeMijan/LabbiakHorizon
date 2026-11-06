@@ -277,6 +277,7 @@ export const db = {
       image: prodData.image || 'https://images.unsplash.com/photo-1548625361-1250269f8303?auto=format&fit=crop&q=80&w=800',
       description_en: prodData.description_en || 'High-grade pilgrim essential for spiritual comfort.',
       description_bn: prodData.description_bn || 'পবিত্র সফরে আরামদায়ক ইবাদতের উপযোগী উপাদান।',
+      specifications: Array.isArray(prodData.specifications) ? prodData.specifications.slice(0, 4) : [],
       createdAt: new Date().toISOString()
     };
 
@@ -321,7 +322,9 @@ export const db = {
     return {
       routes: database.transport.routes.map(r => ({
         ...r,
-        finalPriceSAR: calculateTieredMarkup(r.basePriceSAR)
+        finalPriceSAR: calculateTieredMarkup(r.basePriceSAR),
+        priceBDT: r.priceBDT !== undefined ? Number(r.priceBDT) : Math.round((calculateTieredMarkup(r.basePriceSAR) || 1600) * 33),
+        vehicleType: r.vehicleType || r.typeEn || 'GMC Yukon / VIP Fleet'
       })),
       vehicles: database.transport.vehicles
     };
@@ -333,12 +336,20 @@ export const db = {
     if (index === -1) return null;
 
     const current = database.transport.routes[index];
-    const newBase = updates.basePriceSAR !== undefined ? Number(updates.basePriceSAR) : current.basePriceSAR;
-    const finalPriceSAR = calculateTieredMarkup(newBase);
+    let newBase = updates.basePriceSAR !== undefined ? Number(updates.basePriceSAR) : current.basePriceSAR;
+    let finalPriceSAR = calculateTieredMarkup(newBase);
+    let priceBDT = updates.priceBDT !== undefined ? Number(updates.priceBDT) : (current.priceBDT || Math.round(finalPriceSAR * 33));
+
+    if (updates.priceBDT !== undefined && updates.basePriceSAR === undefined) {
+      newBase = Math.round(Number(updates.priceBDT) / 33);
+      finalPriceSAR = newBase;
+    }
 
     const updated = {
       ...current,
       ...updates,
+      priceBDT,
+      vehicleType: updates.vehicleType || current.vehicleType || current.typeEn || 'GMC Yukon / VIP Fleet',
       basePriceSAR: newBase,
       finalPriceSAR,
       updatedAt: new Date().toISOString()
@@ -362,19 +373,22 @@ export const db = {
 
   addRoute(routeData) {
     const database = getDb();
-    const newBase = Number(routeData.basePriceSAR) || 600;
+    const priceBDT = Number(routeData.priceBDT) || Math.round((Number(routeData.basePriceSAR) || 600) * 33);
+    const newBase = Number(routeData.basePriceSAR) || Math.round(priceBDT / 33) || 600;
     const finalPriceSAR = calculateTieredMarkup(newBase);
 
     const newRoute = {
       id: routeData.id || `route-${Date.now()}`,
       nameEn: routeData.nameEn || routeData.name_en || 'New VIP Transport Route',
       nameBn: routeData.nameBn || routeData.name_bn || 'নতুন ভিআইপি ট্রান্সপোর্ট রুট',
+      vehicleType: routeData.vehicleType || routeData.vehicleTypeEn || routeData.typeEn || 'GMC Yukon VIP',
+      priceBDT,
       descEn: routeData.descEn || routeData.desc_en || 'Private chauffeur route with airport and hotel transfer service.',
       descBn: routeData.descBn || routeData.desc_bn || 'প্রাইভেট শফার কার সহ আরামদায়ক ও সময়নিষ্ঠ ট্রান্সফার সার্ভিস।',
-      typeEn: routeData.typeEn || routeData.type_en || 'Private Chauffeur',
+      typeEn: routeData.typeEn || routeData.type_en || routeData.vehicleType || 'Private Chauffeur',
       typeBn: routeData.typeBn || routeData.type_bn || 'প্রাইভেট সফর',
-      distanceEn: routeData.distanceEn || 'Variable distance',
-      distanceBn: routeData.distanceBn || 'দূরত্ব ভিত্তিক',
+      distanceEn: routeData.distanceEn || 'Express Route',
+      distanceBn: routeData.distanceBn || 'এক্সপ্রেস রুট',
       basePriceSAR: newBase,
       finalPriceSAR,
       createdAt: new Date().toISOString()
@@ -392,6 +406,17 @@ export const db = {
 
     saveDb();
     return newRoute;
+  },
+
+  deleteRoute(id) {
+    const database = getDb();
+    const initialLen = database.transport.routes.length;
+    database.transport.routes = database.transport.routes.filter(r => r.id !== id);
+    if (database.transport.routes.length !== initialLen) {
+      saveDb();
+      return true;
+    }
+    return false;
   },
 
   // --- ORDERS & ENQUIRIES ---
@@ -413,6 +438,9 @@ export const db = {
       totalBDT: Number(orderData.totalBDT) || 0,
       totalUSD: Number(orderData.totalUSD) || Math.round((Number(orderData.totalBDT) || 0) / 120),
       deliveryAddress: orderData.deliveryAddress || orderData.address || 'Horizon Lounge, Gulshan-2, Dhaka',
+      division: orderData.division || '',
+      shippingFee: Number(orderData.shippingFee) || 0,
+      paymentMethod: orderData.paymentMethod || 'Cash on Delivery',
       notes: orderData.notes || '',
       createdAt: new Date().toISOString()
     };

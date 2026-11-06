@@ -20,7 +20,6 @@ export default function Navbar({
   onOpenConsultation = () => {}, 
   onNavigateCurator = () => {}, 
   onOpenWizard = () => {},
-  onOpenAdmin = () => {},
   cartCount = 0,
   onOpenCart = () => {}
 }) {
@@ -51,11 +50,13 @@ export default function Navbar({
   });
 
   // Exactly 4 primary navigation touchpoints as specified in UX architecture
+  const isShopPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/shop');
+
   const primaryNavLinks = [
-    { name: isBn ? 'প্যাকেজ সমূহ' : 'Packages', href: '#packages' },
-    { name: isBn ? 'প্রাইভেট ট্রান্সপোর্ট' : 'Transport Fleet', href: '#fleet' },
-    { name: isBn ? 'অনলাইন শপ' : 'Pilgrim Essentials', href: '#store' },
-    { name: isBn ? 'সাধারণ জিজ্ঞাসা' : 'FAQ', href: '#faq' },
+    { name: isBn ? 'প্যাকেজ সমূহ' : 'Packages', href: isShopPage ? '/#packages' : '#packages' },
+    { name: isBn ? 'প্রাইভেট ট্রান্সপোর্ট' : 'Transport Fleet', href: isShopPage ? '/#fleet' : '#fleet' },
+    { name: isBn ? 'অনলাইন শপ' : 'Pilgrim Essentials', href: '/shop' },
+    { name: isBn ? 'সাধারণ জিজ্ঞাসা' : 'FAQ', href: isShopPage ? '/#faq' : '#faq' },
   ];
 
   return (
@@ -88,20 +89,6 @@ export default function Navbar({
           </div>
 
           <div className="flex items-center gap-3 sm:gap-4 text-xs font-semibold">
-            {/* Admin Portal Button */}
-            <button
-              onClick={onOpenAdmin}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#d4af37]/10 border border-[#d4af37]/40 text-[#d4af37] hover:bg-[#d4af37] hover:text-[#080809] transition-colors cursor-pointer"
-              title={isBn ? 'অ্যাডমিন পোর্টাল ও সিএমএস' : 'Admin Portal & CMS'}
-            >
-              <Lock className="w-3 h-3" />
-              <span className="font-serif uppercase font-bold text-[10px] tracking-wider">
-                {dict.nav?.admin || (isBn ? 'অ্যাডমিন' : 'Admin CMS')}
-              </span>
-            </button>
-
-            <span className="text-[#d4af37]/40">|</span>
-
             <a 
               href="tel:+8801800522224" 
               className="flex items-center gap-1.5 text-kiswah-gold hover:opacity-80 transition-opacity"
@@ -118,7 +105,7 @@ export default function Navbar({
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           
           {/* Brand Logo */}
-          <a href="#" className="flex items-center gap-3 group shrink-0">
+          <a href="/" className="flex items-center gap-3 group shrink-0">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#e5c158] via-[#d4af37] to-[#996515] p-0.5 shadow-xl shadow-[#d4af37]/20 flex items-center justify-center group-hover:scale-105 transition-transform">
               <div className="w-full h-full bg-[#080809] rounded-[10px] flex items-center justify-center text-lg font-serif">
                 🕋
@@ -399,20 +386,6 @@ export default function Navbar({
                 <Sparkles className="w-4 h-4 text-[#080809]" />
                 <span>{isBn ? 'কাস্টম প্যাকেজ তৈরি করুন' : 'Build Custom Package'}</span>
               </button>
-
-              {/* Admin Portal Quick Link */}
-              <div className="text-center pt-2">
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    onOpenAdmin();
-                  }}
-                  className="inline-flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-[#d4af37] font-mono cursor-pointer"
-                >
-                  <Lock className="w-3 h-3 text-[#d4af37]" />
-                  <span>{dict.nav?.admin || (isBn ? 'অ্যাডমিন পোর্টাল' : 'Admin Control Center')}</span>
-                </button>
-              </div>
 
             </motion.div>
           </div>

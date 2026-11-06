@@ -25,24 +25,107 @@
         "৫-স্টার উঠানমুখী হোটেল",
         "এসি পরিবহন সুবিধা"
       ],
-      "image": "https://images.unsplash.com/photo-1591604466107-ec97de577aff?auto=format&fit=crop&q=80&w=800",
+      "image": "https://i.ibb.co.com/m5YrYHtD/pexels-rushdi-fatani-782816372-38546869.jpg",
       "accentColor": "from-amber-500/30 to-amber-950/50",
       "borderColor": "border-[#d4af37]",
       "tagColor": "text-[#d4af37]",
       "isPopular": false,
-      "createdAt": "2026-11-05T17:34:17.954Z"
+      "createdAt": "2026-11-05T17:34:17.954Z",
+      "selectedHotelIds": [],
+      "flightTier": "Direct Flight - Saudia / Biman VIP",
+      "flightLuggage": "2x 23kg Check-in (46kg) + 7kg Cabin Baggage + 5L Zamzam",
+      "flightRoute": "Dhaka ➔ Jeddah ➔ Madinah ➔ Dhaka (Direct)",
+      "flightAircraft": "Boeing 787-9 Dreamliner / Boeing 777-300ER",
+      "itinerary": [
+        {
+          "day": "Day 1",
+          "day_bn": "দিন ১",
+          "title": "Dhaka Departure & Royal Jeddah Arrival",
+          "title_bn": "ঢাকা ত্যাগ ও জেদ্দা রাজকীয় আগমন",
+          "desc": "VIP flight from DAC to JED, private chauffeur transfer to Makkah 5-star hotel.",
+          "desc_bn": "ঢাকা থেকে বিমানে জেদ্দা পৌঁছানো এবং প্রাইভেট চফারে মক্কা ৫-স্টার হোটেলে স্থানান্তর।"
+        },
+        {
+          "day": "Day 2",
+          "day_bn": "দিন ২",
+          "title": "Guided Umrah under Senior Scholar Direction",
+          "title_bn": "মোয়াল্লিমের নেতৃত্বে পবিত্র উমরাহ পালন",
+          "desc": "Performing peaceful Umrah rites with dedicated scholar guidance.",
+          "desc_bn": "অভিজ্ঞ আলেমের নির্দেশনায় তাওয়াফ, সাঈ ও হালাল সঠিকভাবে সুন্নাহ মোতাবেক সম্পন্ন করা।"
+        },
+        {
+          "day": "Day 3–5",
+          "day_bn": "দিন ৩–৫",
+          "title": "Makkah Sacred Ziyarah & Prayers",
+          "title_bn": "মক্কার ঐতিহাসিক জিয়ারত ও ইবাদত",
+          "desc": "Excursion to Cave Hira, Thawr, Mina, and unhurried courtyard prayers.",
+          "desc_bn": "জাবালে নূর, জাবালে সওর ও আরাফাত পরিদর্শন। হারামে নফল ইবাদতের পর্যাপ্ত সময়।"
+        },
+        {
+          "day": "Day 6",
+          "day_bn": "দিন ৬",
+          "title": "Haramain High-Speed Train to Madinah",
+          "title_bn": "হারামাইন বুলেট ট্রেনে মদিনা যাত্রা",
+          "desc": "First-Class high-speed bullet train transfer to Madinah Al-Munawwarah.",
+          "desc_bn": "বুলেট ট্রেনের ফার্স্ট ক্লাস কেবিনে আরামদায়কভাবে মদিনায় গমন।"
+        },
+        {
+          "day": "Day 7–8",
+          "day_bn": "দিন ৭–৮",
+          "title": "Rawdah Sharif Ziyarah & Prophet's Mosque",
+          "title_bn": "রওজা শরিফ জিয়ারত ও মসজিদে নববী",
+          "desc": "Priority entry to Rawdah Sharif and spiritual solace in the Prophet's Mosque.",
+          "desc_bn": "নুসুক অ্যাপ পারমিটে রিয়াদুল জান্নাতে সালাত ও রাসুলুল্লাহ (সাঃ)-এর রওজায় সালাম পেশ।"
+        },
+        {
+          "day": "Day 9–10",
+          "day_bn": "দিন ৯–১০",
+          "title": "Madinah Ziyarah & Homeward Return",
+          "title_bn": "মদিনা জিয়ারত ও ঢাকায় প্রত্যাবর্তন",
+          "desc": "Visiting Quba Mosque and Mount Uhud before direct flight return to Dhaka.",
+          "desc_bn": "মসজিদে কুবা ও উহুদ প্রান্তর পরিদর্শন শেষে ঢাকায় সম্মানজনক প্রত্যাবর্তন।"
+        }
+      ],
+      "inclusions": [
+        {
+          "title": "VIP Visa & Priority Rawdah Permit",
+          "title_bn": "ভিআইপি ভিসা ও নুসুক অগ্রাধিকার রওজা পারমিট",
+          "desc": "Ministry-verified visa with fast-track Nusuk Rawdah reservation."
+        },
+        {
+          "title": "1-on-1 Senior Scholar Moallim",
+          "title_bn": "ব্যক্তিগত অভিজ্ঞ আলেম মোয়াল্লিম গাইড",
+          "desc": "Experienced Bengali scholar escorting every ritual and tawaf."
+        },
+        {
+          "title": "Private AC Fleet & Bullet Train 1st Class",
+          "title_bn": "প্রাইভেট এসি পরিবহন ও বুলেট ট্রেন ফার্স্ট ক্লাস",
+          "desc": "Airport transfers and intercity travel in luxury vehicles."
+        },
+        {
+          "title": "5L Zamzam & Dates to Dhaka Home",
+          "title_bn": "ঢাকায় বাসায় ৫ লিটার জমজম ও খেজুর ডেলিভারি",
+          "desc": "Sealed official Zamzam delivered to your doorstep in Dhaka."
+        },
+        {
+          "title": "CIP Airport Fast-Track Protocol",
+          "title_bn": "সিআইপি ফাস্ট-ট্র্যাক এয়ারপোর্ট প্রোটোকল",
+          "desc": "Expedited customs and lounge access at Dhaka & Jeddah airports."
+        }
+      ],
+      "updatedAt": "2026-11-06T00:17:58.685Z"
     },
     {
       "id": "umrah-vip-clocktower",
-      "type": "umrah",
+      "type": "hajj",
       "title_en": "VIP Clock Tower Royal Penthouse Umrah",
       "title_bn": "ভিআইপি ক্লক টাওয়ার রয়্যাল পেন্টহাউস ওমরাহ",
       "badge_en": "Presidential Tier",
       "badge_bn": "প্রেসিডেন্সিয়াল ক্যাটাগরি",
       "priceBDT": 285000,
       "priceUSD": 2380,
-      "price_en": "৳ 285,000 / $2,380",
-      "price_bn": "৳ ২৮৫,০০০/-",
+      "price_en": "৳ 285,000",
+      "price_bn": "৳ 285,000/-",
       "priceUnit_en": "per person",
       "priceUnit_bn": "জনপ্রতি",
       "image": "https://images.unsplash.com/photo-1591604466107-ec97de577aff?auto=format&fit=crop&q=80&w=800",
@@ -67,7 +150,90 @@
         "হারামাইন বুলেট ট্রেন ভিআইপি ফার্স্ট ক্লাস প্রাইভেট ক্যাবিন",
         "১-অন-১ প্রবীণ আলেম স্কলারের ব্যক্তিগত মোয়াল্লেম গাইড",
         "এক্সিকিউটিভ বুফে ক্যাটারিং ও ঢাকায় বাসায় ৫ লিটার জমজম পৌঁছানো"
-      ]
+      ],
+      "selectedHotelIds": [],
+      "flightTier": "Direct Flight - Saudia / Biman VIP",
+      "flightLuggage": "2x 23kg Check-in (46kg) + 7kg Cabin Baggage + 5L Zamzam",
+      "flightRoute": "Dhaka ➔ Jeddah ➔ Madinah ➔ Dhaka (Direct)",
+      "flightAircraft": "Boeing 787-9 Dreamliner / Boeing 777-300ER",
+      "itinerary": [
+        {
+          "day": "Day 1",
+          "day_bn": "দিন ১",
+          "title": "Dhaka Departure & Royal Jeddah Arrival",
+          "title_bn": "ঢাকা ত্যাগ ও জেদ্দা রাজকীয় আগমন",
+          "desc": "VIP flight from DAC to JED, private chauffeur transfer to Makkah 5-star hotel.",
+          "desc_bn": "ঢাকা থেকে বিমানে জেদ্দা পৌঁছানো এবং প্রাইভেট চফারে মক্কা ৫-স্টার হোটেলে স্থানান্তর।"
+        },
+        {
+          "day": "Day 2",
+          "day_bn": "দিন ২",
+          "title": "Guided Umrah under Senior Scholar Direction",
+          "title_bn": "মোয়াল্লিমের নেতৃত্বে পবিত্র উমরাহ পালন",
+          "desc": "Performing peaceful Umrah rites with dedicated scholar guidance.",
+          "desc_bn": "অভিজ্ঞ আলেমের নির্দেশনায় তাওয়াফ, সাঈ ও হালাল সঠিকভাবে সুন্নাহ মোতাবেক সম্পন্ন করা।"
+        },
+        {
+          "day": "Day 3–5",
+          "day_bn": "দিন ৩–৫",
+          "title": "Makkah Sacred Ziyarah & Prayers",
+          "title_bn": "মক্কার ঐতিহাসিক জিয়ারত ও ইবাদত",
+          "desc": "Excursion to Cave Hira, Thawr, Mina, and unhurried courtyard prayers.",
+          "desc_bn": "জাবালে নূর, জাবালে সওর ও আরাফাত পরিদর্শন। হারামে নফল ইবাদতের পর্যাপ্ত সময়।"
+        },
+        {
+          "day": "Day 6",
+          "day_bn": "দিন ৬",
+          "title": "Haramain High-Speed Train to Madinah",
+          "title_bn": "হারামাইন বুলেট ট্রেনে মদিনা যাত্রা",
+          "desc": "First-Class high-speed bullet train transfer to Madinah Al-Munawwarah.",
+          "desc_bn": "বুলেট ট্রেনের ফার্স্ট ক্লাস কেবিনে আরামদায়কভাবে মদিনায় গমন।"
+        },
+        {
+          "day": "Day 7–8",
+          "day_bn": "দিন ৭–৮",
+          "title": "Rawdah Sharif Ziyarah & Prophet's Mosque",
+          "title_bn": "রওজা শরিফ জিয়ারত ও মসজিদে নববী",
+          "desc": "Priority entry to Rawdah Sharif and spiritual solace in the Prophet's Mosque.",
+          "desc_bn": "নুসুক অ্যাপ পারমিটে রিয়াদুল জান্নাতে সালাত ও রাসুলুল্লাহ (সাঃ)-এর রওজায় সালাম পেশ।"
+        },
+        {
+          "day": "Day 9–10",
+          "day_bn": "দিন ৯–১০",
+          "title": "Madinah Ziyarah & Homeward Return",
+          "title_bn": "মদিনা জিয়ারত ও ঢাকায় প্রত্যাবর্তন",
+          "desc": "Visiting Quba Mosque and Mount Uhud before direct flight return to Dhaka.",
+          "desc_bn": "মসজিদে কুবা ও উহুদ প্রান্তর পরিদর্শন শেষে ঢাকায় সম্মানজনক প্রত্যাবর্তন।"
+        }
+      ],
+      "inclusions": [
+        {
+          "title": "VIP Visa & Priority Rawdah Permit",
+          "title_bn": "ভিআইপি ভিসা ও নুসুক অগ্রাধিকার রওজা পারমিট",
+          "desc": "Ministry-verified visa with fast-track Nusuk Rawdah reservation."
+        },
+        {
+          "title": "1-on-1 Senior Scholar Moallim",
+          "title_bn": "ব্যক্তিগত অভিজ্ঞ আলেম মোয়াল্লিম গাইড",
+          "desc": "Experienced Bengali scholar escorting every ritual and tawaf."
+        },
+        {
+          "title": "Private AC Fleet & Bullet Train 1st Class",
+          "title_bn": "প্রাইভেট এসি পরিবহন ও বুলেট ট্রেন ফার্স্ট ক্লাস",
+          "desc": "Airport transfers and intercity travel in luxury vehicles."
+        },
+        {
+          "title": "5L Zamzam & Dates to Dhaka Home",
+          "title_bn": "ঢাকায় বাসায় ৫ লিটার জমজম ও খেজুর ডেলিভারি",
+          "desc": "Sealed official Zamzam delivered to your doorstep in Dhaka."
+        },
+        {
+          "title": "CIP Airport Fast-Track Protocol",
+          "title_bn": "সিআইপি ফাস্ট-ট্র্যাক এয়ারপোর্ট প্রোটোকল",
+          "desc": "Expedited customs and lounge access at Dhaka & Jeddah airports."
+        }
+      ],
+      "updatedAt": "2026-11-06T00:47:07.720Z"
     },
     {
       "id": "umrah-executive-courtyard",
@@ -278,20 +444,6 @@
   "transport": {
     "routes": [
       {
-        "id": "jed_makkah",
-        "nameEn": "Jeddah Airport (JED) → Makkah Hotel",
-        "nameBn": "জেদ্দা বিমানবন্দর (JED) → মক্কা হোটেল",
-        "descEn": "Direct VIP Airport meet & greet with luggage assistance to your Clock Tower or Haram courtyard hotel.",
-        "descBn": "লগেজ সুবিধা সহ জেদ্দা এয়ারপোর্ট থেকে সরাসরি মক্কা ক্লক টাওয়ার বা হারাম চত্বরের হোটেলে ট্রান্সফার।",
-        "typeEn": "Airport Arrival",
-        "typeBn": "এয়ারপোর্ট অ্যারাইভাল",
-        "distanceEn": "95 km (approx. 60 mins)",
-        "distanceBn": "৯৫ কিমি (আনুমানিক ৬০ মিনিট)",
-        "basePriceSAR": 1600,
-        "finalPriceSAR": 1750,
-        "updatedAt": "2026-11-03T16:28:45.706Z"
-      },
-      {
         "id": "makkah_madinah",
         "nameEn": "Makkah Hotel → Madinah Hotel (Intercity)",
         "nameBn": "মক্কা হোটেল → মদিনা হোটেল (ইন্টারসিটি)",
@@ -445,26 +597,30 @@
   },
   "orders": [
     {
-      "id": "ORD-2026-5206",
+      "id": "ORD-2026-2399",
       "type": "store_order",
-      "customerName": "Alamgir",
+      "customerName": "Abdul Hamid",
       "customerPhone": "01617050445",
       "customerEmail": "vip@labbaikhorizon.com",
-      "status": "Completed",
+      "status": "Pending",
       "items": [
         {
-          "id": "prod-ortho-rug",
-          "name": "অর্থোপেডিক মেমোরি ফোম জায়নামাজ (কিসওয়াহ গোল্ড ডিজাইন)",
+          "id": "prod-1793900152771",
+          "name": "ভাই রে ভাই ",
           "quantity": 1,
-          "priceBDT": 4800
+          "priceBDT": 35500,
+          "image": "https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?auto=format&fit=crop&q=80&w=800"
         }
       ],
-      "totalBDT": 4800,
-      "totalUSD": 40,
-      "deliveryAddress": "House 12",
-      "notes": "House 13",
-      "createdAt": "2026-11-03T17:07:27.550Z",
-      "updatedAt": "2026-11-03T17:07:40.536Z"
+      "totalBDT": 35650,
+      "totalUSD": 297,
+      "deliveryAddress": "banasree, ঢাকার বাইরে (Outside Dhaka), Bangladesh",
+      "division": "Outside Dhaka (ঢাকার বাইরে)",
+      "shippingFee": 150,
+      "paymentMethod": "ক্যাশ অন ডেলিভারি (Cash on Delivery)",
+      "notes": "No special delivery instructions provided.",
+      "createdAt": "2026-11-06T00:45:55.123Z",
+      "updatedAt": "2026-11-06T01:22:11.840Z"
     },
     {
       "id": "ORD-2026-1858",

@@ -140,6 +140,7 @@ export const authAPI = {
       if (res.ok && data.token) {
         localStorage.setItem('horizon_admin_token', data.token);
         localStorage.setItem('horizon_admin_user', JSON.stringify(data.user));
+        localStorage.setItem('isAdminAuthenticated', 'true');
         return { success: true, data };
       }
       return { success: false, message: data.message || 'Login failed' };
@@ -151,6 +152,7 @@ export const authAPI = {
         const user = { name: 'Private Client Director', role: 'admin' };
         localStorage.setItem('horizon_admin_token', dummyToken);
         localStorage.setItem('horizon_admin_user', JSON.stringify(user));
+        localStorage.setItem('isAdminAuthenticated', 'true');
         return { success: true, data: { token: dummyToken, user }, isOffline: true };
       }
       return { success: false, message: 'Invalid credentials or API offline' };
@@ -159,9 +161,13 @@ export const authAPI = {
 
   async verify() {
     const token = localStorage.getItem('horizon_admin_token');
-    if (!token) return { success: false };
+    if (!token) {
+      localStorage.removeItem('isAdminAuthenticated');
+      return { success: false };
+    }
     if (token.startsWith('offline_vip_token_')) {
       const user = JSON.parse(localStorage.getItem('horizon_admin_user') || '{}');
+      localStorage.setItem('isAdminAuthenticated', 'true');
       return { success: true, user, isOffline: true };
     }
 
@@ -171,10 +177,13 @@ export const authAPI = {
       });
       if (res.ok) {
         const data = await res.json();
+        localStorage.setItem('isAdminAuthenticated', 'true');
         return { success: true, user: data.user };
       }
+      localStorage.removeItem('isAdminAuthenticated');
       return { success: false };
     } catch {
+      localStorage.setItem('isAdminAuthenticated', 'true');
       return { success: true, user: { name: 'Private Client Director', role: 'admin' }, isOffline: true };
     }
   },
@@ -182,6 +191,7 @@ export const authAPI = {
   logout() {
     localStorage.removeItem('horizon_admin_token');
     localStorage.removeItem('horizon_admin_user');
+    localStorage.removeItem('isAdminAuthenticated');
   }
 };
 
@@ -446,12 +456,15 @@ export const transportAPI = {
     const current = await this.get();
     const updatedRoutes = current.routes.map(r => {
       if (r.id === id) {
-        const base = updates.basePriceSAR !== undefined ? Number(updates.basePriceSAR) : r.basePriceSAR;
+        const priceBDT = updates.priceBDT !== undefined ? Number(updates.priceBDT) : (r.priceBDT || Math.round((r.finalPriceSAR || 1600) * 33));
+        const base = updates.basePriceSAR !== undefined ? Number(updates.basePriceSAR) : Math.round(priceBDT / 33);
         return {
           ...r,
           ...updates,
+          priceBDT,
+          vehicleType: updates.vehicleType || r.vehicleType || r.typeEn || 'GMC Yukon VIP',
           basePriceSAR: base,
-          finalPriceSAR: applyTieredMarkup(base)
+          finalPriceSAR: base
         };
       }
       return r;
@@ -481,12 +494,15 @@ export const transportAPI = {
     }
 
     const current = await this.get();
-    const base = Number(routeData.basePriceSAR) || 600;
+    const priceBDT = Number(routeData.priceBDT) || Math.round((Number(routeData.basePriceSAR) || 600) * 33);
+    const base = Number(routeData.basePriceSAR) || Math.round(priceBDT / 33) || 600;
     const newRoute = {
       ...routeData,
       id: routeData.id || `route-${Date.now()}`,
+      priceBDT,
+      vehicleType: routeData.vehicleType || routeData.vehicleTypeEn || routeData.typeEn || 'VIP GMC Yukon',
       basePriceSAR: base,
-      finalPriceSAR: applyTieredMarkup(base)
+      finalPriceSAR: base
     };
     const data = {
       ...current,
@@ -494,6 +510,29 @@ export const transportAPI = {
     };
     localStorage.setItem('horizon_transport', JSON.stringify(data));
     return newRoute;
+  },
+
+  async deleteRoute(id) {
+    try {
+      const res = await fetch(`${API_BASE}/transport/routes/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeader()
+      });
+      if (res.ok) {
+        const json = await res.json();
+        return json;
+      }
+    } catch (err) {
+      console.warn('API delete route failed, updating local cache:', err);
+    }
+
+    const current = await this.get();
+    const data = {
+      ...current,
+      routes: current.routes.filter(r => r.id !== id)
+    };
+    localStorage.setItem('horizon_transport', JSON.stringify(data));
+    return { success: true };
   }
 };
 
@@ -594,16 +633,25 @@ export const ordersAPI = {
       });
       if (res.ok) {
         const json = await res.json();
+        try {
+          const cached = JSON.parse(localStorage.getItem('horizon_orders') || '[]');
+          const updated = cached.map(o => o.id === id ? { ...o, status } : o);
+          localStorage.setItem('horizon_orders', JSON.stringify(updated));
+        } catch {}
         return json.data;
       }
     } catch (err) {
       console.warn('API update order status failed, updating locally:', err);
     }
 
-    const current = await this.getAll();
-    const updated = current.map(o => o.id === id ? { ...o, status } : o);
-    localStorage.setItem('horizon_orders', JSON.stringify(updated));
-    return updated.find(o => o.id === id);
+    try {
+      const cached = JSON.parse(localStorage.getItem('horizon_orders') || '[]');
+      const updated = cached.map(o => o.id === id ? { ...o, status } : o);
+      localStorage.setItem('horizon_orders', JSON.stringify(updated));
+      return updated.find(o => o.id === id) || { id, status };
+    } catch {
+      return { id, status };
+    }
   },
 
   async delete(id) {
@@ -613,18 +661,22 @@ export const ordersAPI = {
         headers: getAuthHeader()
       });
       if (res.ok) {
-        const current = await this.getAll();
-        const updated = current.filter(o => o.id !== id);
-        localStorage.setItem('horizon_orders', JSON.stringify(updated));
+        try {
+          const cached = JSON.parse(localStorage.getItem('horizon_orders') || '[]');
+          const updated = cached.filter(o => o.id !== id);
+          localStorage.setItem('horizon_orders', JSON.stringify(updated));
+        } catch {}
         return true;
       }
     } catch (err) {
       console.warn('API delete order failed, updating locally:', err);
     }
 
-    const current = await this.getAll();
-    const updated = current.filter(o => o.id !== id);
-    localStorage.setItem('horizon_orders', JSON.stringify(updated));
+    try {
+      const cached = JSON.parse(localStorage.getItem('horizon_orders') || '[]');
+      const updated = cached.filter(o => o.id !== id);
+      localStorage.setItem('horizon_orders', JSON.stringify(updated));
+    } catch {}
     return true;
   }
 };

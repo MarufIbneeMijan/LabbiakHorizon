@@ -14,7 +14,7 @@ import 'swiper/css/pagination';
 import { packagesAPI, hotelsAPI } from '../services/api';
 import { DICTIONARY } from '../data/mockData';
 
-export default function PackagesSection({ locale = 'en', onSelectPackage = () => {}, onOpenWizard = () => {} }) {
+export default function PackagesSection({ locale = 'bn', onSelectPackage = () => {}, onOpenWizard = () => {} }) {
   const dict = DICTIONARY[locale] || DICTIONARY.en;
   const isBn = locale === 'bn';
 
@@ -351,35 +351,70 @@ export default function PackagesSection({ locale = 'en', onSelectPackage = () =>
                 const title = isBn ? (pkg.title_bn || pkg.title_en) : (pkg.title_en || pkg.title_bn);
                 const badge = isBn ? (pkg.badge_bn || pkg.badge_en) : (pkg.badge_en || pkg.badge_bn);
                 const features = isBn ? (pkg.features_bn || pkg.features_en || []) : (pkg.features_en || pkg.features_bn || []);
-                const priceDisplay = isBn ? (pkg.price_bn || `৳ ${pkg.priceBDT?.toLocaleString('en-IN')}/-`) : (pkg.price_en || `৳ ${pkg.priceBDT?.toLocaleString('en-IN')}`);
+                const priceDisplay = `৳ ${Number(pkg.priceBDT || 185000).toLocaleString('en-IN')}${isBn ? '/-' : ''}`;
 
-                // Luxury Minimalist Icon Assignment
-                const luxuryIcons = [Crown, Sparkles, ShieldCheck, Building2, Compass, Award, Star];
-                const IconComponent = luxuryIcons[idx % luxuryIcons.length];
+                // High-Resolution Islamic Imagery Selection with dynamic Admin URL fallback
+                const getPackageVisualImage = (item) => {
+                  const directUrl = item.imageUrl || item.image_url || item.image;
+                  if (directUrl && typeof directUrl === 'string' && directUrl.startsWith('http')) {
+                    return directUrl;
+                  }
+                  const q = `${item.id || ''} ${item.title_en || ''} ${item.badge_en || ''} ${item.type || ''}`.toLowerCase();
+                  if (q.includes('ramadan') || q.includes('clocktower') || q.includes('clock tower') || q.includes('penthouse')) {
+                    return 'https://images.unsplash.com/photo-1542810634-71277d95dcbb?auto=format&fit=crop&q=80&w=1200';
+                  }
+                  if (q.includes('madinah') || q.includes('nabawi') || q.includes('prophet') || q.includes('green dome')) {
+                    return 'https://images.unsplash.com/photo-1590076215667-875d4ef2d7ee?auto=format&fit=crop&q=80&w=1200';
+                  }
+                  if (q.includes('hajj') || q.includes('presidential')) {
+                    return 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=1200';
+                  }
+                  return 'https://images.unsplash.com/photo-1591604466107-ec97de577aff?auto=format&fit=crop&q=80&w=1200';
+                };
+
+                const cardImage = getPackageVisualImage(pkg);
 
                 return (
                   <SwiperSlide key={pkg.id} className="h-auto">
                     <div className="h-full bg-kiswah-card rounded-3xl border border-[#d4af37]/30 hover:border-[#d4af37]/65 transition-all duration-300 flex flex-col justify-between overflow-hidden shadow-2xl group">
                       
-                      {/* Luxury Minimalist Card Header (Replacing bulky banner image) */}
-                      <div className="p-6 pb-4 border-b border-slate-800/80 bg-gradient-to-b from-white/[0.04] to-transparent">
-                        <div className="flex items-start justify-between gap-3 mb-4">
-                          <div className="w-12 h-12 rounded-2xl bg-[#d4af37]/10 border border-[#d4af37]/30 text-[#d4af37] flex items-center justify-center shadow-md shadow-[#d4af37]/5 shrink-0 group-hover:scale-105 group-hover:bg-[#d4af37]/20 group-hover:border-[#d4af37]/60 transition-all duration-300">
-                            <IconComponent className="w-6 h-6 text-[#d4af37]" />
-                          </div>
+                      {/* Curated High-Resolution Islamic Visual Header with Dark Gradient Overlay */}
+                      <div className="relative h-56 sm:h-60 w-full overflow-hidden bg-slate-900 shrink-0">
+                        <img
+                          src={cardImage}
+                          alt={title}
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://images.unsplash.com/photo-1591604466107-ec97de577aff?auto=format&fit=crop&q=80&w=1200';
+                          }}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                          loading="lazy"
+                        />
+                        {/* Subtle dark gradient overlay at the bottom so title text overlays cleanly */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#121215] via-[#121215]/30 to-transparent pointer-events-none" />
 
-                          <div className="flex flex-wrap items-center justify-end gap-1.5">
-                            <span className="px-3 py-1 rounded-full bg-kiswah-gold text-[#080809] font-serif font-extrabold text-[10px] uppercase tracking-wider shadow-sm">
-                              {badge}
+                        {/* Top floating badges */}
+                        <div className="absolute top-4 left-4 right-4 flex items-center justify-between pointer-events-none z-10">
+                          <span className="px-3 py-1 rounded-full bg-kiswah-gold text-[#080809] font-serif font-extrabold text-[10px] uppercase tracking-wider shadow-lg">
+                            {badge}
+                          </span>
+                          {pkg.isPopular && (
+                            <span className="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-amber-300 border border-amber-500/40 font-serif font-extrabold text-[10px] uppercase tracking-wider shadow-lg">
+                              {isBn ? '★ সর্বাধিক পছন্দের' : '★ Most Popular'}
                             </span>
-                            {pkg.isPopular && (
-                              <span className="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-serif font-extrabold text-[10px] uppercase tracking-wider">
-                                {isBn ? 'সর্বাধিক পছন্দের' : 'Popular'}
-                              </span>
-                            )}
-                          </div>
+                          )}
                         </div>
 
+                        {/* Bottom-left floating duration info on image */}
+                        <div className="absolute bottom-3 left-4 z-10 pointer-events-none">
+                          <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 text-slate-300 text-[10px] font-mono">
+                            <Sparkles className="w-3 h-3 text-[#d4af37]" />
+                            <span>{pkg.duration_en || (pkg.type === 'hajj' ? (isBn ? '৪০ দিন স্থায়ী হজ' : '40 Days Hajj') : (isBn ? '১৪ দিন ওমরাহ' : '14 Days Umrah'))}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Title Header right below image */}
+                      <div className="p-6 pb-2">
                         <h3 className="text-xl font-serif font-bold text-white group-hover:text-[#d4af37] transition-colors leading-snug">
                           {title}
                         </h3>
@@ -475,9 +510,7 @@ export default function PackagesSection({ locale = 'en', onSelectPackage = () =>
         {selectedDetailPkg && (() => {
           const title = isBn ? (selectedDetailPkg.title_bn || selectedDetailPkg.title_en) : (selectedDetailPkg.title_en || selectedDetailPkg.title_bn);
           const badge = isBn ? (selectedDetailPkg.badge_bn || selectedDetailPkg.badge_en) : (selectedDetailPkg.badge_en || selectedDetailPkg.badge_bn);
-          const priceDisplay = isBn 
-            ? (selectedDetailPkg.price_bn || `৳ ${selectedDetailPkg.priceBDT?.toLocaleString('en-IN')}/-`) 
-            : (selectedDetailPkg.price_en || `৳ ${selectedDetailPkg.priceBDT?.toLocaleString('en-IN')}`);
+          const priceDisplay = `৳ ${Number(selectedDetailPkg.priceBDT || 185000).toLocaleString('en-IN')}${isBn ? '/-' : ''}`;
           const tabsData = getPackageTabsData(selectedDetailPkg);
 
           return (
@@ -502,8 +535,11 @@ export default function PackagesSection({ locale = 'en', onSelectPackage = () =>
                 {/* Header Visual with Gradient Overlay */}
                 <div className="relative h-48 sm:h-56 shrink-0 overflow-hidden">
                   <img
-                    src={selectedDetailPkg.image}
+                    src={selectedDetailPkg.imageUrl || selectedDetailPkg.image_url || selectedDetailPkg.image || 'https://images.unsplash.com/photo-1591604466107-ec97de577aff?auto=format&fit=crop&q=80&w=1200'}
                     alt={title}
+                    onError={(e) => {
+                      e.currentTarget.src = 'https://images.unsplash.com/photo-1591604466107-ec97de577aff?auto=format&fit=crop&q=80&w=1200';
+                    }}
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#101013] via-[#101013]/60 to-transparent" />

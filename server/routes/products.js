@@ -36,7 +36,8 @@ router.post('/', requireAdmin, (req, res) => {
   try {
     const { 
       name_en, name_bn, priceBDT, priceUSD, 
-      category, image, stock, tag, description_en, description_bn 
+      category, image, stock, tag, description_en, description_bn,
+      specifications
     } = req.body;
 
     if (!name_en || priceBDT === undefined) {
@@ -56,7 +57,8 @@ router.post('/', requireAdmin, (req, res) => {
       stock: stock !== undefined ? Number(stock) : 50,
       tag: tag || 'Essential',
       description_en,
-      description_bn
+      description_bn,
+      specifications: Array.isArray(specifications) ? specifications.slice(0, 4) : []
     });
 
     res.status(201).json({

@@ -249,10 +249,8 @@ ${addOnList}
 👥 *Delegation Size:* ${adults} Adults, ${children} Children, ${infants} Infants
 
 💰 *Investment Summary:*
-- Total BDT: ৳${valuation.totalBDT.toLocaleString('en-IN')} BDT
-- Total SAR: ${valuation.totalSAR.toLocaleString()} SAR
-- Total USD: $${valuation.totalUSD.toLocaleString()} USD
-- Per Person BDT: ৳${valuation.perPersonBDT.toLocaleString('en-IN')} BDT (${valuation.perPersonSAR.toLocaleString()} SAR)
+- Total Investment: ৳${valuation.totalBDT.toLocaleString('en-IN')}/-
+- Per Person Investment: ৳${valuation.perPersonBDT.toLocaleString('en-IN')}/-
 
 Please connect me with your Private Client Director at Horizon Lounge, Gulshan-2 to finalize our dates.`;
 
@@ -431,10 +429,7 @@ Please connect me with your Private Client Director at Horizon Lounge, Gulshan-2
 
                             <div className="text-right shrink-0">
                               <span className="text-sm font-serif font-bold text-kiswah-gold block">
-                                ৳{hotel.nightlyBdt.toLocaleString('en-IN')}
-                              </span>
-                              <span className="text-[10px] text-slate-400 block font-mono">
-                                ({nightlySAR.toLocaleString()} SAR / night)
+                                ৳{hotel.nightlyBdt.toLocaleString('en-IN')}/-
                               </span>
                             </div>
                           </div>
@@ -495,10 +490,7 @@ Please connect me with your Private Client Director at Horizon Lounge, Gulshan-2
 
                             <div className="text-right shrink-0">
                               <span className="text-sm font-serif font-bold text-kiswah-gold block">
-                                ৳{hotel.nightlyBdt.toLocaleString('en-IN')}
-                              </span>
-                              <span className="text-[10px] text-slate-400 block font-mono">
-                                ({nightlySAR.toLocaleString()} SAR / night)
+                                ৳{hotel.nightlyBdt.toLocaleString('en-IN')}/-
                               </span>
                             </div>
                           </div>
@@ -641,10 +633,7 @@ Please connect me with your Private Client Director at Horizon Lounge, Gulshan-2
 
                             <div className="text-right shrink-0">
                               <span className="text-xs font-serif font-bold text-kiswah-gold block">
-                                ৳{calculatedRouteBDT.toLocaleString('en-IN')}
-                              </span>
-                              <span className="text-[10px] text-slate-400 block font-mono">
-                                ({calculatedRouteSAR.toLocaleString()} SAR)
+                                ৳{calculatedRouteBDT.toLocaleString('en-IN')}/-
                               </span>
                             </div>
                           </div>
@@ -731,10 +720,7 @@ Please connect me with your Private Client Director at Horizon Lounge, Gulshan-2
 
                             <div className="text-right shrink-0">
                               <span className="text-sm font-serif font-bold text-kiswah-gold block">
-                                ৳{addon.bdt.toLocaleString('en-IN')}
-                              </span>
-                              <span className="text-[10px] text-slate-400 block font-mono">
-                                ({addonSAR.toLocaleString()} SAR)
+                                ৳{addon.bdt.toLocaleString('en-IN')}/-
                               </span>
                             </div>
                           </div>
@@ -934,16 +920,6 @@ Please connect me with your Private Client Director at Horizon Lounge, Gulshan-2
                   <span className="text-xs font-bold text-slate-400 uppercase">BDT</span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-800/80 text-amber-300 font-mono">
-                  <div>
-                    <span className="text-[10px] text-slate-400 uppercase block font-sans">Saudi Riyal:</span>
-                    <span className="font-bold">{valuation.totalSAR.toLocaleString()} SAR</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 uppercase block font-sans">US Dollar:</span>
-                    <span className="font-bold">${valuation.totalUSD.toLocaleString()} USD</span>
-                  </div>
-                </div>
               </div>
 
               {/* Per Person & Cost Breakdown List */}
@@ -951,7 +927,7 @@ Please connect me with your Private Client Director at Horizon Lounge, Gulshan-2
                 <div className="flex justify-between items-center pb-1.5 border-b border-slate-800">
                   <span className="text-slate-400">{dict.perPerson}:</span>
                   <span className="font-bold text-white font-serif">
-                    ৳{valuation.perPersonBDT.toLocaleString('en-IN')} BDT <span className="text-[10px] text-amber-300">({valuation.perPersonSAR.toLocaleString()} SAR)</span>
+                    ৳{valuation.perPersonBDT.toLocaleString('en-IN')}/-
                   </span>
                 </div>
 

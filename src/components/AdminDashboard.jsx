@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   ShieldCheck, Lock, LogOut, Package, ShoppingBag, Car, 
   ClipboardList, Plus, Trash2, Edit3, Save, X, Check, 
@@ -8,6 +9,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { authAPI, packagesAPI, productsAPI, transportAPI, ordersAPI, hotelsAPI } from '../services/api';
+import AdminLogin from './AdminLogin';
 
 const DEFAULT_ITINERARY_TEMPLATE = [
   { day: 'Day 1', day_bn: 'দিন ১', title: 'Dhaka Departure & Royal Jeddah Arrival', title_bn: 'ঢাকা ত্যাগ ও জেদ্দা রাজকীয় আগমন', desc: 'VIP flight from DAC to JED, private chauffeur transfer to Makkah 5-star hotel.', desc_bn: 'ঢাকা থেকে বিমানে জেদ্দা পৌঁছানো এবং প্রাইভেট চফারে মক্কা ৫-স্টার হোটেলে স্থানান্তর।' },
@@ -26,12 +28,15 @@ const DEFAULT_INCLUSIONS_TEMPLATE = [
   { title: 'CIP Airport Fast-Track Protocol', title_bn: 'সিআইপি ফাস্ট-ট্র্যাক এয়ারপোর্ট প্রোটোকল', desc: 'Expedited customs and lounge access at Dhaka & Jeddah airports.' }
 ];
 
-export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
-  if (!isOpen) return null;
+export default function AdminDashboard({ isOpen = true, onClose, locale = 'en', adminUser: propAdminUser, onLogout }) {
+  const navigate = useNavigate();
+  if (isOpen === false) return null;
 
   // Authentication State
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [adminUser, setAdminUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('isAdminAuthenticated') === 'true' && Boolean(localStorage.getItem('horizon_admin_token'));
+  });
+  const [adminUser, setAdminUser] = useState(propAdminUser || null);
   const [loginIdentifier, setLoginIdentifier] = useState('admin@labbaikhorizon.com');
   const [loginPassword, setLoginPassword] = useState('Labbaik@VIP2026');
   const [loginError, setLoginError] = useState('');
@@ -62,15 +67,83 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
   const productFormRef = useRef(null);
   const hotelFormRef = useRef(null);
 
-  const [newRouteModal, setNewRouteModal] = useState(false);
-  const [newRouteForm, setNewRouteForm] = useState({
+  // Transport Route Modal State
+  const [routeModalOpen, setRouteModalOpen] = useState(false);
+  const [editingRoute, setEditingRoute] = useState(null);
+  const [routeForm, setRouteForm] = useState({
     nameEn: '',
     nameBn: '',
-    typeEn: 'Private Chauffeur',
-    typeBn: 'প্রাইভেট সফর',
-    distanceEn: '100 km',
-    basePriceSAR: 600
+    vehicleType: 'GMC Yukon VIP',
+    priceBDT: 52000,
+    distanceEn: '95 km (approx. 60 mins)'
   });
+
+  // Dynamic Categories State
+  const DEFAULT_CATEGORIES = [
+    { id: 'ihram', labelEn: 'Ihram & Attire', labelBn: 'ইহরাম ও পোশাক' },
+    { id: 'zamzam', labelEn: 'Zamzam Water', labelBn: 'জমজম পানি' },
+    { id: 'dates', labelEn: 'Ajwa Dates & Relics', labelBn: 'আজওয়া খেজুর ও হাদিয়া' },
+    { id: 'tasbeeh', labelEn: 'Digital Counters & Dua', labelBn: 'স্মার্ট তাসবীহ ও কাউন্টার' },
+    { id: 'rugs', labelEn: 'Orthopedic Rugs & Footwear', labelBn: 'মেমোরি ফোম জায়নামাজ ও জুতো' },
+    { id: 'skincare', labelEn: 'Halal Personal Care', labelBn: 'হালাল স্কিনকেয়ার ও কিট' }
+  ];
+
+  const [categories, setCategories] = useState(() => {
+    try {
+      const saved = localStorage.getItem('horizon_custom_categories');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const merged = [...DEFAULT_CATEGORIES];
+          parsed.forEach((c) => {
+            if (!merged.some((m) => m.id === c.id)) merged.push(c);
+          });
+          return merged;
+        }
+      }
+    } catch {}
+    return DEFAULT_CATEGORIES;
+  });
+
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+  const [newCatEn, setNewCatEn] = useState('');
+  const [newCatBn, setNewCatBn] = useState('');
+
+  // Dynamic Tags State
+  const DEFAULT_TAGS = ['Essential', 'Best Seller', 'Luxury', 'New Arrival', 'Limited Stock'];
+  const [tags, setTags] = useState(() => {
+    try {
+      const saved = localStorage.getItem('horizon_custom_tags');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return Array.from(new Set([...DEFAULT_TAGS, ...parsed]));
+        }
+      }
+    } catch {}
+    return DEFAULT_TAGS;
+  });
+
+  const [isCreatingTag, setIsCreatingTag] = useState(false);
+  const [newTagName, setNewTagName] = useState('');
+
+  // Dynamic Cities State
+  const DEFAULT_CITIES = ['Makkah', 'Madinah'];
+  const [cities, setCities] = useState(() => {
+    try {
+      const saved = localStorage.getItem('horizon_custom_cities');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return Array.from(new Set([...DEFAULT_CITIES, ...parsed]));
+        }
+      }
+    } catch {}
+    return DEFAULT_CITIES;
+  });
+
+  const [isCreatingCity, setIsCreatingCity] = useState(false);
+  const [newCityName, setNewCityName] = useState('');
 
   // Hotel Form State
   const [hotelForm, setHotelForm] = useState({
@@ -109,7 +182,7 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
     inclusions: DEFAULT_INCLUSIONS_TEMPLATE
   });
 
-  // Product Form State
+  // Product Form State with dynamic specifications (up to 4 bullet points)
   const [productForm, setProductForm] = useState({
     name_en: '',
     name_bn: '',
@@ -120,7 +193,13 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
     stock: 50,
     image: 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?auto=format&fit=crop&q=80&w=800',
     description_en: '',
-    description_bn: ''
+    description_bn: '',
+    specifications: [
+      '100% Egyptian Long-Staple Combed Cotton',
+      'Shariah Compliant Unstitched Weave',
+      'Ultra-absorbent & Hypoallergenic',
+      'Includes Secure Travel Belt'
+    ]
   });
 
   // Orders Filter
@@ -135,17 +214,23 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
   const checkAuth = async () => {
     const res = await authAPI.verify();
     if (res.success) {
+      localStorage.setItem('isAdminAuthenticated', 'true');
       setIsAuthenticated(true);
       setAdminUser(res.user);
       loadAllData();
     } else {
+      localStorage.removeItem('isAdminAuthenticated');
       setIsAuthenticated(false);
       setIsLoading(false);
+      if (onLogout) onLogout();
     }
   };
 
   const handleLogin = async (e) => {
-    e.preventDefault();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     setIsLoggingIn(true);
     setLoginError('');
 
@@ -153,18 +238,27 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
     setIsLoggingIn(false);
 
     if (res.success) {
+      localStorage.setItem('isAdminAuthenticated', 'true');
       setIsAuthenticated(true);
-      setAdminUser(res.data.user);
+      setAdminUser(res.data?.user || res.user);
       loadAllData();
     } else {
       setLoginError(res.message || 'Invalid credentials');
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = (e = null) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
     authAPI.logout();
+    localStorage.removeItem('isAdminAuthenticated');
     setIsAuthenticated(false);
     setAdminUser(null);
+    if (onLogout) {
+      onLogout();
+    }
   };
 
   const showNotification = (msg) => {
@@ -230,7 +324,7 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
         : packageForm.features_bn,
       priceBDT: Number(packageForm.priceBDT),
       priceUSD: Number(packageForm.priceUSD) || Math.round(Number(packageForm.priceBDT) / 120),
-      price_en: `৳ ${Number(packageForm.priceBDT).toLocaleString()} / $${Number(packageForm.priceUSD || Math.round(packageForm.priceBDT / 120))}`,
+      price_en: `৳ ${Number(packageForm.priceBDT).toLocaleString()}`,
       price_bn: `৳ ${Number(packageForm.priceBDT).toLocaleString()}/-`,
       selectedHotelIds: packageForm.selectedHotelIds || [],
       flightTier: packageForm.flightTier,
@@ -255,7 +349,11 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
     setPackages(updated);
   };
 
-  const handleDeletePackage = async (id) => {
+  const handleDeletePackage = async (id, e = null) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
     if (window.confirm('Are you sure you want to remove this package?')) {
       await packagesAPI.delete(id);
       showNotification('Package deleted.');
@@ -263,7 +361,11 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
     }
   };
 
-  const startEditPackage = (pkg) => {
+  const startEditPackage = (pkg, e = null) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
     setEditingPackage(pkg);
     setPackageForm({
       type: pkg.type || 'umrah',
@@ -374,14 +476,91 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
     }));
   };
 
+  // --- DYNAMIC CMS CREATION HANDLERS ---
+  const handleCreateCategory = () => {
+    if (!newCatEn.trim()) return;
+    const slug = newCatEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const newCat = {
+      id: slug || `cat-${Date.now()}`,
+      labelEn: newCatEn.trim(),
+      labelBn: newCatBn.trim() || newCatEn.trim()
+    };
+    const updated = [...categories, newCat];
+    setCategories(updated);
+    try {
+      localStorage.setItem('horizon_custom_categories', JSON.stringify(updated));
+    } catch {}
+    setProductForm((prev) => ({ ...prev, category: newCat.id }));
+    setNewCatEn('');
+    setNewCatBn('');
+    setIsCreatingCategory(false);
+    showNotification(`New category "${newCat.labelEn}" created successfully!`);
+  };
+
+  const handleCreateTag = () => {
+    if (!newTagName.trim()) return;
+    const clean = newTagName.trim();
+    if (!tags.includes(clean)) {
+      const updated = [...tags, clean];
+      setTags(updated);
+      try {
+        localStorage.setItem('horizon_custom_tags', JSON.stringify(updated));
+      } catch {}
+    }
+    setProductForm((prev) => ({ ...prev, tag: clean }));
+    setNewTagName('');
+    setIsCreatingTag(false);
+    showNotification(`New tag "${clean}" created successfully!`);
+  };
+
+  const handleCreateCity = () => {
+    if (!newCityName.trim()) return;
+    const clean = newCityName.trim();
+    if (!cities.includes(clean)) {
+      const updated = [...cities, clean];
+      setCities(updated);
+      try {
+        localStorage.setItem('horizon_custom_cities', JSON.stringify(updated));
+      } catch {}
+    }
+    setHotelForm((prev) => ({ ...prev, city: clean }));
+    setNewCityName('');
+    setIsCreatingCity(false);
+    showNotification(`New city "${clean}" added to directory!`);
+  };
+
   // --- PRODUCT ACTIONS ---
+  const handleAddSpecification = () => {
+    if ((productForm.specifications || []).length >= 4) return;
+    setProductForm((prev) => ({
+      ...prev,
+      specifications: [...(prev.specifications || []), '']
+    }));
+  };
+
+  const handleUpdateSpecification = (idx, value) => {
+    setProductForm((prev) => {
+      const specs = [...(prev.specifications || [])];
+      specs[idx] = value;
+      return { ...prev, specifications: specs };
+    });
+  };
+
+  const handleRemoveSpecification = (idx) => {
+    setProductForm((prev) => ({
+      ...prev,
+      specifications: (prev.specifications || []).filter((_, i) => i !== idx)
+    }));
+  };
+
   const handleSaveProduct = async (e) => {
     e.preventDefault();
     const payload = {
       ...productForm,
       priceBDT: Number(productForm.priceBDT),
-      priceUSD: Number(productForm.priceUSD),
-      stock: Number(productForm.stock)
+      priceUSD: Number(productForm.priceUSD) || Math.round(Number(productForm.priceBDT) / 120),
+      stock: Number(productForm.stock),
+      specifications: (productForm.specifications || []).filter(s => s && s.trim())
     };
 
     if (editingProduct) {
@@ -393,11 +572,28 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
     }
 
     setEditingProduct(null);
+    setProductForm({
+      name_en: '',
+      name_bn: '',
+      priceBDT: 3500,
+      priceUSD: 30,
+      category: 'ihram',
+      tag: 'Essential',
+      stock: 50,
+      image: 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?auto=format&fit=crop&q=80&w=800',
+      description_en: '',
+      description_bn: '',
+      specifications: []
+    });
     const updated = await productsAPI.getAll('all');
     setProducts(updated);
   };
 
-  const handleDeleteProduct = async (id) => {
+  const handleDeleteProduct = async (id, e = null) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
     if (window.confirm('Delete this pilgrim store product?')) {
       await productsAPI.delete(id);
       showNotification('Product deleted.');
@@ -405,13 +601,21 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
     }
   };
 
-  const handleUpdateStock = async (id, newStock) => {
+  const handleUpdateStock = async (id, newStock, e = null) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
     if (newStock < 0) return;
     await productsAPI.update(id, { stock: newStock });
     setProducts(products.map(p => p.id === id ? { ...p, stock: newStock } : p));
   };
 
-  const startEditProduct = (prod) => {
+  const startEditProduct = (prod, e = null) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
     setEditingProduct(prod);
     setProductForm({
       name_en: prod.name_en || '',
@@ -423,41 +627,80 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
       stock: prod.stock !== undefined ? prod.stock : 50,
       image: prod.image || '',
       description_en: prod.description_en || '',
-      description_bn: prod.description_bn || ''
+      description_bn: prod.description_bn || '',
+      specifications: Array.isArray(prod.specifications) && prod.specifications.length > 0
+        ? [...prod.specifications]
+        : (Array.isArray(prod.specs) ? [...prod.specs] : [])
     });
     setTimeout(() => {
       productFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 50);
   };
 
-  // --- TRANSPORT ACTIONS ---
-  const handleUpdateRouteBaseRate = async (routeId, newBaseSAR) => {
-    const val = Number(newBaseSAR);
-    if (isNaN(val) || val <= 0) return;
-
-    const res = await transportAPI.updateRoute(routeId, { basePriceSAR: val });
-    if (res) {
-      showNotification(`Route base price updated to ${val} SAR. Tiered VIP markup applied.`);
-      const updatedTrans = await transportAPI.get();
-      setTransport(updatedTrans);
-    }
-  };
-
-  const handleAddRoute = async (e) => {
-    e.preventDefault();
-    await transportAPI.addRoute(newRouteForm);
-    setNewRouteModal(false);
-    showNotification('New custom transport route added.');
-    const updated = await transportAPI.get();
-    setTransport(updated);
-    setNewRouteForm({
+  // --- STREAMLINED TRANSPORT ACTIONS ---
+  const openAddRouteModal = () => {
+    setEditingRoute(null);
+    setRouteForm({
       nameEn: '',
       nameBn: '',
-      typeEn: 'Private Chauffeur',
-      typeBn: 'প্রাইভেট সফর',
-      distanceEn: '100 km',
-      basePriceSAR: 600
+      vehicleType: 'GMC Yukon VIP',
+      priceBDT: 45000,
+      distanceEn: '95 km (approx. 60 mins)'
     });
+    setRouteModalOpen(true);
+  };
+
+  const startEditRoute = (r, e = null) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+    setEditingRoute(r);
+    setRouteForm({
+      nameEn: r.nameEn || '',
+      nameBn: r.nameBn || '',
+      vehicleType: r.vehicleType || r.typeEn || 'GMC Yukon VIP',
+      priceBDT: r.priceBDT !== undefined ? r.priceBDT : Math.round((r.finalPriceSAR || 1600) * 33),
+      distanceEn: r.distanceEn || ''
+    });
+    setRouteModalOpen(true);
+  };
+
+  const handleSaveRoute = async (e) => {
+    e.preventDefault();
+    const payload = {
+      nameEn: routeForm.nameEn.trim(),
+      nameBn: routeForm.nameBn.trim() || routeForm.nameEn.trim(),
+      vehicleType: routeForm.vehicleType.trim(),
+      priceBDT: Number(routeForm.priceBDT),
+      distanceEn: routeForm.distanceEn.trim() || 'Express Transfer',
+      basePriceSAR: Math.round(Number(routeForm.priceBDT) / 33)
+    };
+
+    if (editingRoute) {
+      await transportAPI.updateRoute(editingRoute.id, payload);
+      showNotification('Transport route updated successfully.');
+    } else {
+      await transportAPI.addRoute(payload);
+      showNotification('New transport route added.');
+    }
+    setRouteModalOpen(false);
+    setEditingRoute(null);
+    const updated = await transportAPI.get();
+    setTransport(updated);
+  };
+
+  const handleDeleteRoute = async (routeId, e = null) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+    if (window.confirm('Delete this transport route?')) {
+      await transportAPI.deleteRoute(routeId);
+      showNotification('Transport route deleted.');
+      const updated = await transportAPI.get();
+      setTransport(updated);
+    }
   };
 
   // --- HOTEL ACTIONS ---
@@ -499,7 +742,11 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
     setHotels(updated);
   };
 
-  const handleDeleteHotel = async (id) => {
+  const handleDeleteHotel = async (id, e = null) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
     if (window.confirm('Delete this luxury hotel property from CMS?')) {
       await hotelsAPI.delete(id);
       showNotification('Hotel property removed.');
@@ -507,7 +754,11 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
     }
   };
 
-  const startEditHotel = (htl) => {
+  const startEditHotel = (htl, e = null) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
     setEditingHotel(htl);
     setHotelForm({
       name: htl.name || '',
@@ -528,15 +779,45 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
   };
 
   // --- ORDER ACTIONS ---
-  const handleUpdateOrderStatus = async (orderId, newStatus) => {
-    const res = await ordersAPI.updateStatus(orderId, newStatus);
-    if (res) {
-      setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
-      showNotification(`Order ${orderId} marked as ${newStatus}.`);
+  const handleUpdateOrderStatus = async (orderId, newStatus, e = null) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+
+    // 1. Optimistic state update in place - instantly update without reloading or redirecting
+    setOrders((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
+    );
+
+    // 2. Immediate localStorage persistence
+    try {
+      const stored = localStorage.getItem('horizon_orders');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const updated = parsed.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o));
+        localStorage.setItem('horizon_orders', JSON.stringify(updated));
+      }
+    } catch (err) {
+      console.warn('Local orders cache update error:', err);
+    }
+
+    // 3. Subtle non-intrusive feedback
+    showNotification(`Order ${orderId} status updated to "${newStatus}" successfully!`);
+
+    // 4. Background API sync (isolated, never triggers reload/redirect)
+    try {
+      await ordersAPI.updateStatus(orderId, newStatus);
+    } catch (err) {
+      console.warn('API order status update failed (local state kept):', err);
     }
   };
 
-  const handleDeleteOrder = async (orderId) => {
+  const handleDeleteOrder = async (orderId, e = null) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
     const target = orders.find(o => o.id === orderId);
     if (!target) return;
 
@@ -546,10 +827,22 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
     }
 
     if (window.confirm(`Permanently remove order ${orderId}? This action cannot be reversed.`)) {
-      const ok = await ordersAPI.delete(orderId);
-      if (ok) {
-        setOrders(orders.filter(o => o.id !== orderId));
-        showNotification(`Order ${orderId} has been successfully deleted.`);
+      setOrders(prev => prev.filter(o => o.id !== orderId));
+      try {
+        const stored = localStorage.getItem('horizon_orders');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          const updated = parsed.filter(o => o.id !== orderId);
+          localStorage.setItem('horizon_orders', JSON.stringify(updated));
+        }
+      } catch (err) {
+        console.warn('Local orders cache delete error:', err);
+      }
+      showNotification(`Order ${orderId} has been successfully deleted.`);
+      try {
+        await ordersAPI.delete(orderId);
+      } catch (err) {
+        console.warn('API delete order failed:', err);
       }
     }
   };
@@ -565,145 +858,100 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
     return matchesStatus && matchesSearch;
   });
 
+  if (!isAuthenticated) {
+    return (
+      <AdminLogin
+        onLoginSuccess={(u) => {
+          setIsAuthenticated(true);
+          setAdminUser(u);
+          loadAllData();
+        }}
+      />
+    );
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-[#080809]/95 backdrop-blur-2xl overflow-y-auto font-sans selection:bg-[#d4af37] selection:text-[#080809]">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.98 }}
-        className="bg-[#121214] border border-[#d4af37]/35 rounded-3xl w-full max-w-7xl max-h-[96vh] flex flex-col shadow-2xl relative overflow-hidden kiswah-gold-glow"
-      >
-        {/* Glow accents */}
-        <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-[#d4af37]/10 rounded-full blur-[140px] pointer-events-none" />
-        <div className="absolute bottom-0 left-10 w-[350px] h-[350px] bg-[#996515]/10 rounded-full blur-[120px] pointer-events-none" />
+    <div className="min-h-screen bg-[#080809] text-slate-100 flex flex-col font-sans selection:bg-[#d4af37] selection:text-[#080809]">
+      <div className="w-full flex-1 flex flex-col p-2 sm:p-4 lg:p-6 max-w-[1750px] mx-auto">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="bg-[#121214] border border-[#d4af37]/35 rounded-3xl w-full flex-1 flex flex-col shadow-2xl relative overflow-hidden kiswah-gold-glow"
+        >
+          {/* Glow accents */}
+          <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-[#d4af37]/10 rounded-full blur-[140px] pointer-events-none" />
+          <div className="absolute bottom-0 left-10 w-[350px] h-[350px] bg-[#996515]/10 rounded-full blur-[120px] pointer-events-none" />
 
-        {/* TOP STATUS BAR */}
-        <div className="bg-[#080809] border-b border-[#d4af37]/25 p-4 sm:px-8 flex flex-wrap items-center justify-between gap-4 z-20 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#d4af37]/15 border border-[#d4af37]/40 flex items-center justify-center text-xl text-[#d4af37]">
-              🕋
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="font-serif font-bold text-lg text-white">LabbaikHorizon Control Center</h1>
-                <span className="text-[10px] bg-[#d4af37]/15 text-[#d4af37] font-mono font-bold px-2 py-0.5 rounded-full border border-[#d4af37]/30">
-                  CMS & E-COMMERCE
-                </span>
+          {/* TOP STATUS BAR */}
+          <div className="bg-[#080809] border-b border-[#d4af37]/25 p-4 sm:px-8 flex flex-wrap items-center justify-between gap-4 z-20 shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#d4af37]/15 border border-[#d4af37]/40 flex items-center justify-center text-xl text-[#d4af37]">
+                🕋
               </div>
-              <p className="text-xs text-slate-400">
-                MoRA HAAB-1420 • Al Ahsaniya Transport Grids • Unified Data Hub
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {isAuthenticated && (
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-slate-800 text-xs">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span className="text-slate-300 font-medium">Director: <strong className="text-white">{adminUser?.name || 'Administrator'}</strong></span>
-              </div>
-            )}
-
-            {isAuthenticated && (
-              <button
-                onClick={handleLogout}
-                className="px-3.5 py-1.5 rounded-xl bg-red-950/60 hover:bg-red-900/80 border border-red-500/40 text-red-300 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-                title="Sign out of Admin session"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Sign Out</span>
-              </button>
-            )}
-
-            <button
-              onClick={onClose}
-              className="p-2 rounded-xl bg-white/[0.05] border border-slate-800 text-slate-400 hover:text-white hover:border-[#d4af37]/50 transition-colors cursor-pointer"
-              title="Close Admin Portal"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-
-        {/* NOTIFICATION TOAST */}
-        <AnimatePresence>
-          {actionSuccess && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="bg-emerald-950 border border-emerald-500 text-emerald-300 text-xs py-2 px-6 flex items-center justify-center gap-2 z-30 font-medium shadow-lg"
-            >
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>{actionSuccess}</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* SCREEN 1: LOGIN IF NOT AUTHENTICATED */}
-        {!isAuthenticated ? (
-          <div className="p-8 sm:p-16 flex-1 flex flex-col items-center justify-center overflow-y-auto">
-            <div className="max-w-md w-full bg-[#0a0a0c] border border-[#d4af37]/35 p-8 rounded-3xl space-y-6 shadow-2xl relative">
-              <div className="text-center space-y-2">
-                <div className="w-14 h-14 rounded-2xl bg-[#d4af37]/15 border border-[#d4af37]/40 flex items-center justify-center mx-auto text-[#d4af37]">
-                  <Lock className="w-7 h-7" />
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="font-serif font-bold text-lg text-white">LabbaikHorizon Control Center</h1>
+                  <span className="text-[10px] bg-[#d4af37]/15 text-[#d4af37] font-mono font-bold px-2 py-0.5 rounded-full border border-[#d4af37]/30">
+                    CMS & E-COMMERCE
+                  </span>
                 </div>
-                <h2 className="text-2xl font-serif font-bold text-white">VIP Director Authentication</h2>
                 <p className="text-xs text-slate-400">
-                  Enter authorized administrator credentials to access the CMS and E-Commerce Manager.
+                  MoRA HAAB-1420 • Al Ahsaniya Transport Grids • Unified Data Hub
                 </p>
               </div>
+            </div>
 
-              {loginError && (
-                <div className="p-3 bg-red-950/70 border border-red-500/50 rounded-xl text-xs text-red-300 flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
-                  <span>{loginError}</span>
+            <div className="flex items-center gap-3">
+              {isAuthenticated && (
+                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-slate-800 text-xs">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  <span className="text-slate-300 font-medium">Director: <strong className="text-white">{adminUser?.name || 'Administrator'}</strong></span>
                 </div>
               )}
 
-              <form onSubmit={handleLogin} className="space-y-4 text-xs">
-                <div>
-                  <label className="text-slate-300 font-semibold block mb-1">Email or Username</label>
-                  <input
-                    type="text"
-                    required
-                    value={loginIdentifier}
-                    onChange={(e) => setLoginIdentifier(e.target.value)}
-                    className="w-full bg-[#121214] border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:border-[#d4af37] focus:outline-none"
-                    placeholder="admin@labbaikhorizon.com"
-                  />
-                </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onClose) onClose();
+                  else navigate('/');
+                }}
+                className="px-3.5 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-slate-800 text-slate-300 hover:text-white hover:border-[#d4af37]/50 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                title="Return to Public Website"
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-[#d4af37]" />
+                <span className="hidden sm:inline">Public Website</span>
+              </button>
 
-                <div>
-                  <label className="text-slate-300 font-semibold block mb-1">Secure Password</label>
-                  <input
-                    type="password"
-                    required
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    className="w-full bg-[#121214] border border-slate-800 rounded-xl px-4 py-2.5 text-white font-mono focus:border-[#d4af37] focus:outline-none"
-                    placeholder="••••••••••••"
-                  />
-                </div>
-
-                <div className="bg-white/[0.02] border border-[#d4af37]/15 p-3 rounded-xl text-[11px] text-slate-400 space-y-1">
-                  <span className="text-[#d4af37] font-semibold block">Default Director Credentials:</span>
-                  <p>User: <code className="text-white">admin@labbaikhorizon.com</code> or <code className="text-white">admin</code></p>
-                  <p>Pass: <code className="text-white">Labbaik@VIP2026</code> or <code className="text-white">horizon2026</code></p>
-                </div>
-
+              {isAuthenticated && (
                 <button
-                  type="submit"
-                  disabled={isLoggingIn}
-                  className="w-full py-3.5 bg-kiswah-gold hover:bg-kiswah-gold-hover text-[#080809] font-serif font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-xl cursor-pointer disabled:opacity-50"
+                  type="button"
+                  onClick={handleLogout}
+                  className="px-3.5 py-1.5 rounded-xl bg-red-950/60 hover:bg-red-900/80 border border-red-500/40 text-red-300 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                  title="Sign out of Admin session"
                 >
-                  {isLoggingIn ? 'Verifying Credentials...' : 'Authenticate & Enter Dashboard'}
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Sign Out</span>
                 </button>
-              </form>
+              )}
             </div>
           </div>
-        ) : (
-          /* SCREEN 2: MAIN DASHBOARD TABS & CONTENT */
+
+          {/* NOTIFICATION TOAST */}
+          <AnimatePresence>
+            {actionSuccess && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="bg-emerald-950 border border-emerald-500 text-emerald-300 text-xs py-2 px-6 flex items-center justify-center gap-2 z-30 font-medium shadow-lg"
+              >
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>{actionSuccess}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* MAIN DASHBOARD TABS & CONTENT */}
           <div className="flex-1 flex flex-col overflow-hidden">
             
             {/* TABS HEADER */}
@@ -897,7 +1145,7 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
                               </div>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                               <div>
                                 <label className="text-slate-300 font-semibold block mb-1">Price (BDT ৳) *</label>
                                 <input
@@ -909,16 +1157,6 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
                                     priceBDT: Number(e.target.value),
                                     priceUSD: Math.round(Number(e.target.value) / 120)
                                   })}
-                                  className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:border-[#d4af37] focus:outline-none"
-                                />
-                              </div>
-
-                              <div>
-                                <label className="text-slate-300 font-semibold block mb-1">Price (USD $)</label>
-                                <input
-                                  type="number"
-                                  value={packageForm.priceUSD}
-                                  onChange={(e) => setPackageForm({ ...packageForm, priceUSD: Number(e.target.value) })}
                                   className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:border-[#d4af37] focus:outline-none"
                                 />
                               </div>
@@ -944,29 +1182,43 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
                               </div>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-                              <div>
-                                <label className="text-slate-300 font-semibold block mb-1">Package Banner Image URL</label>
+                            <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+                              <div className="sm:col-span-8">
+                                <label className="text-slate-300 font-semibold block mb-1">ইমেজ লাইভ লিঙ্ক (Image Direct URL)</label>
                                 <input
                                   type="url"
                                   value={packageForm.image}
                                   onChange={(e) => setPackageForm({ ...packageForm, image: e.target.value })}
-                                  placeholder="https://images.unsplash.com/photo-..."
+                                  placeholder="https://i.ibb.co/example/image.png"
                                   className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
                                 />
                               </div>
 
-                              <div className="flex items-center gap-3 pt-4 sm:pt-6">
-                                <input
-                                  type="checkbox"
-                                  id="isPopular"
-                                  checked={packageForm.isPopular}
-                                  onChange={(e) => setPackageForm({ ...packageForm, isPopular: e.target.checked })}
-                                  className="w-4 h-4 accent-[#d4af37] cursor-pointer"
-                                />
-                                <label htmlFor="isPopular" className="text-amber-300 font-semibold cursor-pointer">
-                                  Mark as 'Popular Choice'
-                                </label>
+                              <div className="sm:col-span-4 flex items-center gap-3 pt-2 sm:pt-5">
+                                <div className="h-14 w-20 rounded-xl overflow-hidden border border-slate-700 bg-slate-950 flex items-center justify-center shrink-0">
+                                  {packageForm.image ? (
+                                    <img
+                                      src={packageForm.image}
+                                      alt="Preview"
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                    />
+                                  ) : (
+                                    <span className="text-[9px] text-slate-500 font-mono text-center px-1">No Image</span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    id="isPopular"
+                                    checked={packageForm.isPopular}
+                                    onChange={(e) => setPackageForm({ ...packageForm, isPopular: e.target.checked })}
+                                    className="w-4 h-4 accent-[#d4af37] cursor-pointer"
+                                  />
+                                  <label htmlFor="isPopular" className="text-amber-300 font-semibold text-xs cursor-pointer">
+                                    Popular
+                                  </label>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -1452,7 +1704,7 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
                               <p className="text-xs text-amber-300 font-medium">{pkg.title_bn}</p>
 
                               <div className="text-lg font-serif font-bold text-kiswah-gold">
-                                ৳{pkg.priceBDT?.toLocaleString('en-IN')} <span className="text-xs text-slate-400">(${(pkg.priceUSD || Math.round(pkg.priceBDT / 120)).toLocaleString()} USD)</span>
+                                ৳{pkg.priceBDT?.toLocaleString('en-IN')}
                               </div>
 
                               <div className="space-y-1 text-xs text-slate-400 pt-2 border-t border-slate-800/80">
@@ -1467,14 +1719,24 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
 
                             <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
                               <button
-                                onClick={() => startEditPackage(pkg)}
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  startEditPackage(pkg, e);
+                                }}
                                 className="px-3 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 text-xs flex items-center gap-1 cursor-pointer"
                               >
                                 <Edit3 className="w-3.5 h-3.5" />
                                 <span>Edit</span>
                               </button>
                               <button
-                                onClick={() => handleDeletePackage(pkg.id)}
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleDeletePackage(pkg.id, e);
+                                }}
                                 className="px-3 py-1.5 rounded-lg bg-red-950/60 hover:bg-red-900 text-red-300 text-xs flex items-center gap-1 cursor-pointer"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -1557,23 +1819,78 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
                             </div>
 
                             <div>
-                              <label className="text-slate-300 font-semibold block mb-1">Category</label>
-                              <select
-                                value={productForm.category}
-                                onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
-                                className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
-                              >
-                                <option value="ihram">Ihram & Towels</option>
-                                <option value="zamzam">Zamzam Water</option>
-                                <option value="dates">Ajwa Dates & Relics</option>
-                                <option value="tasbeeh">Digital Counters & Tasbeeh</option>
-                                <option value="rugs">Orthopedic Prayer Rugs</option>
-                                <option value="skincare">Halal Skincare & Toiletries</option>
-                              </select>
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="text-slate-300 font-semibold block">Category *</label>
+                                <button
+                                  type="button"
+                                  onClick={() => setIsCreatingCategory(!isCreatingCategory)}
+                                  className="text-[11px] text-[#d4af37] hover:underline font-medium cursor-pointer"
+                                >
+                                  {isCreatingCategory ? 'বাতিল' : '+ নতুন ক্যাটাগরি'}
+                                </button>
+                              </div>
+
+                              {!isCreatingCategory ? (
+                                <select
+                                  value={productForm.category}
+                                  onChange={(e) => {
+                                    if (e.target.value === '__new__') {
+                                      setIsCreatingCategory(true);
+                                    } else {
+                                      setProductForm({ ...productForm, category: e.target.value });
+                                    }
+                                  }}
+                                  className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
+                                >
+                                  {categories.map((c) => (
+                                    <option key={c.id} value={c.id}>
+                                      {c.labelEn} {c.labelBn ? `(${c.labelBn})` : ''}
+                                    </option>
+                                  ))}
+                                  <option value="__new__" className="text-amber-300 font-bold bg-[#1a1a1f]">
+                                    + নতুন ক্যাটাগরি যোগ করুন (Add New Category)...
+                                  </option>
+                                </select>
+                              ) : (
+                                <div className="p-3 bg-[#0a0a0c] border border-[#d4af37]/40 rounded-xl space-y-2">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <input
+                                      type="text"
+                                      value={newCatEn}
+                                      onChange={(e) => setNewCatEn(e.target.value)}
+                                      placeholder="Category Name (EN)"
+                                      className="bg-[#121214] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-[#d4af37] focus:outline-none"
+                                    />
+                                    <input
+                                      type="text"
+                                      value={newCatBn}
+                                      onChange={(e) => setNewCatBn(e.target.value)}
+                                      placeholder="ক্যাটাগরি নাম (বাংলা)"
+                                      className="bg-[#121214] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-[#d4af37] focus:outline-none"
+                                    />
+                                  </div>
+                                  <div className="flex justify-end gap-2 pt-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => setIsCreatingCategory(false)}
+                                      className="px-2.5 py-1 text-slate-400 hover:text-white text-[11px] cursor-pointer"
+                                    >
+                                      বাতিল
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={handleCreateCategory}
+                                      className="px-3 py-1 bg-kiswah-gold text-[#080809] font-serif font-bold text-[11px] rounded-lg cursor-pointer"
+                                    >
+                                      যোগ করুন
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
                               <label className="text-slate-300 font-semibold block mb-1">Price (BDT ৳) *</label>
                               <input
@@ -1590,16 +1907,6 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
                             </div>
 
                             <div>
-                              <label className="text-slate-300 font-semibold block mb-1">Price (USD $)</label>
-                              <input
-                                type="number"
-                                value={productForm.priceUSD}
-                                onChange={(e) => setProductForm({ ...productForm, priceUSD: Number(e.target.value) })}
-                                className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:border-[#d4af37] focus:outline-none"
-                              />
-                            </div>
-
-                            <div>
                               <label className="text-slate-300 font-semibold block mb-1">Stock Level Quantity</label>
                               <input
                                 type="number"
@@ -1611,16 +1918,148 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
                             </div>
 
                             <div>
-                              <label className="text-slate-300 font-semibold block mb-1">Product Tag</label>
-                              <select
-                                value={productForm.tag}
-                                onChange={(e) => setProductForm({ ...productForm, tag: e.target.value })}
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="text-slate-300 font-semibold block">Product Tag</label>
+                                <button
+                                  type="button"
+                                  onClick={() => setIsCreatingTag(!isCreatingTag)}
+                                  className="text-[11px] text-[#d4af37] hover:underline font-medium cursor-pointer"
+                                >
+                                  {isCreatingTag ? 'বাতিল' : '+ নতুন ট্যাগ'}
+                                </button>
+                              </div>
+
+                              {!isCreatingTag ? (
+                                <select
+                                  value={productForm.tag}
+                                  onChange={(e) => {
+                                    if (e.target.value === '__new__') {
+                                      setIsCreatingTag(true);
+                                    } else {
+                                      setProductForm({ ...productForm, tag: e.target.value });
+                                    }
+                                  }}
+                                  className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
+                                >
+                                  {tags.map((t) => (
+                                    <option key={t} value={t}>
+                                      {t}
+                                    </option>
+                                  ))}
+                                  <option value="__new__" className="text-amber-300 font-bold bg-[#1a1a1f]">
+                                    + নতুন ট্যাগ যোগ করুন (Add New Tag)...
+                                  </option>
+                                </select>
+                              ) : (
+                                <div className="p-3 bg-[#0a0a0c] border border-[#d4af37]/40 rounded-xl space-y-2">
+                                  <input
+                                    type="text"
+                                    value={newTagName}
+                                    onChange={(e) => setNewTagName(e.target.value)}
+                                    placeholder="New Tag Name (e.g. Luxury, Best Deal)"
+                                    className="w-full bg-[#121214] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-[#d4af37] focus:outline-none"
+                                  />
+                                  <div className="flex justify-end gap-2 pt-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => setIsCreatingTag(false)}
+                                      className="px-2.5 py-1 text-slate-400 hover:text-white text-[11px] cursor-pointer"
+                                    >
+                                      বাতিল
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={handleCreateTag}
+                                      className="px-3 py-1 bg-kiswah-gold text-[#080809] font-serif font-bold text-[11px] rounded-lg cursor-pointer"
+                                    >
+                                      যোগ করুন
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+                            <div className="sm:col-span-9">
+                              <label className="text-slate-300 font-semibold block mb-1">ইমেজ লাইভ লিঙ্ক (Image Direct URL)</label>
+                              <input
+                                type="url"
+                                value={productForm.image}
+                                onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
+                                placeholder="https://i.ibb.co/example/image.png"
                                 className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
-                              >
-                                <option value="Essential">Essential</option>
-                                <option value="Best Seller">Best Seller</option>
-                                <option value="Luxury">Luxury</option>
-                              </select>
+                              />
+                            </div>
+
+                            <div className="sm:col-span-3 flex items-center gap-3 pt-2 sm:pt-5">
+                              <div className="h-14 w-20 rounded-xl overflow-hidden border border-slate-700 bg-slate-950 flex items-center justify-center shrink-0">
+                                {productForm.image ? (
+                                  <img
+                                    src={productForm.image}
+                                    alt="Preview"
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                  />
+                                ) : (
+                                  <span className="text-[9px] text-slate-500 font-mono text-center px-1">No Image</span>
+                                )}
+                              </div>
+                              <span className="text-[11px] text-slate-400 font-mono">লাইভ প্রিভিউ</span>
+                            </div>
+                          </div>
+
+                          {/* DYNAMIC SPECIFICATIONS & SHARIAH CERTIFICATION BUILDER (MAX 4) */}
+                          <div className="p-4 rounded-2xl bg-[#121214] border border-slate-800 space-y-3">
+                            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                              <div>
+                                <h4 className="font-serif font-bold text-xs uppercase tracking-wider text-white flex items-center gap-2">
+                                  <ShieldCheck className="w-4 h-4 text-[#d4af37]" />
+                                  <span>পণ্যটির বিশদ বিবরণ ও শরীয়াহ সনদ (Dynamic Specifications & Certification)</span>
+                                </h4>
+                                <p className="text-[11px] text-slate-400 mt-0.5">
+                                  Add up to 4 distinct specification bullet points displayed inside the customer-facing Product Details modal.
+                                </p>
+                              </div>
+                              <span className="text-[11px] font-mono text-amber-300 font-bold px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 shrink-0">
+                                {(productForm.specifications || []).length} / 4
+                              </span>
+                            </div>
+
+                            <div className="space-y-2 pt-1">
+                              {(productForm.specifications || []).map((spec, idx) => (
+                                <div key={idx} className="flex items-center gap-2">
+                                  <span className="text-amber-400 font-mono font-bold text-xs w-6 shrink-0 text-center">
+                                    #{idx + 1}
+                                  </span>
+                                  <input
+                                    type="text"
+                                    value={spec}
+                                    onChange={(e) => handleUpdateSpecification(idx, e.target.value)}
+                                    placeholder={`e.g. Specification Point #${idx + 1} (e.g. 100% Egyptian Cotton / Shariah Compliant)`}
+                                    className="flex-1 bg-[#0a0a0c] border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white focus:border-[#d4af37] focus:outline-none"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveSpecification(idx)}
+                                    className="p-1.5 rounded-lg bg-red-950/40 hover:bg-red-900/60 text-red-400 hover:text-red-200 border border-red-500/30 cursor-pointer transition-colors shrink-0"
+                                    title="Delete specification"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ))}
+
+                              {(productForm.specifications || []).length < 4 && (
+                                <button
+                                  type="button"
+                                  onClick={handleAddSpecification}
+                                  className="mt-2 px-3.5 py-1.5 bg-white/[0.04] hover:bg-[#d4af37]/15 border border-[#d4af37]/40 text-[#d4af37] rounded-xl font-serif text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors"
+                                >
+                                  <Plus className="w-3.5 h-3.5" />
+                                  <span>+ বৈশিষ্ট্য যোগ করুন (Add Specification) - ({4 - (productForm.specifications || []).length} slots remaining)</span>
+                                </button>
+                              )}
                             </div>
                           </div>
 
@@ -1658,7 +2097,7 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
 
                               <div className="flex items-baseline justify-between pt-1">
                                 <span className="text-base font-serif font-bold text-kiswah-gold">
-                                  ৳{prod.priceBDT?.toLocaleString('en-IN')} <span className="text-xs text-slate-400">(${prod.priceUSD} USD)</span>
+                                  ৳{prod.priceBDT?.toLocaleString('en-IN')}
                                 </span>
                               </div>
 
@@ -1681,14 +2120,24 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
 
                             <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
                               <button
-                                onClick={() => startEditProduct(prod)}
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  startEditProduct(prod, e);
+                                }}
                                 className="px-3 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 text-xs flex items-center gap-1 cursor-pointer"
                               >
                                 <Edit3 className="w-3.5 h-3.5" />
                                 <span>Edit</span>
                               </button>
                               <button
-                                onClick={() => handleDeleteProduct(prod.id)}
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleDeleteProduct(prod.id, e);
+                                }}
                                 className="px-3 py-1.5 rounded-lg bg-red-950/60 hover:bg-red-900 text-red-300 text-xs flex items-center gap-1 cursor-pointer"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -1702,86 +2151,90 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
                     </div>
                   )}
 
-                  {/* SUBTAB C: TRANSPORT & FLEET RATES MANAGER */}
+                  {/* SUBTAB C: TRANSPORT & FLEET ROUTES MANAGER */}
                   {cmsSubtab === 'transport' && (
                     <div className="space-y-6">
-                      <div className="flex flex-wrap items-center justify-between gap-4 bg-[#0a0a0c] border border-slate-800 p-4 rounded-2xl">
+                      <div className="flex flex-wrap items-center justify-between gap-4 bg-[#0a0a0c] border border-slate-800 p-4 sm:p-5 rounded-2xl">
                         <div>
                           <h3 className="text-base font-serif font-bold text-white flex items-center gap-2">
                             <Car className="w-4 h-4 text-[#d4af37]" />
-                            <span>Benaa Transport Grid & Tiered VIP Markup</span>
+                            <span>প্রাইভেট ট্রান্সপোর্ট ও ফ্লিট রুট ম্যানেজমেন্ট (Private Transport & Fleet Routes)</span>
                           </h3>
-                          <p className="text-xs text-slate-400 mt-0.5">
-                            Tiered Markup Formula: <strong className="text-amber-300">+150 SAR</strong> if &gt;1500 SAR, <strong className="text-amber-300">+100 SAR</strong> if 900–1500 SAR, <strong className="text-amber-300">+50 SAR</strong> if &lt;900 SAR.
+                          <p className="text-xs text-slate-400 mt-1 font-light">
+                            Manage transport routes, luxury fleet allocations, and direct BDT pricing for airport transfers, intercity journeys, and ziyarah excursions.
                           </p>
                         </div>
 
                         <button
-                          onClick={() => setNewRouteModal(true)}
-                          className="px-4 py-2 bg-kiswah-gold text-[#080809] font-serif font-bold text-xs uppercase tracking-wider rounded-xl shadow-md flex items-center gap-1.5 cursor-pointer hover:bg-kiswah-gold-hover"
+                          type="button"
+                          onClick={openAddRouteModal}
+                          className="px-4 py-2.5 bg-kiswah-gold hover:bg-kiswah-gold-hover text-[#080809] font-serif font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition-transform hover:scale-102"
                         >
                           <Plus className="w-4 h-4" />
-                          <span>Add Custom Route</span>
+                          <span>+ নতুন রুট যোগ করুন / Add New Route</span>
                         </button>
                       </div>
 
                       {/* Routes Table */}
-                      <div className="border border-slate-800 rounded-2xl overflow-hidden bg-[#0a0a0c]">
+                      <div className="border border-slate-800 rounded-2xl overflow-hidden bg-[#0a0a0c] shadow-2xl">
                         <div className="overflow-x-auto">
                           <table className="w-full text-left text-xs">
                             <thead className="bg-[#121214] text-amber-300 font-serif font-bold border-b border-slate-800">
                               <tr>
-                                <th className="p-3.5">Route Name & Type</th>
-                                <th className="p-3.5">Distance</th>
-                                <th className="p-3.5">Base Rate (SAR)</th>
-                                <th className="p-3.5">Applied Markup</th>
-                                <th className="p-3.5">Final Client SAR</th>
-                                <th className="p-3.5 text-right">Quick Base Rate Update</th>
+                                <th className="p-3.5">রুট ও গন্তব্য (Route Name)</th>
+                                <th className="p-3.5">যানবাহন / ফ্লিট (Vehicle Type)</th>
+                                <th className="p-3.5">মূল্য (Price in BDT ৳)</th>
+                                <th className="p-3.5">দূরত্ব / সময়কাল (Distance)</th>
+                                <th className="p-3.5 text-right">অ্যাকশন (Actions)</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800 text-slate-300">
                               {transport.routes.map((route) => {
-                                const markupSAR = (route.finalPriceSAR || 0) - (route.basePriceSAR || 0);
+                                const priceBDT = route.priceBDT !== undefined ? route.priceBDT : Math.round((route.finalPriceSAR || 1600) * 33);
                                 return (
-                                  <tr key={route.id} className="hover:bg-white/[0.01]">
+                                  <tr key={route.id} className="hover:bg-white/[0.02] transition-colors">
                                     <td className="p-3.5">
-                                      <span className="font-semibold text-white block">{route.nameEn}</span>
-                                      <span className="text-[11px] text-amber-300 block">{route.nameBn}</span>
-                                      <span className="text-[10px] text-slate-500 uppercase">{route.typeEn}</span>
+                                      <span className="font-semibold text-white text-sm block">{route.nameEn}</span>
+                                      <span className="text-xs text-amber-300 block font-sans">{route.nameBn}</span>
+                                    </td>
+                                    <td className="p-3.5">
+                                      <span className="px-2.5 py-1 rounded-full bg-[#d4af37]/15 text-[#d4af37] border border-[#d4af37]/30 text-xs font-mono font-bold uppercase inline-block">
+                                        {route.vehicleType || route.typeEn || 'GMC Yukon VIP'}
+                                      </span>
+                                    </td>
+                                    <td className="p-3.5">
+                                      <span className="font-serif font-bold text-kiswah-gold text-base block">
+                                        ৳{Number(priceBDT).toLocaleString('en-IN')}/-
+                                      </span>
                                     </td>
                                     <td className="p-3.5 font-mono text-slate-400">
-                                      {route.distanceEn}
-                                    </td>
-                                    <td className="p-3.5 font-mono font-bold text-white text-sm">
-                                      {route.basePriceSAR} SAR
-                                    </td>
-                                    <td className="p-3.5">
-                                      <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 font-mono text-[11px] font-bold border border-amber-500/30">
-                                        +{markupSAR} SAR
-                                      </span>
-                                    </td>
-                                    <td className="p-3.5 font-mono font-bold text-kiswah-gold text-sm">
-                                      {route.finalPriceSAR} SAR
-                                      <span className="block text-[10px] text-slate-400 font-sans">
-                                        (~ ৳{Math.round((route.finalPriceSAR || 0) * 33).toLocaleString()} BDT)
-                                      </span>
+                                      {route.distanceEn || 'Express Route'}
                                     </td>
                                     <td className="p-3.5 text-right">
-                                      <div className="inline-flex items-center gap-1.5">
-                                        <input
-                                          type="number"
-                                          defaultValue={route.basePriceSAR}
-                                          id={`input-${route.id}`}
-                                          className="w-20 bg-[#121214] border border-slate-700 rounded-lg px-2 py-1 text-xs text-white font-mono text-center focus:border-[#d4af37]"
-                                        />
+                                      <div className="inline-flex items-center gap-2">
                                         <button
-                                          onClick={() => {
-                                            const el = document.getElementById(`input-${route.id}`);
-                                            if (el) handleUpdateRouteBaseRate(route.id, el.value);
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            startEditRoute(route, e);
                                           }}
-                                          className="px-2.5 py-1 bg-[#d4af37]/20 hover:bg-[#d4af37] text-[#d4af37] hover:text-[#080809] border border-[#d4af37]/40 rounded-lg font-bold text-xs cursor-pointer transition-colors"
+                                          className="px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.09] text-slate-300 hover:text-[#d4af37] border border-slate-700 hover:border-[#d4af37]/50 rounded-xl font-serif text-xs font-semibold flex items-center gap-1 cursor-pointer transition-all"
                                         >
-                                          Save
+                                          <Edit3 className="w-3.5 h-3.5" />
+                                          <span>Edit</span>
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleDeleteRoute(route.id, e);
+                                          }}
+                                          className="px-3 py-1.5 bg-red-950/40 hover:bg-red-900/60 text-red-400 hover:text-red-200 border border-red-500/30 rounded-xl font-serif text-xs font-semibold flex items-center gap-1 cursor-pointer transition-all"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                          <span>Delete</span>
                                         </button>
                                       </div>
                                     </td>
@@ -1866,19 +2319,69 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
                             </div>
 
                             <div>
-                              <label className="text-slate-300 font-semibold block mb-1">Holy Sanctuary City *</label>
-                              <select
-                                value={hotelForm.city}
-                                onChange={(e) => setHotelForm({ ...hotelForm, city: e.target.value })}
-                                className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
-                              >
-                                <option value="Makkah">Makkah Al-Mukarramah</option>
-                                <option value="Madinah">Madinah Al-Munawwarah</option>
-                              </select>
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="text-slate-300 font-semibold block">Holy Sanctuary City *</label>
+                                <button
+                                  type="button"
+                                  onClick={() => setIsCreatingCity(!isCreatingCity)}
+                                  className="text-[11px] text-[#d4af37] hover:underline font-medium cursor-pointer"
+                                >
+                                  {isCreatingCity ? 'বাতিল' : '+ নতুন শহর'}
+                                </button>
+                              </div>
+
+                              {!isCreatingCity ? (
+                                <select
+                                  value={hotelForm.city}
+                                  onChange={(e) => {
+                                    if (e.target.value === '__new__') {
+                                      setIsCreatingCity(true);
+                                    } else {
+                                      setHotelForm({ ...hotelForm, city: e.target.value });
+                                    }
+                                  }}
+                                  className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
+                                >
+                                  {cities.map((ct) => (
+                                    <option key={ct} value={ct}>
+                                      {ct === 'Makkah' ? 'Makkah Al-Mukarramah' : ct === 'Madinah' ? 'Madinah Al-Munawwarah' : ct}
+                                    </option>
+                                  ))}
+                                  <option value="__new__" className="text-amber-300 font-bold bg-[#1a1a1f]">
+                                    + নতুন শহর যোগ করুন (Add New City)...
+                                  </option>
+                                </select>
+                              ) : (
+                                <div className="p-3 bg-[#0a0a0c] border border-[#d4af37]/40 rounded-xl space-y-2">
+                                  <input
+                                    type="text"
+                                    value={newCityName}
+                                    onChange={(e) => setNewCityName(e.target.value)}
+                                    placeholder="New City Name (e.g. Jeddah, Taif)"
+                                    className="w-full bg-[#121214] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-[#d4af37] focus:outline-none"
+                                  />
+                                  <div className="flex justify-end gap-2 pt-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => setIsCreatingCity(false)}
+                                      className="px-2.5 py-1 text-slate-400 hover:text-white text-[11px] cursor-pointer"
+                                    >
+                                      বাতিল
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={handleCreateCity}
+                                      className="px-3 py-1 bg-kiswah-gold text-[#080809] font-serif font-bold text-[11px] rounded-lg cursor-pointer"
+                                    >
+                                      যোগ করুন
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
                               <label className="text-slate-300 font-semibold block mb-1">Distance from Courtyard *</label>
                               <input
@@ -1918,16 +2421,6 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
                                 className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:border-[#d4af37] focus:outline-none"
                               />
                             </div>
-
-                            <div>
-                              <label className="text-slate-300 font-semibold block mb-1">Nightly Rate (USD $)</label>
-                              <input
-                                type="number"
-                                value={hotelForm.nightlyUsd}
-                                onChange={(e) => setHotelForm({ ...hotelForm, nightlyUsd: Number(e.target.value) })}
-                                className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:border-[#d4af37] focus:outline-none"
-                              />
-                            </div>
                           </div>
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1944,19 +2437,28 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
                             </div>
 
                             <div>
-                              <label className="text-slate-300 font-semibold block mb-1">Property Image URL</label>
-                              <input
-                                type="url"
-                                value={hotelForm.image}
-                                onChange={(e) => setHotelForm({ ...hotelForm, image: e.target.value })}
-                                placeholder="https://images.unsplash.com/photo-..."
-                                className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
-                              />
-                              {hotelForm.image && (
-                                <div className="mt-2 h-16 w-32 rounded-lg overflow-hidden border border-slate-700">
-                                  <img src={hotelForm.image} alt="Preview" className="w-full h-full object-cover" />
+                              <label className="text-slate-300 font-semibold block mb-1">ইমেজ লাইভ লিঙ্ক (Image Direct URL)</label>
+                              <div className="flex items-start gap-3">
+                                <input
+                                  type="url"
+                                  value={hotelForm.image}
+                                  onChange={(e) => setHotelForm({ ...hotelForm, image: e.target.value })}
+                                  placeholder="https://i.ibb.co/example/image.png"
+                                  className="w-full bg-[#121214] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
+                                />
+                                <div className="h-16 w-24 rounded-xl overflow-hidden border border-slate-700 bg-slate-950 flex items-center justify-center shrink-0">
+                                  {hotelForm.image ? (
+                                    <img
+                                      src={hotelForm.image}
+                                      alt="Preview"
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                    />
+                                  ) : (
+                                    <span className="text-[9px] text-slate-500 font-mono text-center px-1">No Image</span>
+                                  )}
                                 </div>
-                              )}
+                              </div>
                             </div>
                           </div>
 
@@ -1973,22 +2475,29 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
                       </div>
 
                       {/* City Filter Pills */}
-                      <div className="flex items-center gap-2">
-                        {['all', 'makkah', 'madinah'].map((cityKey) => (
-                          <button
-                            key={cityKey}
-                            onClick={() => setHotelCityFilter(cityKey)}
-                            className={`px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all ${
-                              hotelCityFilter === cityKey
-                                ? 'bg-kiswah-gold text-[#080809] shadow-md'
-                                : 'bg-white/[0.03] border border-slate-800 text-slate-400 hover:text-white'
-                            }`}
-                          >
-                            {cityKey === 'all' && `All Hotels (${hotels.length})`}
-                            {cityKey === 'makkah' && `Makkah Sanctum (${hotels.filter(h => h.city?.toLowerCase() === 'makkah').length})`}
-                            {cityKey === 'madinah' && `Madinah Munawwarah (${hotels.filter(h => h.city?.toLowerCase() === 'madinah').length})`}
-                          </button>
-                        ))}
+                      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                        {['all', ...cities.map(c => c.toLowerCase())].map((cityKey) => {
+                          const count = cityKey === 'all' 
+                            ? hotels.length 
+                            : hotels.filter(h => h.city?.toLowerCase() === cityKey).length;
+                          const label = cityKey === 'all' 
+                            ? `All Hotels (${count})` 
+                            : `${cityKey.charAt(0).toUpperCase() + cityKey.slice(1)} (${count})`;
+
+                          return (
+                            <button
+                              key={cityKey}
+                              onClick={() => setHotelCityFilter(cityKey)}
+                              className={`px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all whitespace-nowrap ${
+                                hotelCityFilter === cityKey
+                                  ? 'bg-kiswah-gold text-[#080809] shadow-md font-bold'
+                                  : 'bg-white/[0.03] border border-slate-800 text-slate-400 hover:text-white'
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
                       </div>
 
                       {/* Hotel Cards Grid */}
@@ -2035,22 +2544,31 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
                                 <div className="pt-2 border-t border-slate-800 flex items-baseline justify-between">
                                   <span className="text-[10px] text-slate-400 uppercase font-mono">Nightly Rate:</span>
                                   <span className="text-base font-serif font-bold text-kiswah-gold">
-                                    ৳{Number(htl.nightlyBdt || 0).toLocaleString('en-IN')}{' '}
-                                    <span className="text-xs text-slate-400 font-normal">(${htl.nightlyUsd} USD)</span>
+                                    ৳{Number(htl.nightlyBdt || 0).toLocaleString('en-IN')}
                                   </span>
                                 </div>
                               </div>
 
                               <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
                                 <button
-                                  onClick={() => startEditHotel(htl)}
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    startEditHotel(htl, e);
+                                  }}
                                   className="px-3 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 text-xs flex items-center gap-1 cursor-pointer"
                                 >
                                   <Edit3 className="w-3.5 h-3.5" />
                                   <span>Edit</span>
                                 </button>
                                 <button
-                                  onClick={() => handleDeleteHotel(htl.id)}
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleDeleteHotel(htl.id, e);
+                                  }}
                                   className="px-3 py-1.5 rounded-lg bg-red-950/60 hover:bg-red-900 text-red-300 text-xs flex items-center gap-1 cursor-pointer"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -2077,7 +2595,12 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
                       {['All', 'Pending', 'Processing', 'Dispatched', 'Completed'].map((st) => (
                         <button
                           key={st}
-                          onClick={() => setOrderStatusFilter(st)}
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setOrderStatusFilter(st);
+                          }}
                           className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${
                             orderStatusFilter === st
                               ? 'bg-kiswah-gold text-[#080809] shadow-md'
@@ -2147,6 +2670,17 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
                                   <td className="p-3.5">
                                     <span className="font-semibold text-white block">{ord.customerName}</span>
                                     <span className="text-amber-300 font-mono text-[11px] block">{ord.customerPhone}</span>
+                                    {ord.deliveryAddress && (
+                                      <span className="text-slate-300 text-[10px] block mt-1 flex items-start gap-1">
+                                        <MapPin className="w-3 h-3 text-[#d4af37] shrink-0 mt-0.5" />
+                                        <span className="truncate max-w-[200px]" title={ord.deliveryAddress}>{ord.deliveryAddress}</span>
+                                      </span>
+                                    )}
+                                    {ord.paymentMethod && (
+                                      <span className="text-emerald-400 font-mono text-[10px] block mt-0.5">
+                                        Pay: {ord.paymentMethod} {ord.shippingFee ? `(+৳${ord.shippingFee})` : ''}
+                                      </span>
+                                    )}
                                     {ord.customerEmail && <span className="text-slate-400 text-[10px] block">{ord.customerEmail}</span>}
                                   </td>
 
@@ -2167,16 +2701,18 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
                                     <span className="font-serif font-bold text-kiswah-gold text-sm block">
                                       ৳{ord.totalBDT?.toLocaleString('en-IN')}
                                     </span>
-                                    <span className="text-[10px] text-slate-400 font-mono">
-                                      (${ord.totalUSD?.toLocaleString()} USD)
-                                    </span>
                                   </td>
 
                                   <td className="p-3.5">
                                     <select
                                       value={ord.status}
-                                      onChange={(e) => handleUpdateOrderStatus(ord.id, e.target.value)}
-                                      className={`px-2.5 py-1 rounded-xl text-xs font-bold border cursor-pointer focus:outline-none ${
+                                      onClick={(e) => e.stopPropagation()}
+                                      onChange={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleUpdateOrderStatus(ord.id, e.target.value, e);
+                                      }}
+                                      className={`px-2.5 py-1 rounded-xl text-xs font-bold border cursor-pointer focus:outline-none transition-all ${
                                         ord.status === 'Completed'
                                           ? 'bg-emerald-950 text-emerald-300 border-emerald-500/50'
                                           : ord.status === 'Dispatched'
@@ -2199,6 +2735,7 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
                                         href={`https://wa.me/${cleanPhone}?text=${waMessage}`}
                                         target="_blank"
                                         rel="noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
                                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 text-xs font-semibold transition-colors"
                                       >
                                         <MessageSquare className="w-3.5 h-3.5" />
@@ -2208,7 +2745,12 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
                                       {/* Conditional Order Deletion: Allowed only for Completed or Dispatched */}
                                       {ord.status === 'Completed' || ord.status === 'Dispatched' ? (
                                         <button
-                                          onClick={() => handleDeleteOrder(ord.id)}
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleDeleteOrder(ord.id, e);
+                                          }}
                                           className="p-1.5 rounded-xl bg-red-950/70 hover:bg-red-900 border border-red-500/50 text-red-300 transition-colors cursor-pointer"
                                           title="Archive & delete completed order"
                                           aria-label={`Delete order ${ord.id}`}
@@ -2217,6 +2759,7 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
                                         </button>
                                       ) : (
                                         <button
+                                          type="button"
                                           disabled
                                           className="p-1.5 rounded-xl bg-slate-900/60 border border-slate-800 text-slate-600 opacity-40 cursor-not-allowed"
                                           title="Only Completed or Dispatched orders can be archived or deleted"
@@ -2242,28 +2785,37 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
             </div>
 
           </div>
-        )}
 
-        {/* MODAL: ADD CUSTOM TRANSPORT ROUTE */}
-        {newRouteModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#080809]/80 backdrop-blur-md">
-            <div className="bg-[#121214] border border-[#d4af37]/40 p-6 rounded-3xl max-w-md w-full space-y-4 shadow-2xl">
+        {/* MODAL: ADD / EDIT STREAMLINED TRANSPORT ROUTE */}
+        {routeModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+            <div className="bg-[#121214] border border-[#d4af37]/40 p-6 sm:p-7 rounded-3xl max-w-lg w-full space-y-5 shadow-2xl">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 className="font-serif font-bold text-white text-base">Add Custom Transport Route</h3>
-                <button onClick={() => setNewRouteModal(false)} className="text-slate-400 hover:text-white">
+                <div>
+                  <h3 className="font-serif font-bold text-white text-base">
+                    {editingRoute ? 'Edit Transport Route' : '+ নতুন রুট যোগ করুন (Add New Transport Route)'}
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Enter route name, assigned vehicle type/fleet, and direct final BDT price.
+                  </p>
+                </div>
+                <button 
+                  onClick={() => { setRouteModalOpen(false); setEditingRoute(null); }} 
+                  className="p-1 rounded-full hover:bg-white/10 text-slate-400 hover:text-white cursor-pointer"
+                >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <form onSubmit={handleAddRoute} className="space-y-3 text-xs">
+              <form onSubmit={handleSaveRoute} className="space-y-4 text-xs">
                 <div>
-                  <label className="text-slate-300 font-semibold block mb-1">Route Name (EN) *</label>
+                  <label className="text-slate-300 font-semibold block mb-1">Route Name (English) *</label>
                   <input
                     type="text"
                     required
-                    value={newRouteForm.nameEn}
-                    onChange={(e) => setNewRouteForm({ ...newRouteForm, nameEn: e.target.value })}
-                    placeholder="e.g. Taif Cable Car & Rose Garden Day Tour"
+                    value={routeForm.nameEn}
+                    onChange={(e) => setRouteForm({ ...routeForm, nameEn: e.target.value })}
+                    placeholder="e.g. Jeddah Airport to Makkah Hotel"
                     className="w-full bg-[#0a0a0c] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
                   />
                 </div>
@@ -2273,50 +2825,64 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
                   <input
                     type="text"
                     required
-                    value={newRouteForm.nameBn}
-                    onChange={(e) => setNewRouteForm({ ...newRouteForm, nameBn: e.target.value })}
-                    placeholder="যেমনঃ তায়েফ ক্যাবল কার ও গোলাপ বাগান সফর"
+                    value={routeForm.nameBn}
+                    onChange={(e) => setRouteForm({ ...routeForm, nameBn: e.target.value })}
+                    placeholder="যেমনঃ জেদ্দা বিমানবন্দর থেকে মক্কা হোটেল"
                     className="w-full bg-[#0a0a0c] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-slate-300 font-semibold block mb-1">Base Price (SAR) *</label>
+                    <label className="text-slate-300 font-semibold block mb-1">Vehicle Type / Fleet *</label>
                     <input
-                      type="number"
+                      type="text"
                       required
-                      value={newRouteForm.basePriceSAR}
-                      onChange={(e) => setNewRouteForm({ ...newRouteForm, basePriceSAR: Number(e.target.value) })}
-                      className="w-full bg-[#0a0a0c] border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:border-[#d4af37] focus:outline-none"
+                      value={routeForm.vehicleType}
+                      onChange={(e) => setRouteForm({ ...routeForm, vehicleType: e.target.value })}
+                      placeholder="e.g. GMC Yukon / Hyundai H1 / Bus"
+                      className="w-full bg-[#0a0a0c] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="text-slate-300 font-semibold block mb-1">Distance / Duration</label>
+                    <label className="text-slate-300 font-semibold block mb-1">Price in BDT (৳) *</label>
                     <input
-                      type="text"
-                      value={newRouteForm.distanceEn}
-                      onChange={(e) => setNewRouteForm({ ...newRouteForm, distanceEn: e.target.value })}
-                      placeholder="e.g. 180 km (2.5 hrs)"
-                      className="w-full bg-[#0a0a0c] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
+                      type="number"
+                      required
+                      min={100}
+                      value={routeForm.priceBDT}
+                      onChange={(e) => setRouteForm({ ...routeForm, priceBDT: Number(e.target.value) })}
+                      placeholder="e.g. 52000"
+                      className="w-full bg-[#0a0a0c] border border-slate-800 rounded-xl px-3 py-2 text-white font-mono focus:border-[#d4af37] focus:outline-none"
                     />
                   </div>
                 </div>
 
-                <div className="pt-2 flex justify-end gap-2">
+                <div>
+                  <label className="text-slate-300 font-semibold block mb-1">Distance & Estimated Travel Time</label>
+                  <input
+                    type="text"
+                    value={routeForm.distanceEn}
+                    onChange={(e) => setRouteForm({ ...routeForm, distanceEn: e.target.value })}
+                    placeholder="e.g. 95 km (approx. 60 mins)"
+                    className="w-full bg-[#0a0a0c] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
+                  />
+                </div>
+
+                <div className="pt-2 flex justify-end gap-2 border-t border-slate-800">
                   <button
                     type="button"
-                    onClick={() => setNewRouteModal(false)}
-                    className="px-4 py-2 border border-slate-800 rounded-xl text-slate-300 hover:text-white"
+                    onClick={() => { setRouteModalOpen(false); setEditingRoute(null); }}
+                    className="px-4 py-2 border border-slate-800 rounded-xl text-slate-300 hover:text-white cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-kiswah-gold text-[#080809] font-serif font-bold rounded-xl uppercase tracking-wider"
+                    className="px-5 py-2 bg-kiswah-gold hover:bg-kiswah-gold-hover text-[#080809] font-serif font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg cursor-pointer transition-transform hover:scale-102"
                   >
-                    Create Route
+                    {editingRoute ? 'Save Route Changes' : '+ Save & Publish Route'}
                   </button>
                 </div>
               </form>
@@ -2325,6 +2891,7 @@ export default function AdminDashboard({ isOpen, onClose, locale = 'en' }) {
         )}
 
       </motion.div>
+      </div>
     </div>
   );
 }

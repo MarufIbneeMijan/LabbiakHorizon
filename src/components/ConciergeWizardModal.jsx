@@ -299,10 +299,8 @@ ${addOnList}
 👥 *Delegation Count:* ${adults} Adults, ${children} Children, ${infants} Infants
 
 💰 *Grand Investment Valuation:*
-  - Total BDT: ৳${valuation.grandTotalBDT.toLocaleString('en-IN')} BDT
-  - Total USD: $${valuation.grandTotalUSD.toLocaleString()} USD
-  - Total SAR: ${valuation.grandTotalSAR.toLocaleString()} SAR
-  - Per Person: ৳${valuation.perPersonBDT.toLocaleString('en-IN')} BDT
+  - Total: ৳${valuation.grandTotalBDT.toLocaleString('en-IN')}/-
+  - Per Person: ৳${valuation.perPersonBDT.toLocaleString('en-IN')}/-
 
 Please connect me with your Private Client Director to confirm our booking.`;
 
@@ -388,7 +386,7 @@ Please connect me with your Private Client Director to confirm our booking.`;
               {isBn ? 'চলতি আনুমানিক বাজেট' : 'Est. Running Total'}
             </span>
             <span className="text-sm sm:text-base font-serif font-extrabold text-kiswah-gold">
-              ৳{valuation.grandTotalBDT.toLocaleString('en-IN')} <span className="text-[10px] text-slate-400 font-normal">(~ ${valuation.grandTotalUSD.toLocaleString()} USD)</span>
+              ৳{valuation.grandTotalBDT.toLocaleString('en-IN')}{isBn ? '/-' : ''}
             </span>
           </div>
 
@@ -928,12 +926,9 @@ Please connect me with your Private Client Director to confirm our booking.`;
 
                     <div className="flex items-baseline gap-3">
                       <span className="text-4xl sm:text-6xl font-serif font-extrabold text-kiswah-gold drop-shadow-md">
-                        ৳{valuation.grandTotalBDT.toLocaleString('en-IN')}
+                        ৳{valuation.grandTotalBDT.toLocaleString('en-IN')}{isBn ? '/-' : ''}
                       </span>
                       <span className="text-base font-bold text-slate-400">BDT</span>
-                      <span className="text-sm sm:text-base text-amber-300 font-serif">
-                        (~ ${valuation.grandTotalUSD.toLocaleString()} USD / {valuation.grandTotalSAR.toLocaleString()} SAR)
-                      </span>
                     </div>
 
                     {/* ITEMIZED COST SHEET TABLE */}

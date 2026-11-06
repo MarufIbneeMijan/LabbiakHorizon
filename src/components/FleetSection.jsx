@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import { DICTIONARY, FLEET_ROUTES, FLEET_VEHICLES, applyTieredMarkup } from '../data/mockData';
 import { transportAPI } from '../services/api';
 
-export default function FleetSection({ locale = 'en', onConfirmFleet = () => {} }) {
+export default function FleetSection({ locale = 'bn', onConfirmFleet = () => {} }) {
   const dict = DICTIONARY[locale] || DICTIONARY.en;
   const isBn = locale === 'bn';
 
@@ -114,7 +114,7 @@ export default function FleetSection({ locale = 'en', onConfirmFleet = () => {} 
                 >
                   <div className="space-y-1">
                     <span className="text-[10px] font-mono text-[#d4af37] font-bold uppercase tracking-wider block">
-                      {routeType}
+                      {route.vehicleType || routeType}
                     </span>
                     <h4 className="font-serif font-bold text-xs text-white leading-snug">
                       {routeName}
@@ -123,7 +123,7 @@ export default function FleetSection({ locale = 'en', onConfirmFleet = () => {} 
 
                   <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
                     <span className="truncate">{route.distanceEn || 'Express Transfer'}</span>
-                    <span className="font-bold text-[#d4af37]">{route.finalPriceSAR || applyTieredMarkup(route.basePriceSAR || 550)} SAR</span>
+                    <span className="font-bold text-[#d4af37]">৳{(route.priceBDT || Math.round((route.finalPriceSAR || applyTieredMarkup(route.basePriceSAR || 550)) * 33)).toLocaleString('en-IN')}/-</span>
                   </div>
                 </button>
               );
@@ -139,10 +139,10 @@ export default function FleetSection({ locale = 'en', onConfirmFleet = () => {} 
             </div>
             <div>
               <h3 className="text-base font-serif font-bold text-white">
-                {dict.fleet?.selectVehicleTitle || '2. Select Royal Vehicle & Capacity'}
+                {dict.fleet?.selectVehicleTitle || (isBn ? '২. রাজকীয় যানবাহন ও আসন সংখ্যা নির্বাচন' : '2. Select Royal Vehicle & Capacity')}
               </h3>
               <p className="text-xs text-slate-400">
-                {dict.fleet?.selectVehicleDesc || 'Real-time SAR, BDT, and USD rate card with tiered VIP margins applied'}
+                {isBn ? 'স্বচ্ছ রেট কার্ড ও ২৪/৭ ডেডিকেটেড ভিআইপি চফার সার্ভিস' : 'Transparent BDT rate card with 24/7 dedicated VIP chauffeurs'}
               </p>
             </div>
           </div>
@@ -208,23 +208,19 @@ export default function FleetSection({ locale = 'en', onConfirmFleet = () => {} 
                     </div>
 
                     <div className="pt-4 border-t border-slate-800 space-y-3">
-                      {/* Price Breakdown with Tiered Markup */}
+                      {/* Price Breakdown in Clean BDT */}
                       <div className="bg-[#0a0a0c] p-3 rounded-2xl border border-slate-800 space-y-1 text-xs">
                         <div className="flex justify-between text-slate-400">
-                          <span>Base Saudi Fleet Rate:</span>
-                          <span className="font-mono text-slate-200">{basePrice} SAR</span>
+                          <span>{isBn ? 'মূল যানবাহন ভাড়া:' : 'Standard Vehicle Fare:'}</span>
+                          <span className="font-mono text-slate-200">৳{Math.round(basePrice * 33).toLocaleString('en-IN')}</span>
                         </div>
                         <div className="flex justify-between text-amber-400">
-                          <span>Applied Tiered VIP Margin:</span>
-                          <span className="font-mono font-bold">+{markupAmount} SAR</span>
+                          <span>{isBn ? 'ভিআইপি চফার ও সার্ভিস চার্জ:' : 'VIP Chauffeur & Service:'}</span>
+                          <span className="font-mono font-bold">+৳{Math.round(markupAmount * 33).toLocaleString('en-IN')}</span>
                         </div>
                         <div className="flex justify-between items-baseline pt-1 border-t border-slate-800 text-sm font-bold text-kiswah-gold font-serif">
-                          <span>Final Total (SAR):</span>
-                          <span>{finalPriceSAR} SAR</span>
-                        </div>
-                        <div className="flex justify-between text-[11px] text-slate-400 pt-0.5">
-                          <span>Approx. Investment:</span>
-                          <span className="font-mono">৳{priceBDT.toLocaleString('en-IN')} BDT (${priceUSD} USD)</span>
+                          <span>{isBn ? 'সর্বমোট প্যাকেজ রেট:' : 'Total Fleet Fare (BDT):'}</span>
+                          <span>৳{priceBDT.toLocaleString('en-IN')}/-</span>
                         </div>
                       </div>
 
