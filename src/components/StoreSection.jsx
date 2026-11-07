@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   ShoppingBag, Sparkles, Tag, Check, CheckCircle2, 
   ArrowRight, ShieldCheck, X, Phone, User, MapPin, 
-  MessageSquare, Send, CreditCard, Star, RefreshCw, Eye, Plus, Minus
+  MessageSquare, Send, CreditCard, Star, RefreshCw, Eye, Plus, Minus, AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -36,6 +36,8 @@ export default function StoreSection({
   const [orderNotes, setOrderNotes] = useState('');
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [placedOrderId, setPlacedOrderId] = useState('');
+  const [formError, setFormError] = useState('');
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
   // Lock body scroll whenever any modal is open
   useEffect(() => {
@@ -81,11 +83,25 @@ export default function StoreSection({
     setOrderQuantity(initialQty);
     setOrderPlaced(false);
     setPlacedOrderId('');
+    setFormError('');
+    setHasAttemptedSubmit(false);
   };
 
   const handlePlaceOrder = async (e) => {
-    e.preventDefault();
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
     if (!orderingProduct) return;
+
+    setHasAttemptedSubmit(true);
+
+    if (!customerName.trim() || !customerPhone.trim() || !deliveryAddress.trim()) {
+      setFormError(isBn ? 'দয়া করে সকল বাধ্যতামূলক (*) ঘর পূরণ করুন।' : 'Please fill in all required fields marked with *.');
+      return;
+    }
+
+    setFormError('');
 
     const totalBDT = (orderingProduct.priceBDT || 0) * orderQuantity;
     const totalUSD = Math.round(totalBDT / 120);
@@ -375,57 +391,47 @@ export default function StoreSection({
           </div>
         )}
 
-        {/* 1. PRODUCT QUICK VIEW "SEE DETAILS" MODAL (FIXED PORTAL POSITIONING Z-[100]) */}
+        {/* 1. PRODUCT QUICK VIEW "SEE DETAILS" MODAL (STANDARDIZED WITH PACKAGE DETAILS MODAL) */}
         <AnimatePresence>
           {selectedDetailProduct && (() => {
             const prod = selectedDetailProduct;
             const name = isBn ? (prod.name_bn || prod.name_en) : (prod.name_en || prod.name_bn);
             const desc = isBn ? (prod.description_bn || prod.description_en) : (prod.description_en || prod.description_bn);
             const specs = getProductSpecs(prod);
-            const inStock = prod.stock > 0;
+            const inStock = (prod.stock || 0) > 0;
             const liveTotal = (prod.priceBDT || 0) * detailQuantity;
 
             return (
-              <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md font-sans">
-                
-                {/* Backdrop Click Dismiss */}
-                <div 
-                  className="absolute inset-0" 
-                  onClick={() => setSelectedDetailProduct(null)} 
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+                {/* Modal Backdrop */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setSelectedDetailProduct(null)}
+                  className="fixed inset-0 bg-[#080809]/85 backdrop-blur-2xl transition-opacity"
                 />
 
+                {/* Standardized Glassmorphic Modal Container */}
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                  initial={{ opacity: 0, scale: 0.94, y: 15 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: 15 }}
-                  className="bg-[#121215] border border-[#d4af37]/40 rounded-3xl max-w-2xl w-full p-6 sm:p-8 pt-12 sm:pt-14 shadow-2xl relative overflow-y-auto max-h-[90vh] z-10 kiswah-gold-glow selection:bg-[#d4af37] selection:text-[#080809]"
+                  exit={{ opacity: 0, scale: 0.94, y: 15 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 280 }}
+                  className="relative bg-[#101013] border border-[#d4af37]/40 rounded-3xl max-w-2xl sm:max-w-3xl w-full shadow-2xl overflow-hidden z-10 my-auto flex flex-col max-h-[85vh] backdrop-blur-xl"
                 >
-                  {/* Close Button: Absolute top-right with high contrast and proper clearance */}
-                  <button
-                    onClick={() => setSelectedDetailProduct(null)}
-                    className="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/40 hover:bg-black/60 text-white border border-[#d4af37]/30 transition-all cursor-pointer shadow-lg"
-                    aria-label="Close product details"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
+                  {/* Standardized Header Banner (h-48 sm:h-56 shrink-0) */}
+                  <div className="relative h-48 sm:h-56 shrink-0 overflow-hidden bg-slate-950">
+                    <img
+                      src={prod.image}
+                      alt={name}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#101013] via-[#101013]/60 to-transparent" />
 
-                  <div className="space-y-6">
-                    
-                    {/* Image with Interactive Zoom Preview */}
-                    <div 
-                      className="relative h-64 sm:h-72 rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 cursor-zoom-in group"
-                      onClick={() => setIsZoomed(!isZoomed)}
-                    >
-                      <img
-                        src={prod.image}
-                        alt={name}
-                        className={`w-full h-full object-cover transition-transform duration-500 ${
-                          isZoomed ? 'scale-150' : 'group-hover:scale-105'
-                        }`}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#121215] via-transparent to-transparent pointer-events-none" />
-
-                      <div className="absolute top-3 left-3 flex items-center gap-2">
+                    {/* Top Bar with Badges and 44x44 Close Button (top-4 right-4 z-20) */}
+                    <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-20">
+                      <div className="flex items-center gap-2">
                         <span className="px-3 py-1 rounded-full bg-kiswah-gold text-[#080809] font-serif font-extrabold text-[10px] uppercase tracking-wider shadow-md">
                           {prod.tag || 'Essential'}
                         </span>
@@ -434,40 +440,57 @@ export default function StoreSection({
                         </span>
                       </div>
 
-                      <div className="absolute bottom-3 right-3 text-[11px] text-slate-300 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-800">
-                        <span className="text-slate-400 text-[10px] font-mono">
-                          {isZoomed ? (isBn ? 'স্বাভাবিক দেখতে ক্লিক করুন' : 'Click to unzoom') : (isBn ? 'বড় করে দেখতে ক্লিক করুন' : 'Click to zoom')}
-                        </span>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedDetailProduct(null)}
+                        className="w-11 h-11 rounded-full bg-[#080809]/80 hover:bg-[#d4af37] text-slate-300 hover:text-[#080809] border border-[#d4af37]/40 flex items-center justify-center transition-all cursor-pointer shadow-xl"
+                        aria-label="Close product modal"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
                     </div>
 
-                    {/* Product Name & Pricing */}
-                    <div className="space-y-2">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <h3 className="text-xl sm:text-2xl font-serif font-bold text-white">
-                          {name}
-                        </h3>
-                        <span className={`text-xs font-mono px-3 py-1 rounded-full border ${
-                          inStock 
-                            ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40' 
-                            : 'bg-red-950/80 text-red-300 border-red-500/40'
-                        }`}>
-                          {inStock ? (isBn ? `স্টকে আছে: ${prod.stock} টি` : `In Stock (${prod.stock} units)`) : (isBn ? 'স্টক শেষ' : 'Sold Out')}
+                    {/* Title in Header */}
+                    <div className="absolute bottom-4 left-5 right-5">
+                      <h3 className="text-xl sm:text-2xl font-serif font-extrabold text-white leading-tight">
+                        {name}
+                      </h3>
+                    </div>
+                  </div>
+
+                  {/* Scrollable Content Body */}
+                  <div className="overflow-y-auto p-5 sm:p-6 space-y-5 flex-1">
+                    {/* Price and Stock Status */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                      <div>
+                        <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono block">
+                          {isBn ? 'মূল্য' : 'Price'}
                         </span>
+                        <div className="text-2xl font-serif font-extrabold text-[#d4af37]">
+                          ৳{Number(prod.priceBDT || 0).toLocaleString('en-IN')}{isBn ? '/-' : ''}
+                        </div>
                       </div>
 
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-serif font-extrabold text-kiswah-gold">
-                          ৳{prod.priceBDT?.toLocaleString('en-IN')}{isBn ? '/-' : ''}
-                        </span>
-                      </div>
+                      <span className={`text-xs font-mono px-3.5 py-1.5 rounded-full border ${
+                        inStock 
+                          ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40' 
+                          : 'bg-red-950/80 text-red-300 border-red-500/40'
+                      }`}>
+                        {inStock ? (isBn ? `স্টকে আছে: ${prod.stock} টি` : `In Stock: ${prod.stock} units`) : (isBn ? 'স্টক শেষ' : 'Sold Out')}
+                      </span>
+                    </div>
 
-                      {desc && (
-                        <p className="text-xs sm:text-sm text-slate-300 font-light leading-relaxed pt-1">
+                    {/* Description */}
+                    {desc && (
+                      <div className="space-y-1">
+                        <span className="text-xs font-serif font-bold text-amber-300 uppercase tracking-wider block">
+                          {isBn ? 'পণ্যের বর্ণনা' : 'Description'}
+                        </span>
+                        <p className="text-xs sm:text-sm text-slate-300 font-light leading-relaxed">
                           {desc}
                         </p>
-                      )}
-                    </div>
+                      </div>
+                    )}
 
                     {/* Specifications List */}
                     <div className="bg-[#080809] p-4 rounded-2xl border border-slate-800 space-y-2.5">
@@ -496,74 +519,70 @@ export default function StoreSection({
                         </p>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Quantity Selector & Instant Order CTA */}
-                    <div className="pt-2 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-                      
-                      {/* Counter */}
-                      <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
-                        <span className="text-xs text-slate-400 font-medium">
-                          {isBn ? 'পরিমাণ:' : 'Quantity:'}
-                        </span>
-                        <div className="flex items-center bg-[#080809] border border-slate-700 rounded-xl px-2 py-1">
-                          <button
-                            type="button"
-                            onClick={() => setDetailQuantity(Math.max(1, detailQuantity - 1))}
-                            className="w-7 h-7 rounded-lg bg-white/[0.04] hover:bg-white/[0.1] text-amber-300 font-bold flex items-center justify-center cursor-pointer"
-                          >
-                            <Minus className="w-3.5 h-3.5" />
-                          </button>
-                          <span className="font-mono font-bold text-white text-sm px-3">{detailQuantity}</span>
-                          <button
-                            type="button"
-                            onClick={() => setDetailQuantity(detailQuantity + 1)}
-                            className="w-7 h-7 rounded-lg bg-white/[0.04] hover:bg-white/[0.1] text-amber-300 font-bold flex items-center justify-center cursor-pointer"
-                          >
-                            <Plus className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                        <div className="text-right sm:hidden">
-                          <span className="text-xs font-serif font-bold text-kiswah-gold">
-                            ৳{liveTotal.toLocaleString('en-IN')}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Modal CTA Buttons */}
-                      <div className="flex items-center gap-3 w-full sm:w-auto">
-                        <div className="text-right hidden sm:block pr-2">
-                          <span className="text-[10px] text-slate-400 uppercase block font-mono">
-                            {isBn ? 'মোট বিনিয়োগ' : 'Total'}
-                          </span>
-                          <span className="text-lg font-serif font-bold text-kiswah-gold">
-                            ৳{liveTotal.toLocaleString('en-IN')}
-                          </span>
-                        </div>
-
+                  {/* Fixed Bottom Action Bar */}
+                  <div className="p-4 sm:p-5 border-t border-slate-800 bg-[#0c0c0e] shrink-0 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    {/* Quantity Selector */}
+                    <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+                      <span className="text-xs text-slate-400 font-medium">
+                        {isBn ? 'পরিমাণ:' : 'Quantity:'}
+                      </span>
+                      <div className="flex items-center bg-[#080809] border border-slate-700 rounded-xl px-2 py-1">
                         <button
                           type="button"
-                          onClick={() => {
-                            const p = selectedDetailProduct;
-                            const qty = detailQuantity;
-                            setSelectedDetailProduct(null);
-                            if (onBuyNow) {
-                              onBuyNow(p, qty);
-                            } else if (onAddToCart) {
-                              onAddToCart(p, qty);
-                            } else {
-                              openOrderModal(p, qty);
-                            }
-                          }}
-                          disabled={!inStock}
-                          className="w-full sm:w-auto px-6 py-3.5 bg-kiswah-gold hover:bg-kiswah-gold-hover text-[#080809] font-serif font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 shadow-xl cursor-pointer"
+                          onClick={() => setDetailQuantity(Math.max(1, detailQuantity - 1))}
+                          className="w-7 h-7 rounded-lg bg-white/[0.04] hover:bg-white/[0.1] text-amber-300 font-bold flex items-center justify-center cursor-pointer"
                         >
-                          <ShoppingBag className="w-4 h-4" />
-                          <span>{isBn ? 'এখনই অর্ডার করুন' : 'Proceed to Checkout'}</span>
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="font-mono font-bold text-white text-sm px-3">{detailQuantity}</span>
+                        <button
+                          type="button"
+                          onClick={() => setDetailQuantity(detailQuantity + 1)}
+                          className="w-7 h-7 rounded-lg bg-white/[0.04] hover:bg-white/[0.1] text-amber-300 font-bold flex items-center justify-center cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
                         </button>
                       </div>
-
                     </div>
 
+                    {/* Subtotal and Action Buttons */}
+                    <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
+                      <div className="text-right">
+                        <span className="text-[10px] text-slate-400 uppercase block font-mono">
+                          {isBn ? 'মোট বিনিয়োগ' : 'Total'}
+                        </span>
+                        <span className="text-lg font-serif font-bold text-[#d4af37]">
+                          ৳{liveTotal.toLocaleString('en-IN')}{isBn ? '/-' : ''}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const p = selectedDetailProduct;
+                          const qty = detailQuantity;
+                          setSelectedDetailProduct(null);
+                          if (onBuyNow) {
+                            onBuyNow(p, qty);
+                          } else if (onAddToCart) {
+                            onAddToCart(p, qty);
+                          } else {
+                            openOrderModal(p, qty);
+                          }
+                        }}
+                        disabled={!inStock}
+                        className={`px-6 py-3.5 rounded-xl font-serif font-extrabold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xl cursor-pointer ${
+                          inStock
+                            ? 'bg-gradient-to-r from-[#d4af37] via-[#e5c158] to-[#b38f2a] text-[#080809] hover:brightness-110 shadow-[#d4af37]/20'
+                            : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                        }`}
+                      >
+                        <ShoppingBag className="w-4 h-4" />
+                        <span>{isBn ? 'এখনই অর্ডার করুন' : 'Proceed to Checkout'}</span>
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
               </div>
@@ -621,7 +640,14 @@ export default function StoreSection({
                     </button>
                   </div>
                 ) : (
-                  <form onSubmit={handlePlaceOrder} className="space-y-4 text-xs">
+                  <form 
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handlePlaceOrder(e);
+                    }} 
+                    className="space-y-4 text-xs"
+                  >
                     <div className="flex items-center gap-3 border-b border-[#d4af37]/20 pb-4">
                       <div className="w-11 h-11 rounded-2xl bg-[#d4af37]/10 border border-[#d4af37]/30 text-[#d4af37] flex items-center justify-center">
                         <ShoppingBag className="w-6 h-6" />
@@ -676,8 +702,15 @@ export default function StoreSection({
                         required
                         placeholder="e.g. Al-Haj Syful Islam Chowdhury"
                         value={customerName}
-                        onChange={(e) => setCustomerName(e.target.value)}
-                        className="w-full bg-[#080809] border border-slate-800 rounded-xl px-3.5 py-2.5 text-white focus:border-[#d4af37] focus:outline-none"
+                        onChange={(e) => {
+                          setCustomerName(e.target.value);
+                          if (formError && e.target.value.trim()) setFormError('');
+                        }}
+                        className={`w-full bg-[#080809] border rounded-xl px-3.5 py-2.5 text-white focus:outline-none transition-colors ${
+                          hasAttemptedSubmit && !customerName.trim()
+                            ? 'border-red-500 ring-1 ring-red-500/50'
+                            : 'border-slate-800 focus:border-[#d4af37]'
+                        }`}
                       />
                     </div>
 
@@ -690,8 +723,15 @@ export default function StoreSection({
                         required
                         placeholder="01711-XXXXXX"
                         value={customerPhone}
-                        onChange={(e) => setCustomerPhone(e.target.value)}
-                        className="w-full bg-[#080809] border border-slate-800 rounded-xl px-3.5 py-2.5 text-white font-mono focus:border-[#d4af37] focus:outline-none"
+                        onChange={(e) => {
+                          setCustomerPhone(e.target.value);
+                          if (formError && e.target.value.trim()) setFormError('');
+                        }}
+                        className={`w-full bg-[#080809] border rounded-xl px-3.5 py-2.5 text-white font-mono focus:outline-none transition-colors ${
+                          hasAttemptedSubmit && !customerPhone.trim()
+                            ? 'border-red-500 ring-1 ring-red-500/50'
+                            : 'border-slate-800 focus:border-[#d4af37]'
+                        }`}
                       />
                     </div>
 
@@ -704,8 +744,15 @@ export default function StoreSection({
                         required
                         placeholder="e.g. House 14, Road 72, Gulshan-2, Dhaka"
                         value={deliveryAddress}
-                        onChange={(e) => setDeliveryAddress(e.target.value)}
-                        className="w-full bg-[#080809] border border-slate-800 rounded-xl px-3.5 py-2.5 text-white focus:border-[#d4af37] focus:outline-none"
+                        onChange={(e) => {
+                          setDeliveryAddress(e.target.value);
+                          if (formError && e.target.value.trim()) setFormError('');
+                        }}
+                        className={`w-full bg-[#080809] border rounded-xl px-3.5 py-2.5 text-white focus:outline-none transition-colors ${
+                          hasAttemptedSubmit && !deliveryAddress.trim()
+                            ? 'border-red-500 ring-1 ring-red-500/50'
+                            : 'border-slate-800 focus:border-[#d4af37]'
+                        }`}
                       />
                     </div>
 
@@ -722,6 +769,14 @@ export default function StoreSection({
                       />
                     </div>
 
+                    {/* Prominent Inline Error Alert Banner */}
+                    {formError && (
+                      <div className="p-3 rounded-xl bg-red-950/40 border border-red-500/60 text-red-200 text-xs flex items-center gap-2 animate-pulse shadow-lg">
+                        <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                        <span className="font-medium">{formError}</span>
+                      </div>
+                    )}
+
                     <div className="pt-2 flex justify-end gap-3">
                       <button
                         type="button"
@@ -731,7 +786,12 @@ export default function StoreSection({
                         {isBn ? 'বাতিল' : 'Cancel'}
                       </button>
                       <button
-                        type="submit"
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handlePlaceOrder(e);
+                        }}
                         className="px-6 py-2.5 bg-kiswah-gold text-[#080809] font-serif font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg flex items-center gap-2 cursor-pointer hover:bg-kiswah-gold-hover"
                       >
                         <Check className="w-4 h-4" />

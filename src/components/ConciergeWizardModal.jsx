@@ -310,7 +310,10 @@ Please connect me with your Private Client Director to confirm our booking.`;
 
   // Final Action 3: Submit Dossier Form
   const handleSubmitDossier = async (e) => {
-    e.preventDefault();
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
 
     confetti({
       particleCount: 110,
@@ -977,7 +980,14 @@ Please connect me with your Private Client Director to confirm our booking.`;
                   </div>
 
                   {/* LEAD CAPTURE FORM */}
-                  <form onSubmit={handleSubmitDossier} className="bg-[#121214] border border-[#d4af37]/30 p-6 rounded-3xl space-y-4">
+                  <form 
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleSubmitDossier(e);
+                    }} 
+                    className="bg-[#121214] border border-[#d4af37]/30 p-6 rounded-3xl space-y-4"
+                  >
                     <h3 className="text-base font-serif font-bold text-white flex items-center gap-2">
                       <User className="w-4 h-4 text-[#d4af37]" />
                       <span>Pilgrim Delegation Lead Contact Details</span>
@@ -1043,7 +1053,12 @@ Please connect me with your Private Client Director to confirm our booking.`;
                       </button>
 
                       <button
-                        type="submit"
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleSubmitDossier(e);
+                        }}
                         className="py-3.5 px-4 bg-kiswah-gold hover:bg-kiswah-gold-hover text-[#080809] font-serif font-bold rounded-2xl text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-transform hover:scale-[1.02] shadow-xl"
                       >
                         <Send className="w-4 h-4 text-[#080809]" />

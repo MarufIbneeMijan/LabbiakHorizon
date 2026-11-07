@@ -533,6 +533,149 @@ export const transportAPI = {
     };
     localStorage.setItem('horizon_transport', JSON.stringify(data));
     return { success: true };
+  },
+
+  async addVehicle(vehicleData) {
+    try {
+      const res = await fetch(`${API_BASE}/transport/vehicles`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader()
+        },
+        body: JSON.stringify(vehicleData)
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const current = await this.get();
+        const updated = {
+          ...current,
+          vehicles: [...(current.vehicles || []), json.data]
+        };
+        localStorage.setItem('horizon_transport', JSON.stringify(updated));
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('horizon:transport-updated', { detail: { action: 'add-vehicle', vehicle: json.data } }));
+        }
+        return json.data;
+      }
+    } catch (err) {
+      console.warn('API add vehicle failed, updating local cache:', err);
+    }
+
+    const current = await this.get();
+    const newVehicle = {
+      ...vehicleData,
+      id: vehicleData.id || `veh-${Date.now()}`,
+      nameEn: vehicleData.nameEn || vehicleData.name || 'New VIP Vehicle',
+      nameBn: vehicleData.nameBn || vehicleData.name || 'নতুন ভিআইপি গাড়ি',
+      badgeEn: vehicleData.badgeEn || vehicleData.categoryEn || 'VIP Fleet',
+      badgeBn: vehicleData.badgeBn || 'ভিআইপি ফ্লিট',
+      category: vehicleData.category || vehicleData.categoryEn || 'VIP Chauffeur SUV',
+      categoryEn: vehicleData.categoryEn || vehicleData.category || 'VIP Chauffeur SUV',
+      categoryBn: vehicleData.categoryBn || 'ভিআইপি শফার এসইউভি',
+      image: vehicleData.imageUrl || vehicleData.image || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800',
+      imageUrl: vehicleData.imageUrl || vehicleData.image || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800',
+      status: vehicleData.status || 'active',
+      passengers: Number(vehicleData.passengers) || 4,
+      luggage: Number(vehicleData.luggage) || 4,
+      featuresEn: Array.isArray(vehicleData.featuresEn) ? vehicleData.featuresEn : (vehicleData.features || []),
+      featuresBn: Array.isArray(vehicleData.featuresBn) ? vehicleData.featuresBn : (vehicleData.features || []),
+      createdAt: new Date().toISOString()
+    };
+    const updated = {
+      ...current,
+      vehicles: [...(current.vehicles || []), newVehicle]
+    };
+    localStorage.setItem('horizon_transport', JSON.stringify(updated));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('horizon:transport-updated', { detail: { action: 'add-vehicle', vehicle: newVehicle } }));
+    }
+    return newVehicle;
+  },
+
+  async updateVehicle(id, updates) {
+    try {
+      const res = await fetch(`${API_BASE}/transport/vehicles/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader()
+        },
+        body: JSON.stringify(updates)
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const current = await this.get();
+        const updatedVehicles = (current.vehicles || []).map(v => v.id === id ? { ...v, ...json.data } : v);
+        const updated = { ...current, vehicles: updatedVehicles };
+        localStorage.setItem('horizon_transport', JSON.stringify(updated));
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('horizon:transport-updated', { detail: { action: 'update-vehicle', vehicle: json.data } }));
+        }
+        return json.data;
+      }
+    } catch (err) {
+      console.warn('API update vehicle failed, updating local cache:', err);
+    }
+
+    const current = await this.get();
+    const updatedVehicles = (current.vehicles || []).map(v => {
+      if (v.id === id) {
+        return {
+          ...v,
+          ...updates,
+          nameEn: updates.nameEn || updates.name || v.nameEn,
+          nameBn: updates.nameBn || updates.name || v.nameBn,
+          category: updates.category || updates.categoryEn || v.category,
+          categoryEn: updates.categoryEn || updates.category || v.categoryEn,
+          categoryBn: updates.categoryBn || v.categoryBn,
+          image: updates.imageUrl || updates.image || v.image,
+          imageUrl: updates.imageUrl || updates.image || v.imageUrl,
+          passengers: updates.passengers !== undefined ? Number(updates.passengers) : v.passengers,
+          luggage: updates.luggage !== undefined ? Number(updates.luggage) : v.luggage,
+          featuresEn: Array.isArray(updates.featuresEn) ? updates.featuresEn : (updates.features || v.featuresEn),
+          featuresBn: Array.isArray(updates.featuresBn) ? updates.featuresBn : (updates.features || v.featuresBn),
+          status: updates.status || v.status || 'active'
+        };
+      }
+      return v;
+    });
+    const updated = { ...current, vehicles: updatedVehicles };
+    localStorage.setItem('horizon_transport', JSON.stringify(updated));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('horizon:transport-updated', { detail: { action: 'update-vehicle', vehicle: updatedVehicles.find(v => v.id === id) } }));
+    }
+    return updatedVehicles.find(v => v.id === id);
+  },
+
+  async deleteVehicle(id) {
+    try {
+      const res = await fetch(`${API_BASE}/transport/vehicles/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeader()
+      });
+      if (res.ok) {
+        const current = await this.get();
+        const updatedVehicles = (current.vehicles || []).filter(v => v.id !== id);
+        const updated = { ...current, vehicles: updatedVehicles };
+        localStorage.setItem('horizon_transport', JSON.stringify(updated));
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('horizon:transport-updated', { detail: { action: 'delete-vehicle', id } }));
+        }
+        return true;
+      }
+    } catch (err) {
+      console.warn('API delete vehicle failed, updating local cache:', err);
+    }
+
+    const current = await this.get();
+    const updatedVehicles = (current.vehicles || []).filter(v => v.id !== id);
+    const updated = { ...current, vehicles: updatedVehicles };
+    localStorage.setItem('horizon_transport', JSON.stringify(updated));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('horizon:transport-updated', { detail: { action: 'delete-vehicle', id } }));
+    }
+    return true;
   }
 };
 

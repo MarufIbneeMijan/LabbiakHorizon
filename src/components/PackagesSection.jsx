@@ -311,13 +311,28 @@ export default function PackagesSection({ locale = 'bn', onSelectPackage = () =>
           </div>
         </div>
 
-        {/* Dynamic Package Carousel (Swiper.js) */}
-        {loading ? (
-          <div className="py-24 text-center text-slate-500 font-mono text-sm">
-            {isBn ? 'প্যাকেজসমূহ লোড হচ্ছে...' : 'Loading verified packages from LabbaikHorizon API...'}
-          </div>
-        ) : (
-          <div className="relative">
+        {/* Dynamic Package Carousel (Swiper.js) with 3D Flip tab transition */}
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="py-24 text-center text-slate-500 font-mono text-sm"
+            >
+              {isBn ? 'প্যাকেজসমূহ লোড হচ্ছে...' : 'Loading verified packages from LabbaikHorizon API...'}
+            </motion.div>
+          ) : (
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, rotateY: 15, scale: 0.96 }}
+              animate={{ opacity: 1, rotateY: 0, scale: 1 }}
+              exit={{ opacity: 0, rotateY: -15, scale: 0.96 }}
+              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+              style={{ perspective: 1200 }}
+              className="relative"
+            >
             <Swiper
               modules={[Navigation, Pagination, A11y, Keyboard]}
               spaceBetween={24}
@@ -500,8 +515,9 @@ export default function PackagesSection({ locale = 'bn', onSelectPackage = () =>
                 />
               ))}
             </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       </div>
 

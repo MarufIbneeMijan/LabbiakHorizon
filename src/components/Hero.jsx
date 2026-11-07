@@ -57,10 +57,16 @@ export default function Hero({ locale = 'en', onOpenConsultation = () => {}, onN
             transition={{ duration: 0.7, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
           >
+            {/* Primary CTA: Smooth scroll directly to Live Packages Showcase */}
             <button
+              type="button"
               onClick={() => {
-                if (onOpenWizard) onOpenWizard();
-                else if (onNavigateCurator) onNavigateCurator();
+                const el = document.getElementById('packages');
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                  window.location.href = '/#packages';
+                }
               }}
               className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-kiswah-gold text-[#080809] font-serif font-bold text-sm tracking-wider uppercase shadow-2xl shadow-[#d4af37]/20 hover:opacity-90 transition-transform hover:scale-105 flex items-center justify-center gap-2 cursor-pointer"
             >
@@ -68,13 +74,22 @@ export default function Hero({ locale = 'en', onOpenConsultation = () => {}, onN
               <span>{dict.hero.primaryCta}</span>
             </button>
 
-            <a
-              href="#suites"
-              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white/[0.04] border border-[#d4af37]/40 text-[#d4af37] font-serif font-semibold text-sm tracking-wider uppercase hover:bg-white/[0.08] transition-colors flex items-center justify-center gap-2 cursor-pointer backdrop-blur-md"
+            {/* Secondary CTA: Explicitly trigger Custom Package Builder Concierge Wizard Modal */}
+            <button
+              type="button"
+              onClick={() => {
+                if (onOpenWizard) {
+                  onOpenWizard();
+                } else if (onNavigateCurator) {
+                  onNavigateCurator();
+                }
+              }}
+              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white/[0.04] border border-[#d4af37]/40 text-[#d4af37] font-serif font-semibold text-sm tracking-wider uppercase hover:bg-white/[0.08] transition-colors flex items-center justify-center gap-2 cursor-pointer backdrop-blur-md hover:scale-105 transition-transform"
             >
+              <Sparkles className="w-4 h-4 text-[#d4af37]" />
               <span>{dict.hero.secondaryCta}</span>
               <ArrowRight className="w-4 h-4 text-[#d4af37]" />
-            </a>
+            </button>
           </motion.div>
 
           {/* Key Privilege Highlights */}

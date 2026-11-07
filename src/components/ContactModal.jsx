@@ -1,20 +1,25 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   X, Crown, Send, CheckCircle2, ShieldCheck, MapPin, 
-  Phone, Calendar, Users, MessageSquare, ExternalLink, Sparkles 
+  Phone, Calendar, Users, MessageSquare, ExternalLink, Sparkles,
+  Home, Compass, ArrowRight, AlertCircle 
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { DICTIONARY } from '../data/mockData';
 import { ordersAPI } from '../services/api';
 
-export default function ContactModal({ locale = 'en', onClose = () => {}, presetData = null }) {
+export default function ContactModal({ locale = 'en', onClose = () => {}, presetData = null, onSubmitSuccess = null }) {
+  const navigate = useNavigate();
   const isBn = locale === 'bn';
   const dict = DICTIONARY[locale] || DICTIONARY.en;
 
   const [submitted, setSubmitted] = useState(false);
   const [createdOrderRef, setCreatedOrderRef] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
   // Form State matching technical specifications:
   // Full Name, WhatsApp / Phone Number, Preferred Travel Month & Party Size, Brief Special Requirements / Notes
@@ -47,7 +52,20 @@ export default function ContactModal({ locale = 'en', onClose = () => {}, preset
   }, [onClose]);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+
+    setHasAttemptedSubmit(true);
+
+    if (!formData.name.trim() || !formData.phone.trim()) {
+      setFormError(isBn ? 'দয়া করে সকল বাধ্যতামূলক (*) ঘর পূরণ করুন।' : 'Please fill in all required fields marked with *.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    setFormError('');
     setIsSubmitting(true);
 
     // Celebratory Gold Confetti Explosion
@@ -88,8 +106,44 @@ export default function ContactModal({ locale = 'en', onClose = () => {}, preset
     }
 
     const orderId = savedOrder?.id || `DOS-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    // Explicitly guarantee reservation record in localStorage
+    try {
+      const cached = JSON.parse(localStorage.getItem('horizon_orders') || '[]');
+      const reservationRecord = {
+        id: orderId,
+        type: 'vip_dossier',
+        customerName: formData.name,
+        customerPhone: formData.phone,
+        notes: detailedNotes,
+        tier: itemTitle,
+        totalBDT,
+        totalUSD,
+        status: 'Pending',
+        createdAt: new Date().toISOString()
+      };
+      localStorage.setItem('horizon_orders', JSON.stringify([reservationRecord, ...cached.filter((o) => o.id !== orderId)]));
+    } catch (err) {
+      console.warn('LocalStorage save failed:', err);
+    }
+
     setCreatedOrderRef(orderId);
     setIsSubmitting(false);
+
+    const dossierWaMessage = `Assalamu Alaikum! I have submitted a VIP Reservation on LabbaikHorizon:\n*Reference:* ${orderId}\n*Name:* ${formData.name}\n*WhatsApp / Phone:* ${formData.phone}\n*Travel Month:* ${formData.travelMonth}\n*Party Size:* ${formData.partySize} Pilgrim(s)\n*Selected Package / Service:* ${presetData?.tier || presetData?.packageName || presetData?.vehicleName || 'VIP Sacred Pilgrimage Dossier'}\n${presetData?.totalBDT ? `*Estimated Investment:* ৳${Number(presetData.totalBDT).toLocaleString('en-IN')} BDT\n` : ''}${formData.notes ? `*Special Notes:* ${formData.notes}\n` : ''}Please connect me with a Private Client Director to confirm our dates and itinerary.`;
+    const resWaUrl = `https://wa.me/8801800522224?text=${encodeURIComponent(dossierWaMessage)}`;
+
+    if (onSubmitSuccess) {
+      onSubmitSuccess({
+        orderRef: orderId,
+        customerName: formData.name,
+        totalBDT: totalBDT,
+        type: 'reservation',
+        waUrl: resWaUrl
+      });
+    }
+
+    // Always trigger internal success screen so the user stays inside the modal
     setSubmitted(true);
   };
 
@@ -159,7 +213,7 @@ Please connect me with a Private Client Director to confirm our dates and itiner
                 : 'JazakAllah Khair. Your VIP dossier has been logged. You may connect directly with our Private Client Director on WhatsApp right now.'}
             </p>
 
-            {/* Direct WhatsApp Action Button */}
+            {/* Direct WhatsApp Action Button & Interactive Decision Buttons */}
             <div className="pt-2 flex flex-col gap-3">
               <a
                 href={waUrl}
@@ -172,18 +226,55 @@ Please connect me with a Private Client Director to confirm our dates and itiner
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
 
-              <button
-                type="button"
-                onClick={onClose}
-                className="w-full py-3 bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white font-serif font-bold text-xs uppercase tracking-wider rounded-xl border border-slate-800 transition-colors cursor-pointer"
-              >
-                {isBn ? 'উইন্ডো বন্ধ করুন' : 'Close Window'}
-              </button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onClose();
+                    navigate('/');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="py-3 px-4 rounded-xl border border-slate-700 hover:border-[#d4af37]/60 bg-white/[0.03] hover:bg-white/[0.08] text-slate-200 hover:text-white font-serif font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Home className="w-4 h-4 text-[#d4af37]" />
+                  <span>{isBn ? 'হোম পেজে যান' : 'Go to Home'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onClose();
+                    navigate('/');
+                    const elem = document.getElementById('packages');
+                    if (elem) {
+                      elem.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                      window.scrollTo({ top: 600, behavior: 'smooth' });
+                    }
+                  }}
+                  className="py-3 px-4 rounded-xl bg-gradient-to-r from-[#d4af37] via-[#e5c158] to-[#b38f2a] text-[#080809] hover:brightness-110 font-serif font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md shadow-[#d4af37]/20 cursor-pointer"
+                >
+                  <Compass className="w-4 h-4 text-[#080809]" />
+                  <span>{isBn ? 'অন্যান্য প্যাকেজ দেখুন' : 'Explore Packages'}</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-[#080809]" />
+                </button>
+              </div>
             </div>
           </div>
         ) : (
           /* VIP CREDENTIALS RESERVATION FORM */
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleSubmit(e);
+            }} 
+            className="space-y-4"
+          >
             
             {/* Form Header */}
             <div className="flex items-center gap-3 border-b border-[#d4af37]/25 pb-4">
@@ -251,8 +342,15 @@ Please connect me with a Private Client Director to confirm our dates and itiner
                 required
                 placeholder={isBn ? 'যেমনঃ আলহাজ্ব সাইফুল ইসলাম চৌধুরী' : 'e.g. Al-Haj Syful Islam Chowdhury'}
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full bg-[#080809] border border-slate-800 rounded-xl px-4 py-3 text-slate-100 text-xs sm:text-sm focus:border-[#d4af37] focus:outline-none transition-colors"
+                onChange={(e) => {
+                  setFormData({ ...formData, name: e.target.value });
+                  if (formError && e.target.value.trim()) setFormError('');
+                }}
+                className={`w-full bg-[#080809] border rounded-xl px-4 py-3 text-slate-100 text-xs sm:text-sm focus:outline-none transition-colors ${
+                  hasAttemptedSubmit && !formData.name.trim()
+                    ? 'border-red-500 ring-1 ring-red-500/50'
+                    : 'border-slate-800 focus:border-[#d4af37]'
+                }`}
               />
             </div>
 
@@ -267,8 +365,15 @@ Please connect me with a Private Client Director to confirm our dates and itiner
                   required
                   placeholder="01711-XXXXXX"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full bg-[#080809] border border-slate-800 rounded-xl px-4 py-3 text-slate-100 text-xs sm:text-sm focus:border-[#d4af37] focus:outline-none font-mono transition-colors"
+                  onChange={(e) => {
+                    setFormData({ ...formData, phone: e.target.value });
+                    if (formError && e.target.value.trim()) setFormError('');
+                  }}
+                  className={`w-full bg-[#080809] border rounded-xl px-4 py-3 text-slate-100 text-xs sm:text-sm focus:outline-none font-mono transition-colors ${
+                    hasAttemptedSubmit && !formData.phone.trim()
+                      ? 'border-red-500 ring-1 ring-red-500/50'
+                      : 'border-slate-800 focus:border-[#d4af37]'
+                  }`}
                 />
                 <Phone className="w-4 h-4 text-slate-500 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
@@ -346,9 +451,22 @@ Please connect me with a Private Client Director to confirm our dates and itiner
               />
             </div>
 
+            {/* Prominent Inline Error Alert Banner */}
+            {formError && (
+              <div className="p-3.5 rounded-xl bg-red-950/40 border border-red-500/60 text-red-200 text-xs flex items-center gap-2.5 animate-pulse shadow-lg">
+                <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                <span className="font-medium">{formError}</span>
+              </div>
+            )}
+
             {/* Submit Action Button */}
             <button
-              type="submit"
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleSubmit(e);
+              }}
               disabled={isSubmitting}
               className="w-full py-4 bg-kiswah-gold hover:bg-kiswah-gold-hover text-[#080809] font-serif font-extrabold rounded-xl text-xs sm:text-sm tracking-wider uppercase shadow-xl flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.01] disabled:opacity-50 mt-2"
             >

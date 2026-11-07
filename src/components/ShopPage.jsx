@@ -575,7 +575,7 @@ export default function ShopPage({
 
       </main>
 
-      {/* PRODUCT QUICK VIEW "SEE DETAILS" MODAL */}
+      {/* PRODUCT QUICK VIEW "SEE DETAILS" MODAL (STANDARDIZED WITH PACKAGE DETAILS MODAL) */}
       <AnimatePresence>
         {selectedProduct && (() => {
           const prod = selectedProduct;
@@ -586,88 +586,104 @@ export default function ShopPage({
           const specs = getProductSpecs(prod);
 
           return (
-            <div className="fixed inset-0 z-[110] flex items-center justify-center p-3 sm:p-5 overflow-y-auto bg-black/85 backdrop-blur-md font-sans">
+            <div className="fixed inset-0 z-[110] flex items-center justify-center p-3 sm:p-5 overflow-y-auto font-sans">
               
-              {/* Backdrop */}
-              <div 
-                className="fixed inset-0" 
+              {/* Modal Backdrop */}
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-[#080809]/85 backdrop-blur-2xl transition-opacity" 
                 onClick={() => setSelectedProduct(null)} 
               />
 
-              {/* Modal Container with adequate top padding so close button never overlaps */}
+              {/* Standardized Glassmorphic Modal Container */}
               <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                initial={{ opacity: 0, scale: 0.94, y: 15 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 15 }}
-                className="relative bg-[#121215] border border-[#d4af37]/40 rounded-3xl max-w-2xl w-full p-6 sm:p-8 pt-12 sm:pt-14 shadow-2xl overflow-y-auto max-h-[90vh] z-10 kiswah-gold-glow flex flex-col gap-6"
+                exit={{ opacity: 0, scale: 0.94, y: 15 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 280 }}
+                className="relative bg-[#101013] border border-[#d4af37]/40 rounded-3xl max-w-2xl sm:max-w-3xl w-full shadow-2xl overflow-hidden z-10 my-auto flex flex-col max-h-[85vh] backdrop-blur-xl"
               >
-                {/* Fixed Non-Overlapping Close Button */}
-                <button
-                  type="button"
-                  onClick={() => setSelectedProduct(null)}
-                  className="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/40 hover:bg-black/60 text-white border border-[#d4af37]/30 transition-all cursor-pointer shadow-lg"
-                  aria-label="Close modal"
-                >
-                  <X className="w-5 h-5 text-slate-200 hover:text-white" />
-                </button>
+                {/* Standardized Header Banner (h-48 sm:h-56 shrink-0) */}
+                <div className="relative h-48 sm:h-56 shrink-0 overflow-hidden bg-slate-950">
+                  <img
+                    src={prod.image}
+                    alt={name}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#101013] via-[#101013]/60 to-transparent" />
 
-                <div className="space-y-6">
-                  
-                  {/* Image & Main Info Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-center">
-                    
-                    {/* Zoomable Image Container */}
-                    <div 
-                      className="relative h-64 sm:h-72 rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 cursor-zoom-in"
-                      onClick={() => setIsZoomed(!isZoomed)}
-                    >
-                      <img
-                        src={prod.image}
-                        alt={name}
-                        className={`w-full h-full object-cover transition-transform duration-500 ${isZoomed ? 'scale-150' : 'scale-100 hover:scale-105'}`}
-                      />
-                      <div className="absolute top-3 left-3">
-                        <span className="px-3 py-1 rounded-full bg-kiswah-gold text-[#080809] font-serif font-extrabold text-[10px] uppercase tracking-wider shadow-md">
-                          {prod.tag || 'Essential'}
-                        </span>
-                      </div>
-                      <div className="absolute bottom-2 left-2 right-2 text-center pointer-events-none">
-                        <span className="text-[10px] font-mono text-slate-300 bg-black/60 px-2 py-0.5 rounded-full backdrop-blur-md">
-                          {isZoomed ? (isBn ? 'জুম আউট করতে ক্লিক করুন' : 'Click to zoom out') : (isBn ? 'জুম ইন করতে ক্লিক করুন' : 'Click image to inspect')}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Details Info */}
-                    <div className="space-y-3">
-                      <span className="text-xs font-mono uppercase text-[#d4af37] font-bold tracking-widest block">
-                        {prod.category?.toUpperCase()}
+                  {/* Top Bar with Badges and 44x44 Close Button (top-4 right-4 z-20) */}
+                  <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-20">
+                    <div className="flex items-center gap-2">
+                      <span className="px-3 py-1 rounded-full bg-kiswah-gold text-[#080809] font-serif font-extrabold text-[10px] uppercase tracking-wider shadow-md">
+                        {prod.tag || 'Essential'}
                       </span>
-
-                      <h3 className="text-xl sm:text-2xl font-serif font-bold text-white leading-tight">
-                        {name}
-                      </h3>
-
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center text-[#d4af37]">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className="w-3.5 h-3.5 fill-current" />
-                          ))}
-                        </div>
-                        <span className="text-xs text-slate-400 font-mono">5.0 (Ministry Approved)</span>
-                      </div>
-
-                      <div className="text-2xl font-serif font-extrabold text-kiswah-gold">
-                        ৳{prod.priceBDT?.toLocaleString('en-IN')}{isBn ? '/-' : ''}
-                      </div>
-
-                      <div className="text-xs text-slate-300 leading-relaxed font-light">
-                        {desc}
-                      </div>
-
+                      <span className="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-amber-300 border border-[#d4af37]/30 font-mono text-[10px] uppercase tracking-wider">
+                        {prod.category}
+                      </span>
                     </div>
 
+                    <button
+                      type="button"
+                      onClick={() => setSelectedProduct(null)}
+                      className="w-11 h-11 rounded-full bg-[#080809]/80 hover:bg-[#d4af37] text-slate-300 hover:text-[#080809] border border-[#d4af37]/40 flex items-center justify-center transition-all cursor-pointer shadow-xl"
+                      aria-label="Close product modal"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
                   </div>
+
+                  {/* Title in Header */}
+                  <div className="absolute bottom-4 left-5 right-5">
+                    <h3 className="text-xl sm:text-2xl font-serif font-extrabold text-white leading-tight">
+                      {name}
+                    </h3>
+                  </div>
+                </div>
+
+                {/* Scrollable Content Body */}
+                <div className="overflow-y-auto p-5 sm:p-6 space-y-5 flex-1">
+                  
+                  {/* Price and Stock Status */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                    <div>
+                      <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono block">
+                        {isBn ? 'মূল্য' : 'Price'}
+                      </span>
+                      <div className="text-2xl font-serif font-extrabold text-[#d4af37]">
+                        ৳{Number(prod.priceBDT || 0).toLocaleString('en-IN')}{isBn ? '/-' : ''}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center text-[#d4af37] text-xs">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className="w-3.5 h-3.5 fill-current" />
+                        ))}
+                      </div>
+                      <span className={`text-xs font-mono px-3.5 py-1.5 rounded-full border ${
+                        inStock 
+                          ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40' 
+                          : 'bg-red-950/80 text-red-300 border-red-500/40'
+                      }`}>
+                        {inStock ? (isBn ? `স্টকে আছে: ${prod.stock} টি` : `In Stock: ${prod.stock} units`) : (isBn ? 'স্টক শেষ' : 'Sold Out')}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  {desc && (
+                    <div className="space-y-1">
+                      <span className="text-xs font-serif font-bold text-amber-300 uppercase tracking-wider block">
+                        {isBn ? 'পণ্যের বর্ণনা' : 'Description'}
+                      </span>
+                      <p className="text-xs sm:text-sm text-slate-300 font-light leading-relaxed">
+                        {desc}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Specifications & Shariah Compliance Checklist */}
                   <div className="p-4 bg-[#080809] border border-slate-800 rounded-2xl space-y-3">
@@ -690,71 +706,77 @@ export default function ShopPage({
                     </div>
                   </div>
 
-                  {/* Quantity Counter & Dual Actions */}
-                  <div className="pt-2 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    
-                    {/* Quantity Counter */}
-                    <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
-                      <span className="text-xs text-slate-400 font-medium">
-                        {isBn ? 'পরিমাণ:' : 'Quantity:'}
-                      </span>
-                      <div className="flex items-center bg-[#080809] border border-slate-700 rounded-xl px-2 py-1">
-                        <button
-                          type="button"
-                          onClick={() => setDetailQuantity(Math.max(1, detailQuantity - 1))}
-                          className="w-7 h-7 rounded-lg bg-white/[0.04] hover:bg-white/[0.1] text-amber-300 font-bold flex items-center justify-center cursor-pointer"
-                        >
-                          <Minus className="w-3.5 h-3.5" />
-                        </button>
-                        <span className="font-mono font-bold text-white text-sm px-3">{detailQuantity}</span>
-                        <button
-                          type="button"
-                          onClick={() => setDetailQuantity(detailQuantity + 1)}
-                          className="w-7 h-7 rounded-lg bg-white/[0.04] hover:bg-white/[0.1] text-amber-300 font-bold flex items-center justify-center cursor-pointer"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                      <div className="text-right sm:hidden">
-                        <span className="text-xs font-serif font-bold text-kiswah-gold">
-                          ৳{liveTotal.toLocaleString('en-IN')}
-                        </span>
-                      </div>
-                    </div>
+                </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                {/* Fixed Bottom Action Bar */}
+                <div className="p-4 sm:p-5 border-t border-slate-800 bg-[#0c0c0e] shrink-0 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  {/* Quantity Counter */}
+                  <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+                    <span className="text-xs text-slate-400 font-medium">
+                      {isBn ? 'পরিমাণ:' : 'Quantity:'}
+                    </span>
+                    <div className="flex items-center bg-[#080809] border border-slate-700 rounded-xl px-2 py-1">
                       <button
                         type="button"
-                        onClick={() => {
-                          onAddToCart(prod, detailQuantity);
-                          setSelectedProduct(null);
-                        }}
-                        disabled={!inStock}
-                        className="flex-1 sm:flex-none px-5 py-3.5 bg-white/[0.05] hover:bg-white/[0.1] text-slate-200 hover:text-white border border-slate-700 font-serif font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        onClick={() => setDetailQuantity(Math.max(1, detailQuantity - 1))}
+                        className="w-7 h-7 rounded-lg bg-white/[0.04] hover:bg-white/[0.1] text-amber-300 font-bold flex items-center justify-center cursor-pointer"
                       >
-                        <ShoppingBag className="w-4 h-4 text-[#d4af37]" />
-                        <span>{isBn ? 'ব্যাগে যোগ করুন' : 'Add to Bag'}</span>
+                        <Minus className="w-3.5 h-3.5" />
                       </button>
-
+                      <span className="font-mono font-bold text-white text-sm px-3">{detailQuantity}</span>
                       <button
                         type="button"
-                        onClick={() => {
-                          const p = prod;
-                          const qty = detailQuantity;
-                          setSelectedProduct(null);
-                          onBuyNow(p, qty);
-                        }}
-                        disabled={!inStock}
-                        className="flex-1 sm:flex-none px-6 py-3.5 bg-kiswah-gold hover:bg-kiswah-gold-hover text-[#080809] font-serif font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 shadow-xl cursor-pointer"
+                        onClick={() => setDetailQuantity(detailQuantity + 1)}
+                        className="w-7 h-7 rounded-lg bg-white/[0.04] hover:bg-white/[0.1] text-amber-300 font-bold flex items-center justify-center cursor-pointer"
                       >
-                        <ShieldCheck className="w-4 h-4" />
-                        <span>{isBn ? 'এখনই কিনুন (ক্যাশ অন ডেলিভারি)' : 'Buy Now (COD)'}</span>
+                        <Plus className="w-3.5 h-3.5" />
                       </button>
                     </div>
-
                   </div>
 
+                  {/* Subtotal and Action Buttons */}
+                  <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+                    <div className="text-right pr-2">
+                      <span className="text-[10px] text-slate-400 uppercase block font-mono">
+                        {isBn ? 'মোট বিনিয়োগ' : 'Total'}
+                      </span>
+                      <span className="text-lg font-serif font-bold text-[#d4af37]">
+                        ৳{liveTotal.toLocaleString('en-IN')}{isBn ? '/-' : ''}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onAddToCart(prod, detailQuantity);
+                        setSelectedProduct(null);
+                      }}
+                      disabled={!inStock}
+                      className="px-4 py-3.5 bg-white/[0.05] hover:bg-white/[0.1] text-slate-200 hover:text-white border border-slate-700 font-serif font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <ShoppingBag className="w-4 h-4 text-[#d4af37]" />
+                      <span>{isBn ? 'ব্যাগে যোগ' : 'Add to Bag'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const p = prod;
+                        const qty = detailQuantity;
+                        setSelectedProduct(null);
+                        onBuyNow(p, qty);
+                      }}
+                      disabled={!inStock}
+                      className={`px-5 py-3.5 rounded-xl font-serif font-extrabold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-xl cursor-pointer ${
+                        inStock
+                          ? 'bg-gradient-to-r from-[#d4af37] via-[#e5c158] to-[#b38f2a] text-[#080809] hover:brightness-110 shadow-[#d4af37]/20'
+                          : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                      }`}
+                    >
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>{isBn ? 'এখনই কিনুন' : 'Buy Now'}</span>
+                    </button>
+                  </div>
                 </div>
 
               </motion.div>

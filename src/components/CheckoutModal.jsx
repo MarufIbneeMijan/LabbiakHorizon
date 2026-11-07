@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   X, ShoppingBag, ShieldCheck, CheckCircle2, Truck, 
   CreditCard, Phone, User, MapPin, MessageSquare, 
-  Sparkles, ArrowRight, ExternalLink 
+  Sparkles, ArrowRight, ExternalLink, Home, AlertCircle 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -20,6 +21,7 @@ export default function CheckoutModal({
   items = [],
   onOrderSuccess = () => {}
 }) {
+  const navigate = useNavigate();
   const isBn = locale === 'bn';
 
   // Form Fields
@@ -34,6 +36,8 @@ export default function CheckoutModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [orderRef, setOrderRef] = useState('');
+  const [formError, setFormError] = useState('');
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
   // Lock body scroll
   useEffect(() => {
@@ -70,11 +74,26 @@ export default function CheckoutModal({
   const grandTotalUSD = Math.round(grandTotalBDT / 120);
 
   const handleSubmitOrder = async (e) => {
-    e.preventDefault();
-    if (items.length === 0 || !fullName.trim() || !phone.trim() || !districtArea.trim()) {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+
+    setHasAttemptedSubmit(true);
+
+    if (items.length === 0) {
+      setFormError(isBn ? 'আপনার অর্ডারে কোনো পণ্য নির্বাচন করা নেই।' : 'No items found in your checkout order.');
+      setIsSubmitting(false);
       return;
     }
 
+    if (!fullName.trim() || !phone.trim() || !districtArea.trim()) {
+      setFormError(isBn ? 'দয়া করে সকল বাধ্যতামূলক (*) ঘর পূরণ করুন।' : 'Please fill in all required fields marked with *.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    setFormError('');
     setIsSubmitting(true);
 
     const fullAddress = `${districtArea.trim()}, ${isBn ? zoneObj.nameBn : zoneObj.nameEn}, Bangladesh`;
@@ -114,6 +133,15 @@ export default function CheckoutModal({
       console.warn('Backend order recording error, order preserved locally:', err);
     }
 
+    // Explicitly guarantee order preservation in localStorage
+    try {
+      const cached = JSON.parse(localStorage.getItem('horizon_orders') || '[]');
+      const orderEntry = { ...payload, id: createdId, createdAt: new Date().toISOString() };
+      localStorage.setItem('horizon_orders', JSON.stringify([orderEntry, ...cached.filter((o) => o.id !== createdId)]));
+    } catch (err) {
+      console.warn('LocalStorage save failed:', err);
+    }
+
     // Celebratory Confetti
     confetti({
       particleCount: 100,
@@ -122,10 +150,26 @@ export default function CheckoutModal({
       colors: ['#d4af37', '#e5c158', '#10b981', '#ffffff']
     });
 
+    const waText = encodeURIComponent(
+      `Assalamu Alaikum! I have just confirmed an order on LabbaikHorizon Store:\n\n*Order Reference:* ${createdId}\n*Customer Name:* ${fullName.trim()}\n*Phone:* ${phone.trim()}\n*Delivery Address:* ${districtArea.trim()}, ${zoneObj?.nameEn}\n*Payment Mode:* ${formattedPayment}\n*Items:* ${items.map((i) => `${i.name_en || i.name} (x${i.quantity || 1})`).join(', ')}\n*Total Payable:* ৳${grandTotalBDT.toLocaleString('en-IN')}\n\nPlease confirm my dispatch schedule. JazakAllah Khair!`
+    );
+    const orderWaUrl = `https://wa.me/8801800522224?text=${waText}`;
+
     setOrderRef(createdId);
     setIsSubmitting(false);
+
+    if (onOrderSuccess) {
+      onOrderSuccess({
+        orderRef: createdId,
+        customerName: fullName.trim(),
+        totalBDT: grandTotalBDT,
+        type: 'order',
+        waUrl: orderWaUrl
+      });
+    }
+
+    // Always trigger internal success screen so the user stays inside the modal
     setSubmitted(true);
-    onOrderSuccess();
   };
 
   const resetAndClose = () => {
@@ -135,6 +179,8 @@ export default function CheckoutModal({
     setPhone('');
     setDistrictArea('');
     setDeliveryNotes('');
+    setFormError('');
+    setHasAttemptedSubmit(false);
     onClose();
   };
 
@@ -240,31 +286,63 @@ export default function CheckoutModal({
                     </div>
                   </div>
 
-                  {/* Direct WhatsApp Concierge Button */}
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                  {/* Interactive Post-Checkout Decision Buttons */}
+                  <div className="space-y-3 pt-2">
                     <a
                       href={`https://wa.me/8801800522224?text=${waMessage}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full sm:w-auto px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-serif font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                      className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-serif font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg cursor-pointer"
                     >
                       <MessageSquare className="w-4 h-4" />
                       <span>{isBn ? 'হোয়াটসঅ্যাপে অর্ডার ট্র্যাক করুন' : 'Confirm on WhatsApp'}</span>
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
 
-                    <button
-                      type="button"
-                      onClick={resetAndClose}
-                      className="w-full sm:w-auto px-6 py-3.5 bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 hover:text-white border border-slate-700 font-serif font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer"
-                    >
-                      {isBn ? 'উইন্ডো বন্ধ করুন' : 'Close Window'}
-                    </button>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          resetAndClose();
+                          navigate('/');
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="py-3 px-4 rounded-xl border border-slate-700 hover:border-[#d4af37]/60 bg-white/[0.03] hover:bg-white/[0.08] text-slate-200 hover:text-white font-serif font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <Home className="w-4 h-4 text-[#d4af37]" />
+                        <span>{isBn ? 'হোম পেজে যান' : 'Go to Home'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          resetAndClose();
+                          navigate('/shop');
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="py-3 px-4 rounded-xl bg-gradient-to-r from-[#d4af37] via-[#e5c158] to-[#b38f2a] text-[#080809] hover:brightness-110 font-serif font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md shadow-[#d4af37]/20 cursor-pointer"
+                      >
+                        <ShoppingBag className="w-4 h-4 text-[#080809]" />
+                        <span>{isBn ? 'আরও কেনাকাটা করুন' : 'Order More / Shop'}</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-[#080809]" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : (
                 /* CHECKOUT INPUT FORM */
-                <form onSubmit={handleSubmitOrder} className="space-y-6">
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSubmitOrder(e);
+                  }} 
+                  className="space-y-6"
+                >
                   
                   {/* Order Items Preview Bar */}
                   <div className="bg-[#080809] border border-slate-800 rounded-2xl p-4">
@@ -317,9 +395,16 @@ export default function CheckoutModal({
                           type="text"
                           required
                           value={fullName}
-                          onChange={(e) => setFullName(e.target.value)}
+                          onChange={(e) => {
+                            setFullName(e.target.value);
+                            if (formError && e.target.value.trim()) setFormError('');
+                          }}
                           placeholder={isBn ? 'উদা: মো: আনিসুর রহমান' : 'e.g. Al-Hajj Anisur Rahman'}
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-[#080809] border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-[#d4af37] transition-colors"
+                          className={`w-full px-3.5 py-2.5 rounded-xl bg-[#080809] border text-white placeholder-slate-500 focus:outline-none transition-colors ${
+                            hasAttemptedSubmit && !fullName.trim()
+                              ? 'border-red-500 ring-1 ring-red-500/50'
+                              : 'border-slate-700 focus:border-[#d4af37]'
+                          }`}
                         />
                       </div>
 
@@ -331,9 +416,16 @@ export default function CheckoutModal({
                           type="tel"
                           required
                           value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
+                          onChange={(e) => {
+                            setPhone(e.target.value);
+                            if (formError && e.target.value.trim()) setFormError('');
+                          }}
                           placeholder="+880 1712-345678"
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-[#080809] border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-[#d4af37] font-mono transition-colors"
+                          className={`w-full px-3.5 py-2.5 rounded-xl bg-[#080809] border text-white placeholder-slate-500 focus:outline-none font-mono transition-colors ${
+                            hasAttemptedSubmit && !phone.trim()
+                              ? 'border-red-500 ring-1 ring-red-500/50'
+                              : 'border-slate-700 focus:border-[#d4af37]'
+                          }`}
                         />
                       </div>
                     </div>
@@ -392,11 +484,18 @@ export default function CheckoutModal({
                           rows={2}
                           required
                           value={districtArea}
-                          onChange={(e) => setDistrictArea(e.target.value)}
+                          onChange={(e) => {
+                            setDistrictArea(e.target.value);
+                            if (formError && e.target.value.trim()) setFormError('');
+                          }}
                           placeholder={isBn 
                             ? 'উদা: ফ্ল্যাট ৪এ, বাড়ি ১২, রোড ৭, গুলশান-২, ঢাকা-১২১২' 
                             : 'e.g. Apt 4A, House 12, Road 7, Gulshan-2, Dhaka-1212'}
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-[#080809] border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-[#d4af37] transition-colors resize-none"
+                          className={`w-full px-3.5 py-2.5 rounded-xl bg-[#080809] border text-white placeholder-slate-500 focus:outline-none transition-colors resize-none ${
+                            hasAttemptedSubmit && !districtArea.trim()
+                              ? 'border-red-500 ring-1 ring-red-500/50'
+                              : 'border-slate-700 focus:border-[#d4af37]'
+                          }`}
                         />
                       </div>
 
@@ -509,9 +608,22 @@ export default function CheckoutModal({
                     </div>
                   </div>
 
+                  {/* Prominent Inline Error Alert Banner */}
+                  {formError && (
+                    <div className="p-3.5 rounded-xl bg-red-950/40 border border-red-500/60 text-red-200 text-xs flex items-center gap-2.5 animate-pulse shadow-lg">
+                      <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                      <span className="font-medium">{formError}</span>
+                    </div>
+                  )}
+
                   {/* Submission CTA */}
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleSubmitOrder(e);
+                    }}
                     disabled={isSubmitting || items.length === 0}
                     className="w-full py-4 bg-kiswah-gold hover:bg-kiswah-gold-hover text-[#080809] font-serif font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 shadow-xl cursor-pointer disabled:opacity-50"
                   >

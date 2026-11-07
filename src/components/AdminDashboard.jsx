@@ -5,7 +5,7 @@ import {
   ClipboardList, Plus, Trash2, Edit3, Save, X, Check, 
   MessageSquare, ExternalLink, RefreshCw, AlertCircle, 
   Sparkles, Crown, DollarSign, Calendar, Eye, Phone, MapPin, Tag, CheckCircle2, Building2,
-  Plane, Luggage, RotateCcw, ArrowRight
+  Plane, Luggage, RotateCcw, ArrowRight, Users, Briefcase
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { authAPI, packagesAPI, productsAPI, transportAPI, ordersAPI, hotelsAPI } from '../services/api';
@@ -76,6 +76,23 @@ export default function AdminDashboard({ isOpen = true, onClose, locale = 'en', 
     vehicleType: 'GMC Yukon VIP',
     priceBDT: 52000,
     distanceEn: '95 km (approx. 60 mins)'
+  });
+
+  // Dedicated Fleet & Vehicle Management State
+  const [transportView, setTransportView] = useState('vehicles'); // 'vehicles' | 'routes'
+  const [vehicleModalOpen, setVehicleModalOpen] = useState(false);
+  const [editingVehicle, setEditingVehicle] = useState(null);
+  const [newVehicleFeature, setNewVehicleFeature] = useState('');
+  const [vehicleForm, setVehicleForm] = useState({
+    nameEn: '',
+    nameBn: '',
+    category: 'VIP Chauffeur SUV',
+    passengers: 7,
+    luggage: 5,
+    features: ['24/7 Dedicated Chauffeur', 'Flight Tracking & Cold Zamzam', 'Free High-Speed Wi-Fi', 'Luxury Leather Interior'],
+    imageUrl: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800',
+    status: 'active',
+    badgeEn: 'VIP Benchmark'
   });
 
   // Dynamic Categories State
@@ -703,6 +720,135 @@ export default function AdminDashboard({ isOpen = true, onClose, locale = 'en', 
     }
   };
 
+  // --- VEHICLE ACTIONS ---
+  const openAddVehicleModal = () => {
+    setEditingVehicle(null);
+    setVehicleForm({
+      nameEn: '',
+      nameBn: '',
+      category: 'VIP Chauffeur SUV',
+      passengers: 7,
+      luggage: 5,
+      features: ['24/7 Dedicated Chauffeur', 'Flight Tracking & Cold Zamzam', 'Free High-Speed Wi-Fi', 'Luxury Leather Interior'],
+      imageUrl: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800',
+      status: 'active',
+      badgeEn: 'VIP Benchmark'
+    });
+    setNewVehicleFeature('');
+    setVehicleModalOpen(true);
+  };
+
+  const startEditVehicle = (veh, e = null) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+    setEditingVehicle(veh);
+    setVehicleForm({
+      nameEn: veh.nameEn || veh.name || '',
+      nameBn: veh.nameBn || veh.name || '',
+      category: veh.category || veh.categoryEn || 'VIP Chauffeur SUV',
+      passengers: veh.passengers || 4,
+      luggage: veh.luggage || 4,
+      features: Array.isArray(veh.featuresEn) && veh.featuresEn.length > 0 
+        ? [...veh.featuresEn] 
+        : (Array.isArray(veh.features) ? [...veh.features] : ['24/7 Dedicated Chauffeur', 'Free Wi-Fi']),
+      imageUrl: veh.imageUrl || veh.image || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800',
+      status: veh.status || 'active',
+      badgeEn: veh.badgeEn || veh.badge || 'VIP Fleet'
+    });
+    setNewVehicleFeature('');
+    setVehicleModalOpen(true);
+  };
+
+  const handleSaveVehicle = async (e) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+    if (!vehicleForm.nameEn.trim()) {
+      alert('Please enter a vehicle name in English.');
+      return;
+    }
+
+    const payload = {
+      nameEn: vehicleForm.nameEn.trim(),
+      nameBn: vehicleForm.nameBn.trim() || vehicleForm.nameEn.trim(),
+      name: vehicleForm.nameEn.trim(),
+      category: vehicleForm.category,
+      categoryEn: vehicleForm.category,
+      categoryBn: vehicleForm.category,
+      passengers: Number(vehicleForm.passengers) || 4,
+      luggage: Number(vehicleForm.luggage) || 4,
+      featuresEn: vehicleForm.features,
+      featuresBn: vehicleForm.features,
+      features: vehicleForm.features,
+      image: vehicleForm.imageUrl || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800',
+      imageUrl: vehicleForm.imageUrl || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800',
+      status: vehicleForm.status,
+      badgeEn: vehicleForm.badgeEn || 'VIP Fleet',
+      badgeBn: 'ভিআইপি ফ্লিট'
+    };
+
+    if (editingVehicle) {
+      await transportAPI.updateVehicle(editingVehicle.id, payload);
+      showNotification('Vehicle profile updated successfully.');
+    } else {
+      await transportAPI.addVehicle(payload);
+      showNotification('New VIP fleet vehicle added.');
+    }
+
+    setVehicleModalOpen(false);
+    setEditingVehicle(null);
+    const updated = await transportAPI.get();
+    setTransport(updated);
+  };
+
+  const handleDeleteVehicle = async (vehId, e = null) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+    if (window.confirm('Are you sure you want to delete this vehicle from your VIP fleet?')) {
+      await transportAPI.deleteVehicle(vehId);
+      showNotification('Vehicle removed from fleet.');
+      const updated = await transportAPI.get();
+      setTransport(updated);
+    }
+  };
+
+  const handleToggleVehicleStatus = async (veh, e = null) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+    const newStatus = veh.status === 'maintenance' ? 'active' : 'maintenance';
+    await transportAPI.updateVehicle(veh.id, { status: newStatus });
+    showNotification(`Vehicle status changed to: ${newStatus.toUpperCase()}`);
+    const updated = await transportAPI.get();
+    setTransport(updated);
+  };
+
+  const handleAddVehicleFeature = () => {
+    if (!newVehicleFeature.trim()) return;
+    if (vehicleForm.features.length >= 8) {
+      alert('Maximum 8 features allowed.');
+      return;
+    }
+    setVehicleForm({
+      ...vehicleForm,
+      features: [...vehicleForm.features, newVehicleFeature.trim()]
+    });
+    setNewVehicleFeature('');
+  };
+
+  const handleRemoveVehicleFeature = (indexToRemove) => {
+    setVehicleForm({
+      ...vehicleForm,
+      features: vehicleForm.features.filter((_, idx) => idx !== indexToRemove)
+    });
+  };
+
   // --- HOTEL ACTIONS ---
   const handleSaveHotel = async (e) => {
     e.preventDefault();
@@ -1039,7 +1185,7 @@ export default function AdminDashboard({ isOpen = true, onClose, locale = 'en', 
                       }`}
                     >
                       <Car className="w-3.5 h-3.5 text-[#d4af37]" />
-                      <span>Fleet & Route Rates ({transport.routes.length} Routes)</span>
+                      <span>Fleet & Transport ({transport.vehicles?.length || 0} Vehicles • {transport.routes?.length || 0} Routes)</span>
                     </button>
 
                     <button
@@ -2151,100 +2297,302 @@ export default function AdminDashboard({ isOpen = true, onClose, locale = 'en', 
                     </div>
                   )}
 
-                  {/* SUBTAB C: TRANSPORT & FLEET ROUTES MANAGER */}
+                  {/* SUBTAB C: TRANSPORT & FLEET ROUTES & VEHICLES MANAGER */}
                   {cmsSubtab === 'transport' && (
                     <div className="space-y-6">
+                      
+                      {/* Section Header with Segmented Navigation (Vehicles vs Routes) */}
                       <div className="flex flex-wrap items-center justify-between gap-4 bg-[#0a0a0c] border border-slate-800 p-4 sm:p-5 rounded-2xl">
                         <div>
                           <h3 className="text-base font-serif font-bold text-white flex items-center gap-2">
                             <Car className="w-4 h-4 text-[#d4af37]" />
-                            <span>প্রাইভেট ট্রান্সপোর্ট ও ফ্লিট রুট ম্যানেজমেন্ট (Private Transport & Fleet Routes)</span>
+                            <span>প্রাইভেট ট্রান্সপোর্ট ও ভিআইপি ফ্লিট কন্ট্রোল (Private Transport & VIP Fleet CMS)</span>
                           </h3>
                           <p className="text-xs text-slate-400 mt-1 font-light">
-                            Manage transport routes, luxury fleet allocations, and direct BDT pricing for airport transfers, intercity journeys, and ziyarah excursions.
+                            {transportView === 'vehicles'
+                              ? 'Manage luxury vehicle models, passenger capacity, luggage allowance, live image links, and operational maintenance status.'
+                              : 'Manage transport routes, luxury fleet allocations, and direct BDT pricing for airport transfers, intercity journeys, and ziyarah excursions.'}
                           </p>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={openAddRouteModal}
-                          className="px-4 py-2.5 bg-kiswah-gold hover:bg-kiswah-gold-hover text-[#080809] font-serif font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition-transform hover:scale-102"
-                        >
-                          <Plus className="w-4 h-4" />
-                          <span>+ নতুন রুট যোগ করুন / Add New Route</span>
-                        </button>
-                      </div>
+                        {/* Segment Toggle & Add Actions */}
+                        <div className="flex flex-wrap items-center gap-3">
+                          <div className="flex items-center bg-[#080809] border border-slate-800 rounded-xl p-1">
+                            <button
+                              type="button"
+                              onClick={() => setTransportView('vehicles')}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-serif font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                                transportView === 'vehicles'
+                                  ? 'bg-kiswah-gold text-[#080809] shadow-md'
+                                  : 'text-slate-400 hover:text-white'
+                              }`}
+                            >
+                              <Car className="w-3.5 h-3.5" />
+                              <span>ফ্লিট ও যানবাহন ({transport.vehicles?.length || 0})</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setTransportView('routes')}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-serif font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                                transportView === 'routes'
+                                  ? 'bg-kiswah-gold text-[#080809] shadow-md'
+                                  : 'text-slate-400 hover:text-white'
+                              }`}
+                            >
+                              <MapPin className="w-3.5 h-3.5" />
+                              <span>ট্রান্সপোর্ট রুট ({transport.routes?.length || 0})</span>
+                            </button>
+                          </div>
 
-                      {/* Routes Table */}
-                      <div className="border border-slate-800 rounded-2xl overflow-hidden bg-[#0a0a0c] shadow-2xl">
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left text-xs">
-                            <thead className="bg-[#121214] text-amber-300 font-serif font-bold border-b border-slate-800">
-                              <tr>
-                                <th className="p-3.5">রুট ও গন্তব্য (Route Name)</th>
-                                <th className="p-3.5">যানবাহন / ফ্লিট (Vehicle Type)</th>
-                                <th className="p-3.5">মূল্য (Price in BDT ৳)</th>
-                                <th className="p-3.5">দূরত্ব / সময়কাল (Distance)</th>
-                                <th className="p-3.5 text-right">অ্যাকশন (Actions)</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-800 text-slate-300">
-                              {transport.routes.map((route) => {
-                                const priceBDT = route.priceBDT !== undefined ? route.priceBDT : Math.round((route.finalPriceSAR || 1600) * 33);
-                                return (
-                                  <tr key={route.id} className="hover:bg-white/[0.02] transition-colors">
-                                    <td className="p-3.5">
-                                      <span className="font-semibold text-white text-sm block">{route.nameEn}</span>
-                                      <span className="text-xs text-amber-300 block font-sans">{route.nameBn}</span>
-                                    </td>
-                                    <td className="p-3.5">
-                                      <span className="px-2.5 py-1 rounded-full bg-[#d4af37]/15 text-[#d4af37] border border-[#d4af37]/30 text-xs font-mono font-bold uppercase inline-block">
-                                        {route.vehicleType || route.typeEn || 'GMC Yukon VIP'}
-                                      </span>
-                                    </td>
-                                    <td className="p-3.5">
-                                      <span className="font-serif font-bold text-kiswah-gold text-base block">
-                                        ৳{Number(priceBDT).toLocaleString('en-IN')}/-
-                                      </span>
-                                    </td>
-                                    <td className="p-3.5 font-mono text-slate-400">
-                                      {route.distanceEn || 'Express Route'}
-                                    </td>
-                                    <td className="p-3.5 text-right">
-                                      <div className="inline-flex items-center gap-2">
-                                        <button
-                                          type="button"
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            startEditRoute(route, e);
-                                          }}
-                                          className="px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.09] text-slate-300 hover:text-[#d4af37] border border-slate-700 hover:border-[#d4af37]/50 rounded-xl font-serif text-xs font-semibold flex items-center gap-1 cursor-pointer transition-all"
-                                        >
-                                          <Edit3 className="w-3.5 h-3.5" />
-                                          <span>Edit</span>
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            handleDeleteRoute(route.id, e);
-                                          }}
-                                          className="px-3 py-1.5 bg-red-950/40 hover:bg-red-900/60 text-red-400 hover:text-red-200 border border-red-500/30 rounded-xl font-serif text-xs font-semibold flex items-center gap-1 cursor-pointer transition-all"
-                                        >
-                                          <Trash2 className="w-3.5 h-3.5" />
-                                          <span>Delete</span>
-                                        </button>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
+                          {transportView === 'vehicles' ? (
+                            <button
+                              type="button"
+                              onClick={openAddVehicleModal}
+                              className="px-4 py-2.5 bg-kiswah-gold hover:bg-kiswah-gold-hover text-[#080809] font-serif font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition-transform hover:scale-102"
+                            >
+                              <Plus className="w-4 h-4" />
+                              <span>+ নতুন যানবাহন যোগ করুন / Add Vehicle</span>
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={openAddRouteModal}
+                              className="px-4 py-2.5 bg-kiswah-gold hover:bg-kiswah-gold-hover text-[#080809] font-serif font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg flex items-center gap-2 cursor-pointer transition-transform hover:scale-102"
+                            >
+                              <Plus className="w-4 h-4" />
+                              <span>+ নতুন রুট যোগ করুন / Add Route</span>
+                            </button>
+                          )}
                         </div>
                       </div>
+
+                      {/* VIEW 1: FLEET & VEHICLES MANAGEMENT (CARDS GRID) */}
+                      {transportView === 'vehicles' && (
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between text-xs text-slate-400 px-1">
+                            <span className="font-mono">
+                              Total Registered Vehicles: <strong className="text-[#d4af37]">{transport.vehicles?.length || 0}</strong>
+                            </span>
+                            <span className="text-[11px] text-slate-500 italic">
+                              Live updates seamlessly bind to public Transport Showcase and Route dropdowns.
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {(transport.vehicles || []).map((veh) => {
+                              const isMaint = veh.status === 'maintenance';
+                              const vehImg = veh.imageUrl || veh.image || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800';
+                              const features = (Array.isArray(veh.featuresEn) && veh.featuresEn.length > 0)
+                                ? veh.featuresEn
+                                : (Array.isArray(veh.features) ? veh.features : []);
+
+                              return (
+                                <div
+                                  key={veh.id}
+                                  className="bg-[#0a0a0c] border border-slate-800 hover:border-[#d4af37]/60 rounded-2xl p-4 flex flex-col justify-between space-y-4 shadow-xl overflow-hidden group transition-all"
+                                >
+                                  <div className="space-y-3">
+                                    {/* Image with Badges */}
+                                    <div className="h-44 rounded-xl overflow-hidden bg-slate-950 relative border border-slate-800/80">
+                                      <img
+                                        src={vehImg}
+                                        alt={veh.nameEn || veh.name}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                        onError={(e) => {
+                                          e.currentTarget.src = 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800';
+                                        }}
+                                      />
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+
+                                      {/* Top Badges */}
+                                      <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2">
+                                        <span className="px-2.5 py-1 rounded-full bg-kiswah-gold text-[#080809] font-serif font-extrabold text-[10px] uppercase shadow-md">
+                                          {veh.category || veh.categoryEn || 'VIP Vehicle'}
+                                        </span>
+
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleToggleVehicleStatus(veh, e);
+                                          }}
+                                          title="Click to toggle status"
+                                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider border cursor-pointer transition-all ${
+                                            isMaint
+                                              ? 'bg-amber-950 text-amber-300 border-amber-500/50 hover:bg-amber-900'
+                                              : 'bg-emerald-950 text-emerald-300 border-emerald-500/50 hover:bg-emerald-900'
+                                          }`}
+                                        >
+                                          {isMaint ? 'Maintenance' : 'Active'}
+                                        </button>
+                                      </div>
+
+                                      {/* Bottom Capacity Pills */}
+                                      <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between text-[11px] text-slate-200">
+                                        <span className="flex items-center gap-1.5 bg-black/75 px-2.5 py-1 rounded-lg backdrop-blur-md border border-white/10 font-mono">
+                                          <Users className="w-3.5 h-3.5 text-[#d4af37]" />
+                                          <span>{veh.passengers} Guests</span>
+                                        </span>
+                                        <span className="flex items-center gap-1.5 bg-black/75 px-2.5 py-1 rounded-lg backdrop-blur-md border border-white/10 font-mono">
+                                          <Briefcase className="w-3.5 h-3.5 text-[#d4af37]" />
+                                          <span>{veh.luggage} Luggage</span>
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Vehicle Name */}
+                                    <div>
+                                      <h4 className="font-serif font-bold text-base text-white leading-snug">
+                                        {veh.nameEn || veh.name}
+                                      </h4>
+                                      {veh.nameBn && (
+                                        <p className="text-xs text-amber-300 font-sans mt-0.5">{veh.nameBn}</p>
+                                      )}
+                                    </div>
+
+                                    {/* Features Checklist */}
+                                    <div className="space-y-1 pt-1 border-t border-slate-800/80">
+                                      <span className="text-[10px] font-serif font-bold text-slate-400 uppercase tracking-widest block mb-1">
+                                        Amenities:
+                                      </span>
+                                      <div className="space-y-1 text-[11px] text-slate-300">
+                                        {features.slice(0, 4).map((f, i) => (
+                                          <div key={i} className="flex items-center gap-1.5 text-slate-300">
+                                            <CheckCircle2 className="w-3 h-3 text-[#d4af37] shrink-0" />
+                                            <span className="truncate">{f}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Actions */}
+                                  <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-800">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleToggleVehicleStatus(veh, e);
+                                      }}
+                                      className={`text-[11px] font-mono px-2 py-1 rounded-lg border cursor-pointer transition-colors ${
+                                        isMaint 
+                                          ? 'border-emerald-500/40 text-emerald-300 hover:bg-emerald-950/40' 
+                                          : 'border-amber-500/40 text-amber-300 hover:bg-amber-950/40'
+                                      }`}
+                                    >
+                                      {isMaint ? 'Mark Active' : 'Mark Maintenance'}
+                                    </button>
+
+                                    <div className="flex items-center gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          startEditVehicle(veh, e);
+                                        }}
+                                        className="px-3 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-[#d4af37] text-xs flex items-center gap-1 cursor-pointer transition-colors"
+                                      >
+                                        <Edit3 className="w-3.5 h-3.5" />
+                                        <span>Edit</span>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          handleDeleteVehicle(veh.id, e);
+                                        }}
+                                        className="px-3 py-1.5 rounded-lg bg-red-950/60 hover:bg-red-900 text-red-300 text-xs flex items-center gap-1 cursor-pointer transition-colors"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                        <span>Delete</span>
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* VIEW 2: TRANSPORT ROUTES & RATES (TABLE VIEW) */}
+                      {transportView === 'routes' && (
+                        <div className="space-y-4">
+                          <div className="border border-slate-800 rounded-2xl overflow-hidden bg-[#0a0a0c] shadow-2xl">
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-left text-xs">
+                                <thead className="bg-[#121214] text-amber-300 font-serif font-bold border-b border-slate-800">
+                                  <tr>
+                                    <th className="p-3.5">রুট ও গন্তব্য (Route Name)</th>
+                                    <th className="p-3.5">যানবাহন / ফ্লিট (Assigned Fleet)</th>
+                                    <th className="p-3.5">মূল্য (Price in BDT ৳)</th>
+                                    <th className="p-3.5">দূরত্ব / সময়কাল (Distance)</th>
+                                    <th className="p-3.5 text-right">অ্যাকশন (Actions)</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800 text-slate-300">
+                                  {transport.routes.map((route) => {
+                                    const priceBDT = route.priceBDT !== undefined ? route.priceBDT : Math.round((route.finalPriceSAR || 1600) * 33);
+                                    return (
+                                      <tr key={route.id} className="hover:bg-white/[0.02] transition-colors">
+                                        <td className="p-3.5">
+                                          <span className="font-semibold text-white text-sm block">{route.nameEn}</span>
+                                          <span className="text-xs text-amber-300 block font-sans">{route.nameBn}</span>
+                                        </td>
+                                        <td className="p-3.5">
+                                          <span className="px-2.5 py-1 rounded-full bg-[#d4af37]/15 text-[#d4af37] border border-[#d4af37]/30 text-xs font-mono font-bold uppercase inline-block">
+                                            {route.vehicleType || route.typeEn || 'GMC Yukon VIP'}
+                                          </span>
+                                        </td>
+                                        <td className="p-3.5">
+                                          <span className="font-serif font-bold text-kiswah-gold text-base block">
+                                            ৳{Number(priceBDT).toLocaleString('en-IN')}/-
+                                          </span>
+                                        </td>
+                                        <td className="p-3.5 font-mono text-slate-400">
+                                          {route.distanceEn || 'Express Route'}
+                                        </td>
+                                        <td className="p-3.5 text-right">
+                                          <div className="inline-flex items-center gap-2">
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                startEditRoute(route, e);
+                                              }}
+                                              className="px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.09] text-slate-300 hover:text-[#d4af37] border border-slate-700 hover:border-[#d4af37]/50 rounded-xl font-serif text-xs font-semibold flex items-center gap-1 cursor-pointer transition-all"
+                                            >
+                                              <Edit3 className="w-3.5 h-3.5" />
+                                              <span>Edit</span>
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                handleDeleteRoute(route.id, e);
+                                              }}
+                                              className="px-3 py-1.5 bg-red-950/40 hover:bg-red-900/60 text-red-400 hover:text-red-200 border border-red-500/30 rounded-xl font-serif text-xs font-semibold flex items-center gap-1 cursor-pointer transition-all"
+                                            >
+                                              <Trash2 className="w-3.5 h-3.5" />
+                                              <span>Delete</span>
+                                            </button>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
                     </div>
                   )}
@@ -2807,7 +3155,14 @@ export default function AdminDashboard({ isOpen = true, onClose, locale = 'en', 
                 </button>
               </div>
 
-              <form onSubmit={handleSaveRoute} className="space-y-4 text-xs">
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSaveRoute(e);
+                }} 
+                className="space-y-4 text-xs"
+              >
                 <div>
                   <label className="text-slate-300 font-semibold block mb-1">Route Name (English) *</label>
                   <input
@@ -2834,15 +3189,37 @@ export default function AdminDashboard({ isOpen = true, onClose, locale = 'en', 
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-slate-300 font-semibold block mb-1">Vehicle Type / Fleet *</label>
-                    <input
-                      type="text"
-                      required
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-slate-300 font-semibold block">Vehicle Type / Assigned Fleet *</label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRouteModalOpen(false);
+                          setTransportView('vehicles');
+                          openAddVehicleModal();
+                        }}
+                        className="text-[10px] text-[#d4af37] hover:underline cursor-pointer"
+                      >
+                        + নতুন গাড়ি
+                      </button>
+                    </div>
+                    <select
                       value={routeForm.vehicleType}
                       onChange={(e) => setRouteForm({ ...routeForm, vehicleType: e.target.value })}
-                      placeholder="e.g. GMC Yukon / Hyundai H1 / Bus"
-                      className="w-full bg-[#0a0a0c] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
-                    />
+                      className="w-full bg-[#0a0a0c] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none cursor-pointer"
+                    >
+                      <option value="">-- Select Registered Fleet --</option>
+                      {(transport.vehicles || []).map((veh) => (
+                        <option key={veh.id} value={veh.nameEn || veh.name}>
+                          {veh.nameEn || veh.name} ({veh.category || veh.categoryEn || 'VIP'} - {veh.passengers} Seats)
+                        </option>
+                      ))}
+                      <option value="GMC Yukon Denali / Suburban (VIP SUV)">GMC Yukon Denali / Suburban (VIP SUV)</option>
+                      <option value="Mercedes-Benz Maybach / S-Class">Mercedes-Benz Maybach / S-Class</option>
+                      <option value="Toyota HiAce VIP Commuter">Toyota HiAce VIP Commuter</option>
+                      <option value="VIP Luxury Coach">VIP Luxury Coach (49 Seats)</option>
+                      <option value="Haramain High-Speed Rail">Haramain High-Speed Rail (Business Class)</option>
+                    </select>
                   </div>
 
                   <div>
@@ -2879,10 +3256,291 @@ export default function AdminDashboard({ isOpen = true, onClose, locale = 'en', 
                     Cancel
                   </button>
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleSaveRoute(e);
+                    }}
                     className="px-5 py-2 bg-kiswah-gold hover:bg-kiswah-gold-hover text-[#080809] font-serif font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg cursor-pointer transition-transform hover:scale-102"
                   >
                     {editingRoute ? 'Save Route Changes' : '+ Save & Publish Route'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL: CREATE / EDIT VIP FLEET VEHICLE */}
+        {vehicleModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
+            <div className="bg-[#121214] border border-[#d4af37]/40 p-6 sm:p-7 rounded-3xl max-w-xl w-full space-y-5 shadow-2xl my-auto">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#d4af37]/15 border border-[#d4af37]/40 text-[#d4af37] flex items-center justify-center">
+                    <Car className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-serif font-bold text-white text-base">
+                      {editingVehicle ? 'Edit VIP Vehicle Profile' : '+ নতুন যানবাহন যোগ করুন (Add New VIP Vehicle)'}
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Configure vehicle name, seating specs, luggage capacity, and live photo link.
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => { setVehicleModalOpen(false); setEditingVehicle(null); }} 
+                  className="p-1.5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSaveVehicle(e);
+                }} 
+                className="space-y-4 text-xs"
+              >
+                {/* 1. Vehicle Name (English & Bengali) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-slate-300 font-semibold block mb-1">
+                      Vehicle Name (English) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={vehicleForm.nameEn}
+                      onChange={(e) => setVehicleForm({ ...vehicleForm, nameEn: e.target.value })}
+                      placeholder="e.g. GMC Yukon XL 2026 / Suburban"
+                      className="w-full bg-[#0a0a0c] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-300 font-semibold block mb-1">
+                      Vehicle Name (বাংলা) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={vehicleForm.nameBn}
+                      onChange={(e) => setVehicleForm({ ...vehicleForm, nameBn: e.target.value })}
+                      placeholder="যেমনঃ জিএমসি ইউকন এক্সএল ২০২৬ (ভিআইপি)"
+                      className="w-full bg-[#0a0a0c] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* 2. Category / Class & Status */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-slate-300 font-semibold block mb-1">
+                      Vehicle Category / Class *
+                    </label>
+                    <select
+                      value={vehicleForm.category}
+                      onChange={(e) => setVehicleForm({ ...vehicleForm, category: e.target.value })}
+                      className="w-full bg-[#0a0a0c] border border-slate-800 rounded-xl px-3 py-2 text-white focus:border-[#d4af37] focus:outline-none cursor-pointer"
+                    >
+                      <option value="VIP Chauffeur SUV">VIP Chauffeur SUV (GMC / Escalade)</option>
+                      <option value="Executive Luxury Sedan">Executive Luxury Sedan (Maybach / S-Class)</option>
+                      <option value="Family VIP Van">Family VIP Van (Toyota HiAce / Granvia)</option>
+                      <option value="High-Capacity Minibus">High-Capacity Minibus (Hyundai H1 / Staria)</option>
+                      <option value="Luxury Delegation Coaster">Luxury Delegation Coaster (14-23 Seats)</option>
+                      <option value="Executive 49-Seat Coach">Executive 49-Seat Coach (VIP Delegation)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-slate-300 font-semibold block mb-1">
+                      Fleet Operational Status *
+                    </label>
+                    <div className="flex items-center gap-3 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setVehicleForm({ ...vehicleForm, status: 'active' })}
+                        className={`flex-1 py-2 px-3 rounded-xl border text-xs font-serif font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                          vehicleForm.status === 'active'
+                            ? 'bg-emerald-950 text-emerald-300 border-emerald-500 shadow-md shadow-emerald-950/50'
+                            : 'bg-[#0a0a0c] border-slate-800 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                        <span>Active (সচল)</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setVehicleForm({ ...vehicleForm, status: 'maintenance' })}
+                        className={`flex-1 py-2 px-3 rounded-xl border text-xs font-serif font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                          vehicleForm.status === 'maintenance'
+                            ? 'bg-amber-950 text-amber-300 border-amber-500 shadow-md shadow-amber-950/50'
+                            : 'bg-[#0a0a0c] border-slate-800 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        <span className="w-2 h-2 rounded-full bg-amber-400" />
+                        <span>Maintenance (সার্ভিসিং)</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Passenger & Luggage Capacities */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-slate-300 font-semibold block mb-1">
+                      Passenger Capacity (Persons) *
+                    </label>
+                    <div className="relative">
+                      <Users className="w-4 h-4 text-[#d4af37] absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="number"
+                        required
+                        min={1}
+                        max={60}
+                        value={vehicleForm.passengers}
+                        onChange={(e) => setVehicleForm({ ...vehicleForm, passengers: Number(e.target.value) })}
+                        placeholder="e.g. 7"
+                        className="w-full bg-[#0a0a0c] border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-white font-mono focus:border-[#d4af37] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-slate-300 font-semibold block mb-1">
+                      Luggage Capacity (Large Bags) *
+                    </label>
+                    <div className="relative">
+                      <Briefcase className="w-4 h-4 text-[#d4af37] absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="number"
+                        required
+                        min={0}
+                        max={60}
+                        value={vehicleForm.luggage}
+                        onChange={(e) => setVehicleForm({ ...vehicleForm, luggage: Number(e.target.value) })}
+                        placeholder="e.g. 5"
+                        className="w-full bg-[#0a0a0c] border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-white font-mono focus:border-[#d4af37] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. Live Image URL Input Field with Real-Time Thumbnail Preview */}
+                <div>
+                  <label className="text-slate-300 font-semibold block mb-1">
+                    গাড়ির ইমেজ লাইভ লিঙ্ক (Vehicle Image Direct URL) *
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="url"
+                      required
+                      value={vehicleForm.imageUrl}
+                      onChange={(e) => setVehicleForm({ ...vehicleForm, imageUrl: e.target.value })}
+                      placeholder="https://images.unsplash.com/... or direct image link"
+                      className="flex-1 bg-[#0a0a0c] border border-slate-800 rounded-xl px-3 py-2.5 text-white text-xs font-mono focus:border-[#d4af37] focus:outline-none"
+                    />
+                    
+                    {/* Real-time thumbnail preview box */}
+                    <div className="w-20 h-14 rounded-xl bg-slate-950 border border-slate-700 overflow-hidden shrink-0 relative flex items-center justify-center group shadow-md">
+                      {vehicleForm.imageUrl ? (
+                        <img
+                          src={vehicleForm.imageUrl}
+                          alt="Vehicle Thumbnail Preview"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800';
+                          }}
+                        />
+                      ) : (
+                        <div className="text-center p-1">
+                          <Car className="w-4 h-4 text-slate-500 mx-auto" />
+                          <span className="text-[9px] text-slate-500 block">No Image</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-slate-500 mt-1 block">
+                    Supported: Imgur, Cloudinary, Unsplash, or direct CDN URL. Real-time preview renders on the right.
+                  </span>
+                </div>
+
+                {/* 5. Features / Amenities Dynamic Tag Input */}
+                <div>
+                  <label className="text-slate-300 font-semibold block mb-1">
+                    Features & Luxury Amenities (সুবিধাসমূহ - সর্বোচ্চ ৮টি)
+                  </label>
+
+                  <div className="flex items-center gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={newVehicleFeature}
+                      onChange={(e) => setNewVehicleFeature(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddVehicleFeature();
+                        }
+                      }}
+                      placeholder="e.g. Leather Seats, Free High-Speed WiFi, Zamzam Chilled Box..."
+                      className="flex-1 bg-[#0a0a0c] border border-slate-800 rounded-xl px-3 py-1.5 text-white text-xs focus:border-[#d4af37] focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddVehicleFeature}
+                      className="px-3.5 py-1.5 bg-white/[0.05] hover:bg-[#d4af37] hover:text-[#080809] border border-slate-700 rounded-xl text-slate-200 text-xs font-semibold cursor-pointer transition-colors"
+                    >
+                      + Add
+                    </button>
+                  </div>
+
+                  {/* Active Feature Tags */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {vehicleForm.features.map((feat, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#d4af37]/10 border border-[#d4af37]/30 text-amber-300 text-[11px]"
+                      >
+                        <Check className="w-3 h-3 text-[#d4af37]" />
+                        <span>{feat}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveVehicleFeature(idx)}
+                          className="hover:text-red-400 cursor-pointer ml-1"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Modal Buttons */}
+                <div className="pt-2 flex justify-end gap-2 border-t border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => { setVehicleModalOpen(false); setEditingVehicle(null); }}
+                    className="px-4 py-2 border border-slate-800 rounded-xl text-slate-300 hover:text-white cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleSaveVehicle(e);
+                    }}
+                    className="px-5 py-2 bg-kiswah-gold hover:bg-kiswah-gold-hover text-[#080809] font-serif font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg cursor-pointer transition-transform hover:scale-102"
+                  >
+                    {editingVehicle ? 'Save Vehicle Profile' : '+ Save & Register Vehicle'}
                   </button>
                 </div>
               </form>

@@ -419,6 +419,64 @@ export const db = {
     return false;
   },
 
+  // --- VEHICLE MANAGEMENT ---
+  addVehicle(vehicleData) {
+    const database = getDb();
+    if (!database.transport.vehicles) database.transport.vehicles = [];
+    const newVehicle = {
+      id: vehicleData.id || `veh-${Date.now()}`,
+      nameEn: vehicleData.nameEn || vehicleData.name || 'New VIP Vehicle',
+      nameBn: vehicleData.nameBn || vehicleData.name || 'নতুন ভিআইপি গাড়ি',
+      badgeEn: vehicleData.badgeEn || vehicleData.categoryEn || 'VIP Fleet',
+      badgeBn: vehicleData.badgeBn || 'ভিআইপি ফ্লিট',
+      category: vehicleData.category || vehicleData.categoryEn || 'VIP Chauffeur SUV',
+      categoryEn: vehicleData.categoryEn || vehicleData.category || 'VIP Chauffeur SUV',
+      categoryBn: vehicleData.categoryBn || 'ভিআইপি শফার এসইউভি',
+      passengers: Number(vehicleData.passengers) || 4,
+      luggage: Number(vehicleData.luggage) || 4,
+      featuresEn: Array.isArray(vehicleData.featuresEn) ? vehicleData.featuresEn : (vehicleData.features || []),
+      featuresBn: Array.isArray(vehicleData.featuresBn) ? vehicleData.featuresBn : (vehicleData.features || []),
+      image: vehicleData.imageUrl || vehicleData.image || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800',
+      imageUrl: vehicleData.imageUrl || vehicleData.image || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800',
+      status: vehicleData.status || 'active',
+      basePrices: vehicleData.basePrices || { jed_makkah: 550, makkah_madinah: 1400 },
+      createdAt: new Date().toISOString()
+    };
+    database.transport.vehicles.push(newVehicle);
+    saveDb();
+    return newVehicle;
+  },
+
+  updateVehicle(id, updates) {
+    const database = getDb();
+    if (!database.transport.vehicles) database.transport.vehicles = [];
+    const index = database.transport.vehicles.findIndex(v => v.id === id);
+    if (index === -1) return null;
+    const current = database.transport.vehicles[index];
+    const updated = {
+      ...current,
+      ...updates,
+      image: updates.imageUrl || updates.image || current.image,
+      imageUrl: updates.imageUrl || updates.image || current.imageUrl,
+      updatedAt: new Date().toISOString()
+    };
+    database.transport.vehicles[index] = updated;
+    saveDb();
+    return updated;
+  },
+
+  deleteVehicle(id) {
+    const database = getDb();
+    if (!database.transport.vehicles) return false;
+    const initialLen = database.transport.vehicles.length;
+    database.transport.vehicles = database.transport.vehicles.filter(v => v.id !== id);
+    if (database.transport.vehicles.length !== initialLen) {
+      saveDb();
+      return true;
+    }
+    return false;
+  },
+
   // --- ORDERS & ENQUIRIES ---
   getOrders() {
     return getDb().orders || [];

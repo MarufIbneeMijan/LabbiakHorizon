@@ -127,4 +127,51 @@ router.delete('/routes/:id', requireAdmin, (req, res) => {
   }
 });
 
+// POST /api/transport/vehicles - Create a new vehicle
+router.post('/vehicles', requireAdmin, (req, res) => {
+  try {
+    const vehicle = db.addVehicle(req.body);
+    res.status(201).json({
+      success: true,
+      message: 'Vehicle added successfully.',
+      data: vehicle
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PUT /api/transport/vehicles/:id - Update vehicle details
+router.put('/vehicles/:id', requireAdmin, (req, res) => {
+  try {
+    const updated = db.updateVehicle(req.params.id, req.body);
+    if (!updated) {
+      return res.status(404).json({ success: false, message: 'Vehicle not found.' });
+    }
+    res.json({
+      success: true,
+      message: 'Vehicle updated successfully.',
+      data: updated
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// DELETE /api/transport/vehicles/:id - Remove a vehicle
+router.delete('/vehicles/:id', requireAdmin, (req, res) => {
+  try {
+    const deleted = db.deleteVehicle(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: 'Vehicle not found.' });
+    }
+    res.json({
+      success: true,
+      message: 'Vehicle deleted successfully.'
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 export default router;

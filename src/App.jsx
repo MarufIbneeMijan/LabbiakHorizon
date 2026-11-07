@@ -266,9 +266,20 @@ export default function App() {
   };
 
   // On successful order in CheckoutModal
-  const handleOrderSuccess = () => {
-    // If the completed checkout items were from the cart, clear the cart
+  const handleOrderSuccess = (orderData) => {
+    // 1. Clear cart state and persisted cart in localStorage
     setCartItems([]);
+    try {
+      localStorage.removeItem('horizon_cart');
+    } catch {}
+
+    // Do NOT close CheckoutModal, do NOT navigate, and do NOT scroll to #packages!
+    // The CheckoutModal displays its own internal success view (setSubmitted(true)) so the user stays inside the modal.
+  };
+
+  // On successful reservation in ContactModal
+  const handleReservationSuccess = (resData) => {
+    // ContactModal displays its own internal success view (setSubmitted(true)) so the user stays inside the modal.
   };
 
   const cartCount = cartItems.reduce((acc, it) => acc + (it.quantity || 1), 0);
@@ -365,6 +376,7 @@ export default function App() {
             setContactModalOpen(false);
             setPresetDataForModal(null);
           }}
+          onSubmitSuccess={handleReservationSuccess}
         />
       )}
 
@@ -408,6 +420,7 @@ export default function App() {
           onClose={() => setPdfModalData(null)}
         />
       )}
+
     </>
   );
 }

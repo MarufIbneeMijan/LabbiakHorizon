@@ -597,6 +597,325 @@
   },
   "orders": [
     {
+      "id": "ORD-2026-3236",
+      "type": "store_order",
+      "customerName": "Anusur",
+      "customerPhone": "01617050445",
+      "customerEmail": "vip@labbaikhorizon.com",
+      "status": "Pending",
+      "items": [
+        {
+          "id": "prod-smart-tasbeeh",
+          "name": "ডিজিটাল ওলেড স্মার্ট রিং তাসবীহ ও তাওয়াফ কাউন্টার",
+          "quantity": 1,
+          "priceBDT": 2800,
+          "image": "https://images.unsplash.com/photo-1590076215667-875d4ef2d7ee?auto=format&fit=crop&q=80&w=800"
+        }
+      ],
+      "totalBDT": 2880,
+      "totalUSD": 24,
+      "deliveryAddress": "jjko77, ঢাকা সিটি (Inside Dhaka), Bangladesh",
+      "division": "Inside Dhaka (ঢাকা সিটি)",
+      "shippingFee": 80,
+      "paymentMethod": "ক্যাশ অন ডেলিভারি (Cash on Delivery)",
+      "notes": "No special delivery instructions provided.",
+      "createdAt": "2026-11-07T14:14:47.102Z"
+    },
+    {
+      "id": "DOS-2026-9928",
+      "type": "vip_dossier",
+      "customerName": "Maruf Ibnee Mijan",
+      "customerPhone": "01617050445",
+      "customerEmail": "vip@labbaikhorizon.com",
+      "status": "Pending",
+      "items": [
+        {
+          "name": "খুবি সুন্দর ",
+          "quantity": 2,
+          "priceBDT": 285000,
+          "notes": "Travel Month: শীতকালীন পবিত্র মাস (ডিসেম্বর-ফেব্রুয়ারি) | Party Size: 2 Pilgrim(s)"
+        }
+      ],
+      "totalBDT": 285000,
+      "totalUSD": 2375,
+      "deliveryAddress": "Horizon VIP Client Desk, Gulshan-2, Dhaka",
+      "division": "",
+      "shippingFee": 0,
+      "paymentMethod": "Cash on Delivery",
+      "notes": "Travel Month: শীতকালীন পবিত্র মাস (ডিসেম্বর-ফেব্রুয়ারি) | Party Size: 2 Pilgrim(s)",
+      "createdAt": "2026-11-07T14:14:15.375Z"
+    },
+    {
+      "id": "ORD-2026-7493",
+      "type": "store_order",
+      "customerName": "Abul Hasnat",
+      "customerPhone": "01617050445",
+      "customerEmail": "vip@labbaikhorizon.com",
+      "status": "Pending",
+      "items": [
+        {
+          "id": "prod-1793900152771",
+          "name": "ভাই রে ভাই ",
+          "quantity": 1,
+          "priceBDT": 35500,
+          "image": "https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?auto=format&fit=crop&q=80&w=800"
+        }
+      ],
+      "totalBDT": 35580,
+      "totalUSD": 297,
+      "deliveryAddress": "homeee, ঢাকা সিটি (Inside Dhaka), Bangladesh",
+      "division": "Inside Dhaka (ঢাকা সিটি)",
+      "shippingFee": 80,
+      "paymentMethod": "ক্যাশ অন ডেলিভারি (Cash on Delivery)",
+      "notes": "No special delivery instructions provided.",
+      "createdAt": "2026-11-07T14:01:28.763Z"
+    },
+    {
+      "id": "DOS-2026-1846",
+      "type": "vip_dossier",
+      "customerName": "Maruf",
+      "customerPhone": "01617050445",
+      "customerEmail": "vip@labbaikhorizon.com",
+      "status": "Pending",
+      "items": [
+        {
+          "name": "খুবি সুন্দর ",
+          "quantity": 3,
+          "priceBDT": 285000,
+          "notes": "Travel Month: রাজকীয় ভিআইপি হজ ২০২৭ | Party Size: 3 Pilgrim(s)"
+        }
+      ],
+      "totalBDT": 285000,
+      "totalUSD": 2375,
+      "deliveryAddress": "Horizon VIP Client Desk, Gulshan-2, Dhaka",
+      "division": "",
+      "shippingFee": 0,
+      "paymentMethod": "Cash on Delivery",
+      "notes": "Travel Month: রাজকীয় ভিআইপি হজ ২০২৭ | Party Size: 3 Pilgrim(s)",
+      "createdAt": "2026-11-07T14:01:02.975Z"
+    },
+    {
+      "id": "ORD-2026-5288",
+      "type": "store_order",
+      "customerName": "Ami",
+      "customerPhone": "01617050445",
+      "customerEmail": "vip@labbaikhorizon.com",
+      "status": "Pending",
+      "items": [
+        {
+          "id": "prod-smart-tasbeeh",
+          "name": "ডিজিটাল ওলেড স্মার্ট রিং তাসবীহ ও তাওয়াফ কাউন্টার",
+          "quantity": 1,
+          "priceBDT": 2800,
+          "image": "https://images.unsplash.com/photo-1590076215667-875d4ef2d7ee?auto=format&fit=crop&q=80&w=800"
+        }
+      ],
+      "totalBDT": 2880,
+      "totalUSD": 24,
+      "deliveryAddress": "House 34, ঢাকা সিটি (Inside Dhaka), Bangladesh",
+      "division": "Inside Dhaka (ঢাকা সিটি)",
+      "shippingFee": 80,
+      "paymentMethod": "ক্যাশ অন ডেলিভারি (Cash on Delivery)",
+      "notes": "No special delivery instructions provided.",
+      "createdAt": "2026-11-07T13:53:27.223Z"
+    },
+    {
+      "id": "ORD-2026-4325",
+      "type": "store_order",
+      "customerName": "Abiddd",
+      "customerPhone": "01617050445",
+      "customerEmail": "vip@labbaikhorizon.com",
+      "status": "Pending",
+      "items": [
+        {
+          "id": "prod-smart-tasbeeh",
+          "name": "ডিজিটাল ওলেড স্মার্ট রিং তাসবীহ ও তাওয়াফ কাউন্টার",
+          "quantity": 1,
+          "priceBDT": 2800,
+          "image": "https://images.unsplash.com/photo-1590076215667-875d4ef2d7ee?auto=format&fit=crop&q=80&w=800"
+        }
+      ],
+      "totalBDT": 2880,
+      "totalUSD": 24,
+      "deliveryAddress": "bangladesh, ঢাকা সিটি (Inside Dhaka), Bangladesh",
+      "division": "Inside Dhaka (ঢাকা সিটি)",
+      "shippingFee": 80,
+      "paymentMethod": "ক্যাশ অন ডেলিভারি (Cash on Delivery)",
+      "notes": "No special delivery instructions provided.",
+      "createdAt": "2026-11-07T13:52:14.393Z"
+    },
+    {
+      "id": "DOS-2026-2022",
+      "type": "vip_dossier",
+      "customerName": "Abdul Kaim",
+      "customerPhone": "01617050445",
+      "customerEmail": "vip@labbaikhorizon.com",
+      "status": "Pending",
+      "items": [
+        {
+          "name": "খুবি সুন্দর ",
+          "quantity": 2,
+          "priceBDT": 285000,
+          "notes": "Travel Month: রাজকীয় ভিআইপি হজ ২০২৭ | Party Size: 2 Pilgrim(s)"
+        }
+      ],
+      "totalBDT": 285000,
+      "totalUSD": 2375,
+      "deliveryAddress": "Horizon VIP Client Desk, Gulshan-2, Dhaka",
+      "division": "",
+      "shippingFee": 0,
+      "paymentMethod": "Cash on Delivery",
+      "notes": "Travel Month: রাজকীয় ভিআইপি হজ ২০২৭ | Party Size: 2 Pilgrim(s)",
+      "createdAt": "2026-11-07T13:51:02.548Z"
+    },
+    {
+      "id": "DOS-2026-4433",
+      "type": "vip_dossier",
+      "customerName": "aABIR",
+      "customerPhone": "704562055",
+      "customerEmail": "vip@labbaikhorizon.com",
+      "status": "Pending",
+      "items": [
+        {
+          "name": "খুবি সুন্দর ",
+          "quantity": 2,
+          "priceBDT": 285000,
+          "notes": "Travel Month: শীতকালীন পবিত্র মাস (ডিসেম্বর-ফেব্রুয়ারি) | Party Size: 2 Pilgrim(s)"
+        }
+      ],
+      "totalBDT": 285000,
+      "totalUSD": 2375,
+      "deliveryAddress": "Horizon VIP Client Desk, Gulshan-2, Dhaka",
+      "division": "",
+      "shippingFee": 0,
+      "paymentMethod": "Cash on Delivery",
+      "notes": "Travel Month: শীতকালীন পবিত্র মাস (ডিসেম্বর-ফেব্রুয়ারি) | Party Size: 2 Pilgrim(s)",
+      "createdAt": "2026-11-07T13:41:05.956Z"
+    },
+    {
+      "id": "DOS-2026-9494",
+      "type": "vip_dossier",
+      "customerName": "Abir",
+      "customerPhone": "01617050445",
+      "customerEmail": "vip@labbaikhorizon.com",
+      "status": "Pending",
+      "items": [
+        {
+          "name": "খুবি সুন্দর ",
+          "quantity": 2,
+          "priceBDT": 285000,
+          "notes": "Travel Month: রজব ও শাবান মাস | Party Size: 2 Pilgrim(s)"
+        }
+      ],
+      "totalBDT": 285000,
+      "totalUSD": 2375,
+      "deliveryAddress": "Horizon VIP Client Desk, Gulshan-2, Dhaka",
+      "division": "",
+      "shippingFee": 0,
+      "paymentMethod": "Cash on Delivery",
+      "notes": "Travel Month: রজব ও শাবান মাস | Party Size: 2 Pilgrim(s)",
+      "createdAt": "2026-11-07T13:39:10.649Z"
+    },
+    {
+      "id": "ORD-2026-4943",
+      "type": "store_order",
+      "customerName": "Maruf Ibnee Miajaaaan",
+      "customerPhone": "01617050445",
+      "customerEmail": "vip@labbaikhorizon.com",
+      "status": "Pending",
+      "items": [
+        {
+          "id": "prod-smart-tasbeeh",
+          "name": "ডিজিটাল ওলেড স্মার্ট রিং তাসবীহ ও তাওয়াফ কাউন্টার",
+          "quantity": 1,
+          "priceBDT": 2800,
+          "image": "https://images.unsplash.com/photo-1590076215667-875d4ef2d7ee?auto=format&fit=crop&q=80&w=800"
+        }
+      ],
+      "totalBDT": 2880,
+      "totalUSD": 24,
+      "deliveryAddress": "Airport, ঢাকা সিটি (Inside Dhaka), Bangladesh",
+      "division": "Inside Dhaka (ঢাকা সিটি)",
+      "shippingFee": 80,
+      "paymentMethod": "ক্যাশ অন ডেলিভারি (Cash on Delivery)",
+      "notes": "No special delivery instructions provided.",
+      "createdAt": "2026-11-07T13:38:49.985Z"
+    },
+    {
+      "id": "ORD-2026-1479",
+      "type": "store_order",
+      "customerName": "Abdul High",
+      "customerPhone": "01614050445",
+      "customerEmail": "vip@labbaikhorizon.com",
+      "status": "Pending",
+      "items": [
+        {
+          "id": "prod-ihram-toiletries",
+          "name": "সুগন্ধিহীন হালাল ইহরাম টয়লেট্রিজ ও স্কিনকেয়ার কিট",
+          "quantity": 1,
+          "priceBDT": 2200,
+          "image": "https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&q=80&w=800"
+        }
+      ],
+      "totalBDT": 2280,
+      "totalUSD": 19,
+      "deliveryAddress": "Bangladesh, ঢাকা সিটি (Inside Dhaka), Bangladesh",
+      "division": "Inside Dhaka (ঢাকা সিটি)",
+      "shippingFee": 80,
+      "paymentMethod": "ক্যাশ অন ডেলিভারি (Cash on Delivery)",
+      "notes": "No special delivery instructions provided.",
+      "createdAt": "2026-11-07T13:16:12.411Z"
+    },
+    {
+      "id": "DOS-2026-4462",
+      "type": "vip_dossier",
+      "customerName": "Amir Hamza",
+      "customerPhone": "0177714520",
+      "customerEmail": "vip@labbaikhorizon.com",
+      "status": "Processing",
+      "items": [
+        {
+          "name": "খুবি সুন্দর ",
+          "quantity": 1,
+          "priceBDT": 285000,
+          "notes": "Travel Month: রমজান ২০২৭ (শেষ ১০ দিন) | Party Size: 1 Pilgrim(s)"
+        }
+      ],
+      "totalBDT": 285000,
+      "totalUSD": 2375,
+      "deliveryAddress": "Horizon VIP Client Desk, Gulshan-2, Dhaka",
+      "division": "",
+      "shippingFee": 0,
+      "paymentMethod": "Cash on Delivery",
+      "notes": "Travel Month: রমজান ২০২৭ (শেষ ১০ দিন) | Party Size: 1 Pilgrim(s)",
+      "createdAt": "2026-11-07T13:14:09.070Z",
+      "updatedAt": "2026-11-07T13:14:36.184Z"
+    },
+    {
+      "id": "DOS-2026-7248",
+      "type": "vip_dossier",
+      "customerName": "Maruf",
+      "customerPhone": "01617050445",
+      "customerEmail": "vip@labbaikhorizon.com",
+      "status": "Pending",
+      "items": [
+        {
+          "name": "খুবি সুন্দর ",
+          "quantity": 4,
+          "priceBDT": 285000,
+          "notes": "Travel Month: শীতকালীন পবিত্র মাস (ডিসেম্বর-ফেব্রুয়ারি) | Party Size: 4 Pilgrim(s)"
+        }
+      ],
+      "totalBDT": 285000,
+      "totalUSD": 2375,
+      "deliveryAddress": "Horizon VIP Client Desk, Gulshan-2, Dhaka",
+      "division": "",
+      "shippingFee": 0,
+      "paymentMethod": "Cash on Delivery",
+      "notes": "Travel Month: শীতকালীন পবিত্র মাস (ডিসেম্বর-ফেব্রুয়ারি) | Party Size: 4 Pilgrim(s)",
+      "createdAt": "2026-11-07T13:13:51.411Z"
+    },
+    {
       "id": "ORD-2026-2399",
       "type": "store_order",
       "customerName": "Abdul Hamid",

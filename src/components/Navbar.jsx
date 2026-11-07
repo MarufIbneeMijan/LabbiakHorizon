@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   ShieldCheck, Sparkles, Phone, Globe, Menu, X, 
   ChevronRight, Crown, Lock, ShoppingBag, Palette, Check 
@@ -55,7 +56,7 @@ export default function Navbar({
   const primaryNavLinks = [
     { name: isBn ? 'প্যাকেজ সমূহ' : 'Packages', href: isShopPage ? '/#packages' : '#packages' },
     { name: isBn ? 'প্রাইভেট ট্রান্সপোর্ট' : 'Transport Fleet', href: isShopPage ? '/#fleet' : '#fleet' },
-    { name: isBn ? 'অনলাইন শপ' : 'Pilgrim Essentials', href: '/shop' },
+    { name: isBn ? 'অনলাইন শপ' : 'Pilgrim Essentials', to: '/shop' },
     { name: isBn ? 'সাধারণ জিজ্ঞাসা' : 'FAQ', href: isShopPage ? '/#faq' : '#faq' },
   ];
 
@@ -105,7 +106,7 @@ export default function Navbar({
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           
           {/* Brand Logo */}
-          <a href="/" className="flex items-center gap-3 group shrink-0">
+          <Link to="/" className="flex items-center gap-3 group shrink-0">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#e5c158] via-[#d4af37] to-[#996515] p-0.5 shadow-xl shadow-[#d4af37]/20 flex items-center justify-center group-hover:scale-105 transition-transform">
               <div className="w-full h-full bg-[#080809] rounded-[10px] flex items-center justify-center text-lg font-serif">
                 🕋
@@ -124,18 +125,28 @@ export default function Navbar({
                 {isBn ? 'কিসওয়াহ আল্ট্রা-লাক্সারি জিয়ারত' : 'Kiswah Ultra-Luxury Pilgrimage'}
               </p>
             </div>
-          </a>
+          </Link>
 
           {/* Desktop Clean Hierarchy: Exactly 4 Primary Touchpoints */}
           <div className="hidden lg:flex items-center gap-8 text-xs font-serif font-bold uppercase tracking-wider">
             {primaryNavLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className="text-slate-300 hover:text-[#d4af37] transition-colors relative py-1 hover:after:w-full after:w-0 after:h-0.5 after:bg-[#d4af37] after:absolute after:bottom-0 after:left-0 after:transition-all"
-              >
-                {link.name}
-              </a>
+              link.to ? (
+                <Link
+                  key={link.name}
+                  to={link.to}
+                  className="text-slate-300 hover:text-[#d4af37] transition-colors relative py-1 hover:after:w-full after:w-0 after:h-0.5 after:bg-[#d4af37] after:absolute after:bottom-0 after:left-0 after:transition-all"
+                >
+                  {link.name}
+                </Link>
+              ) : (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  className="text-slate-300 hover:text-[#d4af37] transition-colors relative py-1 hover:after:w-full after:w-0 after:h-0.5 after:bg-[#d4af37] after:absolute after:bottom-0 after:left-0 after:transition-all"
+                >
+                  {link.name}
+                </a>
+              )
             ))}
           </div>
 
@@ -300,15 +311,27 @@ export default function Navbar({
               {/* Primary 4 Touchpoints */}
               <div className="flex flex-col gap-2.5">
                 {primaryNavLinks.map((link) => (
-                  <a
-                    key={link.name}
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center justify-between px-4 py-3.5 rounded-2xl bg-white/[0.03] border border-slate-800 text-slate-200 hover:text-[#d4af37] hover:border-[#d4af37]/40 font-serif font-bold text-xs uppercase tracking-wider transition-all"
-                  >
-                    <span>{link.name}</span>
-                    <ChevronRight className="w-4 h-4 text-[#d4af37]" />
-                  </a>
+                  link.to ? (
+                    <Link
+                      key={link.name}
+                      to={link.to}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center justify-between px-4 py-3.5 rounded-2xl bg-white/[0.03] border border-slate-800 text-slate-200 hover:text-[#d4af37] hover:border-[#d4af37]/40 font-serif font-bold text-xs uppercase tracking-wider transition-all"
+                    >
+                      <span>{link.name}</span>
+                      <ChevronRight className="w-4 h-4 text-[#d4af37]" />
+                    </Link>
+                  ) : (
+                    <a
+                      key={link.name}
+                      href={link.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center justify-between px-4 py-3.5 rounded-2xl bg-white/[0.03] border border-slate-800 text-slate-200 hover:text-[#d4af37] hover:border-[#d4af37]/40 font-serif font-bold text-xs uppercase tracking-wider transition-all"
+                    >
+                      <span>{link.name}</span>
+                      <ChevronRight className="w-4 h-4 text-[#d4af37]" />
+                    </a>
+                  )
                 ))}
               </div>
 
