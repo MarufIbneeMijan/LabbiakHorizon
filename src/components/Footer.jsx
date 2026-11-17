@@ -1,10 +1,12 @@
 import React from 'react';
 import { Crown, ShieldCheck, MapPin, Phone, Mail, Clock, MessageSquare, Lock } from 'lucide-react';
 import { DICTIONARY, AGENCY_CREDENTIALS } from '../data/mockData';
+import { getWhatsAppUrl, OFFICIAL_WHATSAPP, OFFICIAL_HOTLINE } from '../constants/config';
+import { LabbaikLogoIcon } from './LabbaikLogo';
 
 export default function Footer({ locale, onOpenConsultation }) {
   const dict = DICTIONARY[locale] || DICTIONARY.en;
-  const whatsappUrl = "https://wa.me/8801800522224?text=Assalamu%20Alaikum.%20I%20would%20like%20to%20request%20a%20confidential%20VIP%20dossier%20from%20LabbaikHorizon.";
+  const whatsappUrl = getWhatsAppUrl("Assalamu Alaikum. I would like to request a confidential VIP dossier from LabbaikHorizon.");
 
   return (
     <footer id="footer" className="bg-[#050505] border-t border-[#d4af37]/20 text-slate-300 pt-16 pb-12 relative overflow-hidden">
@@ -59,11 +61,7 @@ export default function Footer({ locale, onOpenConsultation }) {
           {/* Brand Info (5 cols) */}
           <div className="lg:col-span-5 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#e5c158] to-[#996515] p-0.5 flex items-center justify-center">
-                <div className="w-full h-full bg-[#080809] rounded-[10px] flex items-center justify-center text-xl font-serif">
-                  🕋
-                </div>
-              </div>
+              <LabbaikLogoIcon size={44} />
               <div>
                 <h3 className="font-serif text-lg font-bold text-white tracking-wider">LABBAIK HORIZON</h3>
                 <p className="text-[10px] text-[#d4af37] uppercase font-mono tracking-widest">
@@ -101,7 +99,7 @@ export default function Footer({ locale, onOpenConsultation }) {
                 <span>{locale === 'bn' ? AGENCY_CREDENTIALS.addressBn : AGENCY_CREDENTIALS.addressEn}</span>
               </div>
 
-              <a href="tel:+8801800522224" className="flex items-center gap-2.5 bg-white/[0.02] p-3 rounded-xl border border-slate-800 hover:border-[#d4af37] transition-colors text-amber-300 font-bold">
+              <a href={`tel:${AGENCY_CREDENTIALS.hotline.replace(/[\s-]/g, '')}`} className="flex items-center gap-2.5 bg-white/[0.02] p-3 rounded-xl border border-slate-800 hover:border-[#d4af37] transition-colors text-amber-300 font-bold">
                 <Phone className="w-4 h-4 text-[#d4af37]" />
                 <span>24/7 VIP Hotline: {AGENCY_CREDENTIALS.hotline}</span>
               </a>
@@ -133,9 +131,9 @@ export default function Footer({ locale, onOpenConsultation }) {
         <div className="pt-8 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <p>© {new Date().getFullYear()} {dict.footer.rights}</p>
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-            <span>{locale === 'bn' ? 'গুলশান-২, ঢাকা' : 'Gulshan-2, Dhaka'}</span>
-            <span>•</span>
-            <span>MoRA Certified HAAB-1420</span>
+            <span>{locale === 'bn' ? 'বনশ্রী, ঢাকা' : 'বনশ্রী, Dhaka'}</span>
+            {/* <span>•</span> */}
+            {/* <span>MoRA Certified HAAB-1420</span> */}
             <span>•</span>
             <span>100% Shariah Compliant</span>
           </div>

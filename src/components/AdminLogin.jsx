@@ -136,7 +136,7 @@ export default function AdminLogin({ onLoginSuccess }) {
           </div>
 
           {/* Quick Demo Credentials Pill */}
-          <div className="bg-white/[0.02] border border-[#d4af37]/15 p-3 rounded-xl text-[11px] text-slate-400 space-y-1">
+          {/* <div className="bg-white/[0.02] border border-[#d4af37]/15 p-3 rounded-xl text-[11px] text-slate-400 space-y-1">
             <div className="flex items-center justify-between">
               <span className="text-[#d4af37] font-semibold flex items-center gap-1">
                 <Sparkles className="w-3 h-3" /> Default Director Credentials:
@@ -151,7 +151,7 @@ export default function AdminLogin({ onLoginSuccess }) {
             </div>
             <p>User: <code className="text-white">admin@labbaikhorizon.com</code> or <code className="text-white">admin</code></p>
             <p>Pass: <code className="text-white">Labbaik@VIP2026</code> or <code className="text-white">horizon2026</code></p>
-          </div>
+          </div> */}
 
           {/* Submit Button */}
           <button

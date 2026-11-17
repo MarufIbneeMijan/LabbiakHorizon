@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Printer, Crown, ShieldCheck, MapPin, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { LabbaikLogoIcon } from './LabbaikLogo';
 
 export default function PrivateDossierModal({ locale, data, onClose }) {
   if (!data) return null;
@@ -50,7 +51,7 @@ export default function PrivateDossierModal({ locale, data, onClose }) {
           <div className="flex justify-between items-start border-b border-[#d4af37]/30 pb-6">
             <div>
               <div className="flex items-center gap-3">
-                <span className="text-3xl font-serif">🕋</span>
+                <LabbaikLogoIcon size={44} />
                 <div>
                   <h1 className="text-xl font-serif font-bold text-kiswah-gold uppercase tracking-widest">
                     LABBAIK HORIZON

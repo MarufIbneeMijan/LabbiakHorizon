@@ -8,6 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { ordersAPI } from '../services/api';
+import { getWhatsAppUrl, OFFICIAL_WHATSAPP } from '../constants/config';
 
 const DELIVERY_ZONES = [
   { id: 'inside_dhaka', nameBn: 'ঢাকা সিটি (Inside Dhaka)', nameEn: 'Inside Dhaka (ঢাকা সিটি)', fee: 80, isInside: true },
@@ -150,10 +151,8 @@ export default function CheckoutModal({
       colors: ['#d4af37', '#e5c158', '#10b981', '#ffffff']
     });
 
-    const waText = encodeURIComponent(
-      `Assalamu Alaikum! I have just confirmed an order on LabbaikHorizon Store:\n\n*Order Reference:* ${createdId}\n*Customer Name:* ${fullName.trim()}\n*Phone:* ${phone.trim()}\n*Delivery Address:* ${districtArea.trim()}, ${zoneObj?.nameEn}\n*Payment Mode:* ${formattedPayment}\n*Items:* ${items.map((i) => `${i.name_en || i.name} (x${i.quantity || 1})`).join(', ')}\n*Total Payable:* ৳${grandTotalBDT.toLocaleString('en-IN')}\n\nPlease confirm my dispatch schedule. JazakAllah Khair!`
-    );
-    const orderWaUrl = `https://wa.me/8801800522224?text=${waText}`;
+    const waRawText = `Assalamu Alaikum! I have just confirmed an order on LabbaikHorizon Store:\n\n*Order Reference:* ${createdId}\n*Customer Name:* ${fullName.trim()}\n*Phone:* ${phone.trim()}\n*Delivery Address:* ${districtArea.trim()}, ${zoneObj?.nameEn}\n*Payment Mode:* ${formattedPayment}\n*Items:* ${items.map((i) => `${i.name_en || i.name} (x${i.quantity || 1})`).join(', ')}\n*Total Payable:* ৳${grandTotalBDT.toLocaleString('en-IN')}\n\nPlease confirm my dispatch schedule. JazakAllah Khair!`;
+    const orderWaUrl = getWhatsAppUrl(waRawText);
 
     setOrderRef(createdId);
     setIsSubmitting(false);
@@ -289,7 +288,7 @@ export default function CheckoutModal({
                   {/* Interactive Post-Checkout Decision Buttons */}
                   <div className="space-y-3 pt-2">
                     <a
-                      href={`https://wa.me/8801800522224?text=${waMessage}`}
+                      href={orderWaUrl || getWhatsAppUrl(decodeURIComponent(waMessage))}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-serif font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg cursor-pointer"

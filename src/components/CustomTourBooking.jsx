@@ -7,6 +7,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { DICTIONARY, CONCIERGE_DATA } from '../data/mockData';
+import { getWhatsAppUrl, OFFICIAL_WHATSAPP } from '../constants/config';
 
 // Conversion Rates
 const BDT_TO_SAR = 32.5; // 1 SAR = 32.5 BDT
@@ -254,8 +255,7 @@ ${addOnList}
 
 Please connect me with your Private Client Director at Horizon Lounge, Gulshan-2 to finalize our dates.`;
 
-    const encoded = encodeURIComponent(message);
-    window.open(`https://wa.me/8801800522224?text=${encoded}`, '_blank');
+    window.open(getWhatsAppUrl(message), '_blank');
   };
 
   // Print PDF Quotation

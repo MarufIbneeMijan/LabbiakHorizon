@@ -121,8 +121,8 @@ export const DICTIONARY = {
       subheading: "Hear heartfelt feedback from business leaders, professionals, and families who completed their pilgrimage with us."
     },
     footer: {
-      loungeBadge: "Gulshan Client Desk",
-      loungeTitle: "Gulshan-2 Private Consultation Office",
+      loungeBadge: "Banasree Client Desk",
+      loungeTitle: "Banasree Private Consultation Office",
       loungeSub: "We warmly welcome you and your family for tea or coffee to plan your Hajj or Umrah journey in a relaxed, private setting.",
       loungeHours: "10:00 AM - 8:00 PM • Prior Appointment Always Welcome",
       bookMeetingBtn: "Book Office Appointment",
@@ -151,7 +151,7 @@ export const DICTIONARY = {
       mora: "ধর্ম বিষয়ক মন্ত্রণালয় অনুমোদিত: HAAB-1420",
       shariah: "১০০% শরীয়াহ-সম্মত সেবা",
       diplomatic: "সহজ ও দ্রুত এয়ারপোর্ট সার্ভিস",
-      hotline: "হটলাইন: +880 1800-LABBAIK",
+      hotline: "হটলাইন: +8801724919098",
       briefingBtn: "পরামর্শের জন্য যোগাযোগ করুন",
       langSwitch: "English"
     },
@@ -167,7 +167,7 @@ export const DICTIONARY = {
       customBooking: "কাস্টম বুকিং",
       pillars: "আমাদের অঙ্গীকার",
       testimonials: "হাজী সাহেবানদের মতামত",
-      lounge: "গুলশান অফিস",
+      lounge: "বনশ্রী অফিস",
       admin: "অ্যাডমিন পোর্টাল",
       requestDossier: "বুকিং আলোচনা"
     },
@@ -261,9 +261,9 @@ export const DICTIONARY = {
       subheading: "আমাদের ব্যবস্থাপনায় সফলভাবে হজ ও উমরাহ পালনকারী সম্মানিত পরিবারবর্গের মূল্যবান অভিজ্ঞতা।"
     },
     footer: {
-      loungeBadge: "গুলশান ক্লায়েন্ট অফিস",
-      loungeTitle: "গুলশান-২ পরামর্শ কেন্দ্র",
-      loungeSub: "গুলশান-২ এ আমাদের অফিসে এসে চা/কফির সাথে আপনার পরিবার বা দলের হজ ও উমরাহ পরিকল্পনা নিয়ে সরাসরি আলোচনা করতে পারেন।",
+      loungeBadge: "বনশ্রী ক্লায়েন্ট অফিস",
+      loungeTitle: "বনশ্রী পরামর্শ কেন্দ্র",
+      loungeSub: "বনশ্রী এ আমাদের অফিসে এসে চা/কফির সাথে আপনার পরিবার বা দলের হজ ও উমরাহ পরিকল্পনা নিয়ে সরাসরি আলোচনা করতে পারেন।",
       loungeHours: "সকাল ১০:০০ - রাত ৮:০০ • শুক্রবার বাদে প্রতিদিন খোলা",
       bookMeetingBtn: "অফিসে অ্যাপয়েন্টমেন্ট নিন",
       whatsappBtn: "সরাসরি কথা বলুন হোয়াটসঅ্যাপে",
@@ -273,7 +273,7 @@ export const DICTIONARY = {
     },
     modal: {
       dossierTitle: "প্যাকেজ বুকিং ও আলোচনা",
-      dossierSub: "লাব্বাইকহরাইজন • গুলশান-২, ঢাকা",
+      dossierSub: "লাব্বাইকহরাইজন • বনশ্রী, ঢাকা",
       nameLabel: "আপনার পূর্ণ নাম *",
       phoneLabel: "ফোন / হোয়াটসঅ্যাপ নম্বর (+880) *",
       seasonLabel: "সফরের সম্ভাব্য মাস",
@@ -692,13 +692,15 @@ export const AGENCY_CREDENTIALS = {
   name: "LabbaikHorizon",
   taglineEn: "Ultra-Luxury Kiswah Pilgrimage Concierge",
   taglineBn: "কিসওয়াহ অনুপ্রেরণায় অতি-অভিজাত হজ ও ওমরাহ কনসিয়ার্জ",
-  hotline: "+880 1800-LABBAIK",
-  phoneAlt: "+880 1700-000000",
+  hotline: "+880 1724-919098",
+  phoneAlt: "+880 1800-522224",
+  whatsapp: "01724919098",
+  whatsappIntl: "8801724919098",
   email: "vip@labbaikhorizon.com",
   moraReg: "HAAB-1420",
   atabReg: "09823",
   addressEn: "Level 6, Horizon Tower, Gulshan-2, Dhaka-1212, Bangladesh",
-  addressBn: "লেভেল ৬, হরাইজন টাওয়ার, গুলশান-২, ঢাকা-১২১২, বাংলাদেশ"
+  addressBn: "হাউজ:১২ এভিনিউ:৮ ব্লক: M, বনশ্রী, ঢাকা।"
 };
 
 export const CONCIERGE_DATA = {

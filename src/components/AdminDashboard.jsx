@@ -10,6 +10,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { authAPI, packagesAPI, productsAPI, transportAPI, ordersAPI, hotelsAPI } from '../services/api';
 import AdminLogin from './AdminLogin';
+import { LabbaikLogoIcon } from './LabbaikLogo';
 
 const DEFAULT_ITINERARY_TEMPLATE = [
   { day: 'Day 1', day_bn: 'দিন ১', title: 'Dhaka Departure & Royal Jeddah Arrival', title_bn: 'ঢাকা ত্যাগ ও জেদ্দা রাজকীয় আগমন', desc: 'VIP flight from DAC to JED, private chauffeur transfer to Makkah 5-star hotel.', desc_bn: 'ঢাকা থেকে বিমানে জেদ্দা পৌঁছানো এবং প্রাইভেট চফারে মক্কা ৫-স্টার হোটেলে স্থানান্তর।' },
@@ -1031,9 +1032,7 @@ export default function AdminDashboard({ isOpen = true, onClose, locale = 'en', 
           {/* TOP STATUS BAR */}
           <div className="bg-[#080809] border-b border-[#d4af37]/25 p-4 sm:px-8 flex flex-wrap items-center justify-between gap-4 z-20 shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#d4af37]/15 border border-[#d4af37]/40 flex items-center justify-center text-xl text-[#d4af37]">
-                🕋
-              </div>
+              <LabbaikLogoIcon size={38} />
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="font-serif font-bold text-lg text-white">LabbaikHorizon Control Center</h1>

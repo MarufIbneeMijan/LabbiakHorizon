@@ -7,6 +7,7 @@ import {
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { PRICING_CONFIG } from '../data/mockData';
+import { getWhatsAppUrl, OFFICIAL_WHATSAPP } from '../constants/config';
 
 export default function Calculator({ onOpenPdfModal }) {
   // State for Calculator Options
@@ -183,7 +184,7 @@ export default function Calculator({ onOpenPdfModal }) {
 
   // WhatsApp Itinerary Share
   const handleWhatsAppShare = () => {
-    const text = `Assalamu Alaikum! I would like to inquire about a Custom Pilgrimage Package from Noor Al Haramain Travels & Tours Dhaka:
+    const text = `Assalamu Alaikum! I would like to inquire about a Custom Pilgrimage Package from LabbaikHorizon VIP Concierge Dhaka:
     
 🕋 *Trip:* ${calculation.seasonName} (${calculation.numDays} Days)
 📍 *Departure City:* ${departureCity}
@@ -198,8 +199,7 @@ export default function Calculator({ onOpenPdfModal }) {
 
 Please confirm available dates & official booking process.`;
 
-    const encodedText = encodeURIComponent(text);
-    window.open(`https://wa.me/8801700000000?text=${encodedText}`, '_blank');
+    window.open(getWhatsAppUrl(text), '_blank');
   };
 
   return (

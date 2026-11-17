@@ -9,6 +9,7 @@ import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { DICTIONARY } from '../data/mockData';
 import { ordersAPI } from '../services/api';
+import { getWhatsAppUrl, OFFICIAL_WHATSAPP } from '../constants/config';
 
 export default function ContactModal({ locale = 'en', onClose = () => {}, presetData = null, onSubmitSuccess = null }) {
   const navigate = useNavigate();
@@ -131,7 +132,7 @@ export default function ContactModal({ locale = 'en', onClose = () => {}, preset
     setIsSubmitting(false);
 
     const dossierWaMessage = `Assalamu Alaikum! I have submitted a VIP Reservation on LabbaikHorizon:\n*Reference:* ${orderId}\n*Name:* ${formData.name}\n*WhatsApp / Phone:* ${formData.phone}\n*Travel Month:* ${formData.travelMonth}\n*Party Size:* ${formData.partySize} Pilgrim(s)\n*Selected Package / Service:* ${presetData?.tier || presetData?.packageName || presetData?.vehicleName || 'VIP Sacred Pilgrimage Dossier'}\n${presetData?.totalBDT ? `*Estimated Investment:* ৳${Number(presetData.totalBDT).toLocaleString('en-IN')} BDT\n` : ''}${formData.notes ? `*Special Notes:* ${formData.notes}\n` : ''}Please connect me with a Private Client Director to confirm our dates and itinerary.`;
-    const resWaUrl = `https://wa.me/8801800522224?text=${encodeURIComponent(dossierWaMessage)}`;
+    const resWaUrl = getWhatsAppUrl(dossierWaMessage);
 
     if (onSubmitSuccess) {
       onSubmitSuccess({
@@ -158,7 +159,7 @@ export default function ContactModal({ locale = 'en', onClose = () => {}, preset
 ${presetData?.totalBDT ? `*Estimated Investment:* ৳${Number(presetData.totalBDT).toLocaleString('en-IN')} BDT\n` : ''}${formData.notes ? `*Special Notes:* ${formData.notes}\n` : ''}
 Please connect me with a Private Client Director to confirm our dates and itinerary.`;
 
-  const waUrl = `https://wa.me/8801800522224?text=${encodeURIComponent(waMessage)}`;
+  const waUrl = getWhatsAppUrl(waMessage);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md font-sans">

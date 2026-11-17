@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { authAPI } from '../services/api';
 import AdminLogin from './AdminLogin';
+import { LabbaikLogoIcon } from './LabbaikLogo';
 
 export default function AdminAuthGuard({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -78,9 +79,7 @@ export default function AdminAuthGuard({ children }) {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#080809] flex flex-col items-center justify-center text-slate-400 font-sans p-4">
-        <div className="w-12 h-12 rounded-2xl bg-[#d4af37]/15 border border-[#d4af37]/40 flex items-center justify-center text-[#d4af37] animate-pulse mb-3">
-          🕋
-        </div>
+        <LabbaikLogoIcon size={52} className="animate-pulse mb-3" />
         <p className="font-serif text-sm text-[#d4af37] tracking-wider uppercase">
           Verifying LabbaikHorizon VIP Security Clearance...
         </p>

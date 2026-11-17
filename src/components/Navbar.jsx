@@ -5,7 +5,8 @@ import {
   ChevronRight, Crown, Lock, ShoppingBag, Palette, Check 
 } from 'lucide-react';
 import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
-import { DICTIONARY } from '../data/mockData';
+import { DICTIONARY, AGENCY_CREDENTIALS } from '../data/mockData';
+import { LabbaikLogoIcon } from './LabbaikLogo';
 
 const THEMES = [
   { id: 'kiswah', nameEn: 'Kiswah Gold', nameBn: 'কিসওয়াহ গোল্ড', icon: '🕋' },
@@ -91,7 +92,7 @@ export default function Navbar({
 
           <div className="flex items-center gap-3 sm:gap-4 text-xs font-semibold">
             <a 
-              href="tel:+8801800522224" 
+              href={`tel:${AGENCY_CREDENTIALS.hotline.replace(/[\s-]/g, '')}`} 
               className="flex items-center gap-1.5 text-kiswah-gold hover:opacity-80 transition-opacity"
             >
               <Phone className="w-3.5 h-3.5" />
@@ -107,22 +108,19 @@ export default function Navbar({
           
           {/* Brand Logo */}
           <Link to="/" className="flex items-center gap-3 group shrink-0">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#e5c158] via-[#d4af37] to-[#996515] p-0.5 shadow-xl shadow-[#d4af37]/20 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <div className="w-full h-full bg-[#080809] rounded-[10px] flex items-center justify-center text-lg font-serif">
-                🕋
-              </div>
-            </div>
+            {/* <LabbaikLogoIcon size={38} className="group-hover:scale-105 transition-transform" /> */}
+            <img src="/logo.png" alt="LabbaikHorizon Logo" className="w-10 h-10 object-contain rounded-xl border border-[#d4af37]/40" />
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-serif text-lg sm:text-xl font-bold tracking-wider text-white group-hover:text-[#d4af37] transition-colors">
                   LabbaikHorizon
                 </span>
-                <span className="hidden sm:inline-block bg-[#d4af37]/10 text-[#d4af37] text-[9px] uppercase tracking-widest font-extrabold px-1.5 py-0.5 rounded border border-[#d4af37]/30">
+                {/* <span className="hidden sm:inline-block bg-[#d4af37]/10 text-[#d4af37] text-[9px] uppercase tracking-widest font-extrabold px-1.5 py-0.5 rounded border border-[#d4af37]/30">
                   Concierge
-                </span>
+                </span> */}
               </div>
               <p className="text-[10px] text-[#d4af37]/80 tracking-widest font-mono uppercase">
-                {isBn ? 'কিসওয়াহ আল্ট্রা-লাক্সারি জিয়ারত' : 'Kiswah Ultra-Luxury Pilgrimage'}
+                {isBn ? 'বিলাসবহুল জিয়ারত' : ' Ultra-Luxury Pilgrimage'}
               </p>
             </div>
           </Link>

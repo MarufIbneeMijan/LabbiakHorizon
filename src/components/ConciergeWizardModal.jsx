@@ -7,7 +7,9 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { DICTIONARY, CONCIERGE_DATA, AGENCY_CREDENTIALS } from '../data/mockData';
-import { ordersAPI, hotelsAPI, FALLBACK_HOTELS } from '../services/api';
+import { ordersAPI, hotelsAPI, transportAPI, FALLBACK_HOTELS } from '../services/api';
+import { getWhatsAppUrl, OFFICIAL_WHATSAPP } from '../constants/config';
+import { LabbaikLogoIcon } from './LabbaikLogo';
 
 const BDT_TO_USD = 122.5; // 1 USD = 122.5 BDT
 const BDT_TO_SAR = 32.5;  // 1 SAR = 32.5 BDT
@@ -74,16 +76,29 @@ export default function ConciergeWizardModal({ locale, isOpen, onClose, onOpenPd
   // Dynamic Hotels Catalog from CMS / API
   const [hotelsList, setHotelsList] = useState(FALLBACK_HOTELS);
 
+  // Dynamic Fleet Vehicles & Journey Routes from CMS / API
+  const [transportData, setTransportData] = useState({
+    vehicles: CONCIERGE_DATA.vehicles,
+    routes: CONCIERGE_DATA.routes
+  });
+
   useEffect(() => {
     loadHotels();
+    loadTransport();
 
     const handleHotelsUpdated = () => {
       loadHotels();
     };
 
+    const handleTransportUpdated = () => {
+      loadTransport();
+    };
+
     window.addEventListener('horizon:hotels-updated', handleHotelsUpdated);
+    window.addEventListener('horizon:transport-updated', handleTransportUpdated);
     return () => {
       window.removeEventListener('horizon:hotels-updated', handleHotelsUpdated);
+      window.removeEventListener('horizon:transport-updated', handleTransportUpdated);
     };
   }, []);
 
@@ -98,6 +113,20 @@ export default function ConciergeWizardModal({ locale, isOpen, onClose, onOpenPd
     }
   };
 
+  const loadTransport = async () => {
+    try {
+      const data = await transportAPI.get();
+      if (data && (data.vehicles?.length > 0 || data.routes?.length > 0)) {
+        setTransportData({
+          vehicles: (data.vehicles && data.vehicles.length > 0) ? data.vehicles : CONCIERGE_DATA.vehicles,
+          routes: (data.routes && data.routes.length > 0) ? data.routes : CONCIERGE_DATA.routes
+        });
+      }
+    } catch (err) {
+      console.warn('Could not load dynamic transport in wizard:', err);
+    }
+  };
+
   const makkahHotels = useMemo(() => {
     const list = hotelsList.filter(h => h.city?.toLowerCase() === 'makkah');
     return list.length > 0 ? list : CONCIERGE_DATA.hotels.makkah;
@@ -107,6 +136,50 @@ export default function ConciergeWizardModal({ locale, isOpen, onClose, onOpenPd
     const list = hotelsList.filter(h => h.city?.toLowerCase() === 'madinah');
     return list.length > 0 ? list : CONCIERGE_DATA.hotels.madinah;
   }, [hotelsList]);
+
+  // Normalized Live Vehicles
+  const availableVehicles = useMemo(() => {
+    const rawList = transportData.vehicles || [];
+    return rawList.map((v) => {
+      const name = (isBn && v.nameBn) ? v.nameBn : (v.nameEn || v.name || 'VIP Vehicle');
+      const badge = (isBn && v.badgeBn) ? v.badgeBn : (v.badgeEn || v.badge || v.categoryEn || 'VIP Chauffeur SUV');
+      let rate = v.ratePerKm;
+      if (rate === undefined || rate === null) {
+        const cat = String(v.categoryEn || v.category || '').toLowerCase();
+        if (cat.includes('bus') || cat.includes('coach')) rate = 2.2;
+        else if (cat.includes('maybach') || cat.includes('mercedes') || cat.includes('presidential')) rate = 1.8;
+        else rate = 1.0;
+      }
+      return {
+        id: v.id,
+        name,
+        nameEn: v.nameEn || v.name || 'VIP Vehicle',
+        nameBn: v.nameBn || v.nameEn || v.name || 'ভিআইপি গাড়ি',
+        badge,
+        ratePerKm: Number(rate) || 1.0,
+        passengers: v.passengers || 4,
+        luggage: v.luggage || 4,
+        image: v.imageUrl || v.image
+      };
+    });
+  }, [transportData.vehicles, isBn]);
+
+  // Normalized Live Routes
+  const availableRoutes = useMemo(() => {
+    const rawList = transportData.routes || [];
+    return rawList.map((r) => {
+      const baseBdt = Number(r.priceBDT) || Number(r.baseBdt) || Math.round((Number(r.finalPriceSAR || r.basePriceSAR) || 600) * 33);
+      return {
+        id: r.id,
+        name_en: r.nameEn || r.name_en || r.name || 'VIP Sanctuary Route',
+        name_bn: r.nameBn || r.name_bn || r.nameEn || r.name || 'ভিআইপি রুট',
+        baseBdt,
+        distanceKm: r.distanceKm || parseInt(String(r.distanceEn || '').replace(/[^0-9]/g, '')) || 100,
+        durationEn: r.durationEn || 'Transfer',
+        durationBn: r.durationBn || 'ট্রান্সফার'
+      };
+    });
+  }, [transportData.routes, isBn]);
 
   // Selected Data Objects
   const selectedMakkahHotel = useMemo(() => {
@@ -118,8 +191,8 @@ export default function ConciergeWizardModal({ locale, isOpen, onClose, onOpenPd
   }, [madinahHotelId, madinahHotels]);
 
   const selectedVehicle = useMemo(() => {
-    return CONCIERGE_DATA.vehicles.find(v => v.id === selectedVehicleId) || CONCIERGE_DATA.vehicles[0];
-  }, [selectedVehicleId]);
+    return availableVehicles.find(v => v.id === selectedVehicleId) || availableVehicles[0] || CONCIERGE_DATA.vehicles[0];
+  }, [selectedVehicleId, availableVehicles]);
 
   // Occupancy Factor
   const occupancyFactor = useMemo(() => {
@@ -138,9 +211,9 @@ export default function ConciergeWizardModal({ locale, isOpen, onClose, onOpenPd
     // 2. Transport Total (route baseBdt * vehicle ratePerKm)
     let totalTransportBDT = 0;
     selectedRouteIds.forEach(id => {
-      const r = CONCIERGE_DATA.routes.find(route => route.id === id);
+      const r = availableRoutes.find(route => route.id === id);
       if (r) {
-        totalTransportBDT += Math.round(r.baseBdt * selectedVehicle.ratePerKm);
+        totalTransportBDT += Math.round(r.baseBdt * (selectedVehicle.ratePerKm || 1.0));
       }
     });
 
@@ -223,18 +296,18 @@ export default function ConciergeWizardModal({ locale, isOpen, onClose, onOpenPd
   // Final Action 1: Download PDF
   const handleDownloadPdf = () => {
     const routeNames = selectedRouteIds.map(id => {
-      const r = CONCIERGE_DATA.routes.find(route => route.id === id);
+      const r = availableRoutes.find(route => route.id === id);
       return isBn ? r?.name_bn : r?.name_en;
-    });
+    }).filter(Boolean);
 
     const addonNames = selectedAddonIds.map(id => {
       const a = CONCIERGE_DATA.addOns.find(addon => addon.id === id);
       return isBn ? a?.name_bn : a?.name_en;
-    });
+    }).filter(Boolean);
 
     const pdfData = {
       leadName: leadName || (isBn ? 'সম্মানিত তীর্থযাত্রী' : 'Distinguished Pilgrim'),
-      leadPhone: leadPhone || '+880 1700-000000',
+      leadPhone: leadPhone || OFFICIAL_WHATSAPP,
       season: seasonHorizon === 'ramadan' 
         ? (isBn ? 'রমজান (শেষ ১০ রাত)' : 'Ramadan (Royal Last 10 Nights)') 
         : seasonHorizon === 'winter' 
@@ -269,14 +342,14 @@ export default function ConciergeWizardModal({ locale, isOpen, onClose, onOpenPd
   // Final Action 2: WhatsApp Booking
   const handleWhatsAppBooking = () => {
     const routeList = selectedRouteIds.map(id => {
-      const r = CONCIERGE_DATA.routes.find(route => route.id === id);
+      const r = availableRoutes.find(route => route.id === id);
       return `  • ${isBn ? r?.name_bn : r?.name_en}`;
-    }).join('\n');
+    }).filter(Boolean).join('\n');
 
     const addOnList = selectedAddonIds.map(id => {
       const a = CONCIERGE_DATA.addOns.find(addon => addon.id === id);
       return `  • ${isBn ? a?.name_bn : a?.name_en}`;
-    }).join('\n');
+    }).filter(Boolean).join('\n');
 
     const msg = `Assalamu Alaikum! I have curated a Bespoke Custom Pilgrimage Itinerary on LabbaikHorizon:
 
@@ -304,8 +377,7 @@ ${addOnList}
 
 Please connect me with your Private Client Director to confirm our booking.`;
 
-    const encoded = encodeURIComponent(msg);
-    window.open(`https://wa.me/8801700000000?text=${encoded}`, '_blank');
+    window.open(getWhatsAppUrl(msg), '_blank');
   };
 
   // Final Action 3: Submit Dossier Form
@@ -362,8 +434,8 @@ Please connect me with your Private Client Director to confirm our booking.`;
         
         {/* Brand & Progress Bar */}
         <div className="flex items-center gap-4 sm:gap-6">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🕋</span>
+          <div className="flex items-center gap-2.5">
+            <LabbaikLogoIcon size={32} />
             <span className="font-serif font-bold text-lg sm:text-xl text-white tracking-wider">
               Labbaik<span className="text-[#d4af37]">Horizon</span>
             </span>
@@ -742,11 +814,16 @@ Please connect me with your Private Client Director to confirm our booking.`;
 
               {/* VEHICLE FLEET */}
               <div className="space-y-3">
-                <label className="text-xs font-serif font-bold text-amber-300 uppercase tracking-wider block">
-                  1. Chauffeur Fleet Selection
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-serif font-bold text-amber-300 uppercase tracking-wider block">
+                    1. Chauffeur Fleet Selection ({availableVehicles.length} Luxury Options)
+                  </label>
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    Live CMS Fleet Synchronization
+                  </span>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {CONCIERGE_DATA.vehicles.slice(0, 3).map((v) => {
+                  {availableVehicles.map((v) => {
                     const isSelected = selectedVehicleId === v.id;
                     return (
                       <div
@@ -758,9 +835,14 @@ Please connect me with your Private Client Director to confirm our booking.`;
                             : 'bg-white/[0.02] border-slate-800 text-slate-300 hover:border-slate-700'
                         }`}
                       >
-                        <span className="text-[10px] bg-[#d4af37]/15 text-[#d4af37] font-serif font-bold px-2 py-0.5 rounded-full border border-[#d4af37]/30">
-                          {v.badge}
-                        </span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] bg-[#d4af37]/15 text-[#d4af37] font-serif font-bold px-2 py-0.5 rounded-full border border-[#d4af37]/30">
+                            {v.badge}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            {v.passengers} Seats • {v.luggage} Bags
+                          </span>
+                        </div>
                         <h4 className="font-serif font-bold text-sm text-white pt-1">{v.name}</h4>
                         <span className="text-xs text-amber-300 font-mono block pt-1">{v.ratePerKm}x Rate Multiplier</span>
                       </div>
@@ -771,14 +853,19 @@ Please connect me with your Private Client Director to confirm our booking.`;
 
               {/* ROUTE CHECKBOXES */}
               <div className="space-y-3 pt-2">
-                <label className="text-xs font-serif font-bold text-amber-300 uppercase tracking-wider block">
-                  2. Route Checkbox Selection (Real-Time Dynamic Updates)
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-serif font-bold text-amber-300 uppercase tracking-wider block">
+                    2. Route Checkbox Selection ({availableRoutes.length} Sanctuary Routes Available)
+                  </label>
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    Real-Time Dynamic Valuation
+                  </span>
+                </div>
                 <div className="space-y-2.5">
-                  {CONCIERGE_DATA.routes.map((route) => {
+                  {availableRoutes.map((route) => {
                     const isChecked = selectedRouteIds.includes(route.id);
                     const routeName = isBn ? route.name_bn : route.name_en;
-                    const calculatedBDT = Math.round(route.baseBdt * selectedVehicle.ratePerKm);
+                    const calculatedBDT = Math.round(route.baseBdt * (selectedVehicle.ratePerKm || 1.0));
 
                     return (
                       <div
@@ -796,7 +883,14 @@ Please connect me with your Private Client Director to confirm our booking.`;
                           }`}>
                             {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                           </div>
-                          <span className="text-xs sm:text-sm font-serif font-semibold">{routeName}</span>
+                          <div>
+                            <span className="text-xs sm:text-sm font-serif font-semibold block">{routeName}</span>
+                            {route.durationEn && (
+                              <span className="text-[11px] text-slate-400 font-light block">
+                                {isBn ? (route.durationBn || route.durationEn) : route.durationEn}
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         <span className="text-xs sm:text-sm font-serif font-bold text-kiswah-gold shrink-0">
@@ -897,12 +991,23 @@ Please connect me with your Private Client Director to confirm our booking.`;
                       ? 'জাজাকআল্লাহ খাইরান। আমাদের প্রাইভেট ক্লায়েন্ট ডিরেক্টর আপনার ফোন নম্বরে যোগাযোগ করবেন এবং গুলশান-২ লাউঞ্জে কফি ব্রিফিং সময়সূচী নিশ্চিত করবেন।'
                       : 'JazakAllah Khair. Our Private Client Director will contact your phone to confirm your private coffee briefing at Horizon Lounge, Gulshan-2.'}
                   </p>
-                  <button
-                    onClick={onClose}
-                    className="px-8 py-3 bg-kiswah-gold text-[#080809] font-serif font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg cursor-pointer"
-                  >
-                    Close Window
-                  </button>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                    <a
+                      href={getWhatsAppUrl(`Assalamu Alaikum! I have just submitted a sealed VIP dossier on LabbaikHorizon.\n*Guest Name:* ${leadName || 'Distinguished Pilgrim'}\n*Phone:* ${leadPhone || '+880...'}\n*Valuation:* ৳${valuation.grandTotalBDT.toLocaleString('en-IN')}\nPlease schedule our private briefing.`)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-serif font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      <span>{isBn ? 'হোয়াটসঅ্যাপে ডিরেক্টর নিশ্চিত করুন' : 'Confirm on WhatsApp'}</span>
+                    </a>
+                    <button
+                      onClick={onClose}
+                      className="w-full sm:w-auto px-8 py-3 bg-kiswah-gold text-[#080809] font-serif font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg cursor-pointer"
+                    >
+                      Close Window
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <>

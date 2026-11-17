@@ -830,6 +830,46 @@ export const transportAPI = {
   }
 };
 
+// --- DEDICATED ROUTES API (JOURNEY ROUTES & AIRPORT TRANSFERS) ---
+export const routesAPI = {
+  async getAll() {
+    const transport = await transportAPI.get();
+    return transport.routes || [];
+  },
+
+  async create(routeData) {
+    return await transportAPI.addRoute(routeData);
+  },
+
+  async update(id, updates) {
+    return await transportAPI.updateRoute(id, updates);
+  },
+
+  async delete(id) {
+    return await transportAPI.deleteRoute(id);
+  }
+};
+
+// --- DEDICATED VEHICLES API (CHAUFFEUR FLEET & BUS LOGISTICS) ---
+export const vehiclesAPI = {
+  async getAll() {
+    const transport = await transportAPI.get();
+    return transport.vehicles || [];
+  },
+
+  async create(vehicleData) {
+    return await transportAPI.addVehicle(vehicleData);
+  },
+
+  async update(id, updates) {
+    return await transportAPI.updateVehicle(id, updates);
+  },
+
+  async delete(id) {
+    return await transportAPI.deleteVehicle(id);
+  }
+};
+
 // --- ORDERS API (STORE ORDERS & VIP DOSSIERS) ---
 export const ordersAPI = {
   async getAll() {
